@@ -1,0 +1,46 @@
+{
+  "name": "xpandorax",
+  "version": "2.0.0",
+  "description": "Premium adult content platform built with Next.js 14",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "dev:validate": "node ./scripts/validate-config.js && next dev -p 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "payload": "payload",
+    "check-env": "node ./scripts/check-env.js",
+    "test-mongodb": "node ./scripts/test-mongodb.js",
+    "check-ip": "node ./scripts/check-ip-whitelist.js",
+    "validate": "node ./scripts/validate-config.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.940.0",
+    "@payloadcms/db-mongodb": "^3.65.0",
+    "@payloadcms/next": "^3.65.0",
+    "@payloadcms/richtext-lexical": "^3.65.0",
+    "@payloadcms/ui": "^3.65.0",
+    "critters": "^0.0.20",
+    "dotenv": "^17.2.3",
+    "fluid-player": "^3.5.0",
+    "mongodb": "^7.0.0",
+    "next": "^15.2.3",
+    "payload": "^3.65.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "sass": "^1.94.2"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "15.2.3",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
