@@ -4,14 +4,18 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function AgeGatePage() {
-  const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleVerify = () => {
-    setLoading(true)
-    // Set cookie for 30 days
-    document.cookie = 'age_verified=true; max-age=2592000; path=/; SameSite=Strict'
+  const handleConfirm = async () => {
+    setIsLoading(true)
+    
+    // Set age verification cookie
+    document.cookie = 'age_verified=true; path=/; max-age=31536000; SameSite=Strict'
+    
+    // Redirect to home page
     router.push('/')
+    router.refresh()
   }
 
   const handleDecline = () => {
@@ -19,62 +23,69 @@ export default function AgeGatePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950 p-4">
-      <div className="age-gate-blur bg-gray-900/90 border border-gray-800 rounded-2xl p-8 md:p-12 max-w-lg w-full text-center shadow-2xl">
-        {/* Warning Icon */}
-        <div className="text-6xl mb-6">⚠️</div>
+    <div className="min-h-screen flex items-center justify-center py-8 px-4 bg-surface-950">
+      <div className="max-w-md w-full text-center">
+        {/* Logo */}
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
+            XpandoraX
+          </h1>
+        </div>
 
-        {/* Title */}
-        <h1 className="text-2xl md:text-3xl font-bold mb-4">
-          Age Verification Required
-        </h1>
+        {/* Card */}
+        <div className="card p-6 sm:p-8">
+          {/* Warning Icon */}
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary-600/20 flex items-center justify-center">
+            <svg className="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
 
-        {/* Warning Text */}
-        <p className="text-gray-400 mb-6 leading-relaxed">
-          This website contains adult content that is only suitable for individuals 
-          who are <span className="text-red-500 font-semibold">18 years of age or older</span>.
-        </p>
-
-        {/* Legal Notice */}
-        <div className="bg-gray-800/50 rounded-lg p-4 mb-8 text-sm text-gray-500">
-          <p>
-            By entering, you confirm that you are at least 18 years old and legally 
-            permitted to view adult content in your jurisdiction. You also agree to 
-            our Terms of Service and Privacy Policy.
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">Age Verification Required</h2>
+          
+          <p className="text-surface-400 mb-6">
+            This website contains age-restricted content. You must be at least 18 years old (or the age of majority in your jurisdiction) to enter.
           </p>
+
+          <div className="space-y-3 mb-6">
+            <p className="text-sm text-surface-500">
+              By clicking "I am 18 or older" you confirm that:
+            </p>
+            <ul className="text-sm text-surface-400 text-left list-disc list-inside space-y-1">
+              <li>You are at least 18 years of age</li>
+              <li>You are of legal age in your jurisdiction</li>
+              <li>You consent to viewing adult content</li>
+              <li>Viewing adult content is legal where you are located</li>
+            </ul>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleConfirm}
+              disabled={isLoading}
+              className="flex-1 btn-primary py-3 disabled:opacity-50"
+            >
+              {isLoading ? 'Loading...' : 'I am 18 or older'}
+            </button>
+            <button
+              onClick={handleDecline}
+              className="flex-1 btn-secondary py-3"
+            >
+              Exit
+            </button>
+          </div>
         </div>
 
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            onClick={handleVerify}
-            disabled={loading}
-            className="btn-primary text-lg px-8 py-3 flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Verifying...
-              </>
-            ) : (
-              <>✓ Yes, I&apos;m 18+</>
-            )}
-          </button>
-          <button
-            onClick={handleDecline}
-            className="btn-secondary text-lg px-8 py-3"
-          >
-            ✕ No, Exit
-          </button>
+        {/* Footer */}
+        <div className="mt-8 text-sm text-surface-500 space-y-2">
+          <p>
+            <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+            <span className="mx-2">|</span>
+            <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
+          </p>
+          <p>All performers are 18 years of age or older.</p>
         </div>
-
-        {/* Additional Info */}
-        <p className="mt-8 text-xs text-gray-600">
-          If you are under 18 years of age, please leave this site immediately.
-        </p>
       </div>
     </div>
   )

@@ -1,28 +1,32 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 
 const ThemeContext = createContext({
   theme: 'dark',
+  setTheme: () => {},
   toggleTheme: () => {},
 })
 
 export function useTheme() {
-  return useContext(ThemeContext)
+  const context = useContext(ThemeContext)
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider')
+  }
+  return context
 }
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('dark')
+  const [theme, setThemeState] = useState('dark')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    // Check for saved preference or system preference
     const savedTheme = localStorage.getItem('theme')
-    if (savedTheme) {
-      setTheme(savedTheme)
+    if (savedTheme && ['dark', 'light'].includes(savedTheme)) {
+      setThemeState(savedTheme)
     } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-      setTheme('light')
+      setThemeState('light')
     }
   }, [])
 
@@ -33,17 +37,22 @@ export function ThemeProvider({ children }) {
     }
   }, [theme, mounted])
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
-  }
+  const setTheme = useCallback((newTheme) => {
+    if (['dark', 'light'].includes(newTheme)) {
+      setThemeState(newTheme)
+    }
+  }, [])
 
-  // Prevent flash of incorrect theme
+  const toggleTheme = useCallback(() => {
+    setThemeState(prev => prev === 'dark' ? 'light' : 'dark')
+  }, [])
+
   if (!mounted) {
     return null
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   )

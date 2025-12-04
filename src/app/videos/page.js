@@ -1,136 +1,75 @@
-import Link from 'next/link'
+import { getVideos } from '@/lib/data'
 import VideoGrid from '@/components/VideoGrid'
-import SearchForm from '@/components/SearchForm'
-import { getVideos, getCategories } from '@/lib/data'
+import Pagination from '@/components/Pagination'
+import SortSelect from '@/components/SortSelect'
+import { SORT_OPTIONS, PAGINATION } from '@/utils/config'
 
 export const metadata = {
   title: 'Videos',
-  description: 'Browse our collection of premium adult videos.',
+  description: 'Browse our collection of premium adult videos from top studios and professional models.',
 }
 
 export default async function VideosPage({ searchParams }) {
   const params = await searchParams
-  const page = parseInt(params?.page) || 1
-  const sort = params?.sort || 'latest'
-  const category = params?.category || ''
-  const search = params?.q || ''
-
-  const { videos, totalPages, totalCount } = await getVideos({
+  const page = parseInt(params.page) || 1
+  const sort = params.sort || 'latest'
+  const filter = params.filter || null
+  
+  const { videos, total, totalPages } = await getVideos({
     page,
-    limit: 24,
     sort,
-    category,
-    search,
+    filter,
+    limit: PAGINATION.VIDEOS_PER_PAGE,
   })
 
-  const categories = await getCategories()
-
-  const sortOptions = [
-    { value: 'latest', label: 'Latest' },
-    { value: 'popular', label: 'Most Popular' },
-    { value: 'trending', label: 'Trending' },
-    { value: 'views', label: 'Most Viewed' },
-    { value: 'duration', label: 'Longest' },
-  ]
+  const getPageTitle = () => {
+    if (filter === 'featured') return 'Featured Videos'
+    if (sort === 'trending') return 'Trending Videos'
+    if (sort === 'popular') return 'Popular Videos'
+    return 'All Videos'
+  }
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-8 sm:py-12">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            <span className="text-red-500">🎥</span> Videos
-          </h1>
-          <p className="text-gray-400">
-            Showing {videos.length} of {totalCount} videos
-          </p>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-8">
-          {/* Search */}
-          <div className="w-full md:w-auto flex-1 md:max-w-md">
-            <SearchForm placeholder="Search videos..." defaultValue={search} />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">{getPageTitle()}</h1>
+            <p className="text-surface-400 mt-1">{total} videos available</p>
           </div>
-
-          {/* Sort Dropdown */}
-          <select
-            defaultValue={sort}
-            onChange={(e) => {
-              const url = new URL(window.location.href)
-              url.searchParams.set('sort', e.target.value)
-              url.searchParams.delete('page')
-              window.location.href = url.toString()
-            }}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-red-500"
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Category Filter */}
-          <select
-            defaultValue={category}
-            onChange={(e) => {
-              const url = new URL(window.location.href)
-              if (e.target.value) {
-                url.searchParams.set('category', e.target.value)
-              } else {
-                url.searchParams.delete('category')
-              }
-              url.searchParams.delete('page')
-              window.location.href = url.toString()
-            }}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-red-500"
-          >
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat.slug} value={cat.slug}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          <SortSelect currentSort={sort} options={SORT_OPTIONS.VIDEOS} />
         </div>
 
-        {/* Video Grid */}
-        {videos.length > 0 ? (
-          <VideoGrid videos={videos} />
-        ) : (
-          <div className="text-center py-16">
-            <p className="text-gray-400 text-lg">No videos found.</p>
-            <Link href="/videos" className="text-red-500 hover:text-red-400 mt-2 inline-block">
-              Clear filters
-            </Link>
+        {/* Filter Tags */}
+        {filter && (
+          <div className="mb-6">
+            <div className="inline-flex items-center gap-2 bg-surface-800 px-3 py-1.5 rounded-full">
+              <span className="text-sm text-surface-300">Filter: {filter}</span>
+              <a 
+                href="/videos" 
+                className="w-5 h-5 flex items-center justify-center bg-surface-700 hover:bg-surface-600 rounded-full text-surface-400 hover:text-white transition-colors"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </a>
+            </div>
           </div>
         )}
 
+        {/* Video Grid */}
+        <VideoGrid videos={videos} />
+
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 mt-12">
-            {page > 1 && (
-              <Link
-                href={`/videos?page=${page - 1}&sort=${sort}${category ? `&category=${category}` : ''}${search ? `&q=${search}` : ''}`}
-                className="btn-secondary px-4 py-2"
-              >
-                ← Previous
-              </Link>
-            )}
-            
-            <span className="flex items-center px-4 text-gray-400">
-              Page {page} of {totalPages}
-            </span>
-
-            {page < totalPages && (
-              <Link
-                href={`/videos?page=${page + 1}&sort=${sort}${category ? `&category=${category}` : ''}${search ? `&q=${search}` : ''}`}
-                className="btn-secondary px-4 py-2"
-              >
-                Next →
-              </Link>
-            )}
+          <div className="mt-10">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              basePath="/videos"
+              queryParams={{ sort, filter }}
+            />
           </div>
         )}
       </div>

@@ -4,16 +4,15 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
+import { Users } from './src/collections/Users.js'
 import { Videos } from './src/collections/Videos.js'
 import { Categories } from './src/collections/Categories.js'
 import { Models } from './src/collections/Models.js'
 import { Producers } from './src/collections/Producers.js'
-import { Users } from './src/collections/Users.js'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-// Determine the server URL based on environment
 const getServerURL = () => {
   if (process.env.NEXT_PUBLIC_SERVER_URL) return process.env.NEXT_PUBLIC_SERVER_URL
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
@@ -28,7 +27,7 @@ const config = buildConfig({
   admin: {
     user: Users.slug,
     meta: {
-      titleSuffix: '- Xpandorax CMS',
+      titleSuffix: '- XpandoraX CMS',
       favicon: '/favicon.ico',
     },
     autoLogin: false,
@@ -66,7 +65,7 @@ const config = buildConfig({
   ].filter(Boolean),
   rateLimit: {
     trustProxy: true,
-    window: 900000, // 15 minutes
+    window: 900000,
     max: 500,
   },
 })

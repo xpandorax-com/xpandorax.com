@@ -1,50 +1,43 @@
+/**
+ * Data access layer for the application
+ * Provides functions to fetch and manipulate content data
+ */
+
 import { mockVideos, mockCategories, mockModels, mockProducers } from './mockData'
 
-// Helper function to simulate async data fetching
-const delay = (ms = 100) => new Promise(resolve => setTimeout(resolve, ms))
+const delay = (ms = 50) => new Promise(resolve => setTimeout(resolve, ms))
 
-// ============================================
-// VIDEOS
-// ============================================
+// =============================================================================
+// VIDEO FUNCTIONS
+// =============================================================================
 
+/**
+ * Get paginated videos with filtering and sorting
+ * @param {object} options - Query options
+ * @returns {Promise<object>} Paginated video results
+ */
 export async function getVideos({ page = 1, limit = 24, sort = 'latest', category = '', search = '' } = {}) {
   await delay()
   
   let videos = [...mockVideos]
   
-  // Filter by category
   if (category) {
-    videos = videos.filter(v => v.categories.some(c => c.slug === category))
-  }
-  
-  // Filter by search
-  if (search) {
-    const searchLower = search.toLowerCase()
-    videos = videos.filter(v => 
-      v.title.toLowerCase().includes(searchLower) ||
-      v.description?.toLowerCase().includes(searchLower) ||
-      v.tags?.some(t => t.toLowerCase().includes(searchLower))
+    videos = videos.filter(video => 
+      video.categories.some(cat => cat.slug === category)
     )
   }
   
-  // Sort
-  switch (sort) {
-    case 'popular':
-    case 'views':
-      videos.sort((a, b) => b.views - a.views)
-      break
-    case 'trending':
-      videos.sort((a, b) => b.likes - a.likes)
-      break
-    case 'duration':
-      videos.sort((a, b) => b.duration - a.duration)
-      break
-    case 'latest':
-    default:
-      videos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  if (search) {
+    const searchTerm = search.toLowerCase()
+    videos = videos.filter(video =>
+      video.title.toLowerCase().includes(searchTerm) ||
+      video.description?.toLowerCase().includes(searchTerm) ||
+      video.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
+    )
   }
   
-  // Paginate
+  videos = sortVideos(videos, sort)
+  
   const totalCount = videos.length
   const totalPages = Math.ceil(totalCount / limit)
   const startIndex = (page - 1) * limit
@@ -58,54 +51,95 @@ export async function getVideos({ page = 1, limit = 24, sort = 'latest', categor
   }
 }
 
+/**
+ * Get featured videos
+ * @param {number} limit - Maximum number of videos to return
+ * @returns {Promise<Array>} Array of featured videos
+ */
 export async function getFeaturedVideos(limit = 6) {
   await delay()
+  
   return mockVideos
-    .filter(v => v.status === 'published')
+    .filter(video => video.status === 'published')
     .sort((a, b) => b.views - a.views)
     .slice(0, limit)
 }
 
+/**
+ * Get latest videos
+ * @param {number} limit - Maximum number of videos to return
+ * @returns {Promise<Array>} Array of latest videos
+ */
 export async function getLatestVideos(limit = 12) {
   await delay()
+  
   return mockVideos
-    .filter(v => v.status === 'published')
+    .filter(video => video.status === 'published')
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, limit)
 }
 
+/**
+ * Get trending videos
+ * @param {number} limit - Maximum number of videos to return
+ * @returns {Promise<Array>} Array of trending videos
+ */
 export async function getTrendingVideos(limit = 6) {
   await delay()
+  
   return mockVideos
-    .filter(v => v.status === 'published')
+    .filter(video => video.status === 'published')
     .sort((a, b) => b.likes - a.likes)
     .slice(0, limit)
 }
 
+/**
+ * Get video by ID or slug
+ * @param {string} id - Video ID or slug
+ * @returns {Promise<object|null>} Video object or null
+ */
 export async function getVideoById(id) {
   await delay()
-  return mockVideos.find(v => v.id === id || v.slug === id) || null
+  
+  return mockVideos.find(video => video.id === id || video.slug === id) || null
 }
 
+/**
+ * Get related videos based on categories
+ * @param {string} videoId - Current video ID
+ * @param {number} limit - Maximum number of videos to return
+ * @returns {Promise<Array>} Array of related videos
+ */
 export async function getRelatedVideos(videoId, limit = 6) {
   await delay()
+  
   const video = mockVideos.find(v => v.id === videoId || v.slug === videoId)
   if (!video) return []
   
   return mockVideos
-    .filter(v => v.id !== videoId && v.categories.some(c => 
-      video.categories.some(vc => vc.slug === c.slug)
-    ))
+    .filter(v => 
+      v.id !== videoId && 
+      v.categories.some(cat => 
+        video.categories.some(vCat => vCat.slug === cat.slug)
+      )
+    )
     .slice(0, limit)
 }
 
+/**
+ * Search videos
+ * @param {string} query - Search query
+ * @param {number} limit - Maximum number of videos to return
+ * @returns {Promise<object>} Search results with videos and total count
+ */
 export async function searchVideos(query, limit = 12) {
   await delay()
-  const searchLower = query.toLowerCase()
-  const videos = mockVideos.filter(v => 
-    v.title.toLowerCase().includes(searchLower) ||
-    v.description?.toLowerCase().includes(searchLower) ||
-    v.tags?.some(t => t.toLowerCase().includes(searchLower))
+  
+  const searchTerm = query.toLowerCase()
+  const videos = mockVideos.filter(video =>
+    video.title.toLowerCase().includes(searchTerm) ||
+    video.description?.toLowerCase().includes(searchTerm) ||
+    video.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
   )
   
   return {
@@ -114,38 +148,45 @@ export async function searchVideos(query, limit = 12) {
   }
 }
 
-// ============================================
-// CATEGORIES
-// ============================================
+// =============================================================================
+// CATEGORY FUNCTIONS
+// =============================================================================
 
+/**
+ * Get all categories sorted by order
+ * @returns {Promise<Array>} Array of categories
+ */
 export async function getCategories() {
   await delay()
-  return mockCategories.sort((a, b) => (a.order || 0) - (b.order || 0))
+  
+  return [...mockCategories].sort((a, b) => (a.order || 0) - (b.order || 0))
 }
 
+/**
+ * Get category by slug
+ * @param {string} slug - Category slug
+ * @returns {Promise<object|null>} Category object or null
+ */
 export async function getCategoryBySlug(slug) {
   await delay()
-  return mockCategories.find(c => c.slug === slug) || null
+  
+  return mockCategories.find(category => category.slug === slug) || null
 }
 
+/**
+ * Get videos for a specific category
+ * @param {string} slug - Category slug
+ * @param {object} options - Query options
+ * @returns {Promise<object>} Paginated video results
+ */
 export async function getCategoryVideos(slug, { page = 1, limit = 24, sort = 'latest' } = {}) {
   await delay()
   
-  let videos = mockVideos.filter(v => v.categories.some(c => c.slug === slug))
+  let videos = mockVideos.filter(video => 
+    video.categories.some(cat => cat.slug === slug)
+  )
   
-  // Sort
-  switch (sort) {
-    case 'popular':
-    case 'views':
-      videos.sort((a, b) => b.views - a.views)
-      break
-    case 'duration':
-      videos.sort((a, b) => b.duration - a.duration)
-      break
-    case 'latest':
-    default:
-      videos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  }
+  videos = sortVideos(videos, sort)
   
   const totalCount = videos.length
   const totalPages = Math.ceil(totalCount / limit)
@@ -160,40 +201,30 @@ export async function getCategoryVideos(slug, { page = 1, limit = 24, sort = 'la
   }
 }
 
-// ============================================
-// MODELS
-// ============================================
+// =============================================================================
+// MODEL FUNCTIONS
+// =============================================================================
 
+/**
+ * Get paginated models with filtering and sorting
+ * @param {object} options - Query options
+ * @returns {Promise<object>} Paginated model results
+ */
 export async function getModels({ page = 1, limit = 24, sort = 'popular', search = '' } = {}) {
   await delay()
   
   let models = [...mockModels]
   
-  // Filter by search
   if (search) {
-    const searchLower = search.toLowerCase()
-    models = models.filter(m => 
-      m.name.toLowerCase().includes(searchLower) ||
-      m.bio?.toLowerCase().includes(searchLower) ||
-      m.country?.toLowerCase().includes(searchLower)
+    const searchTerm = search.toLowerCase()
+    models = models.filter(model =>
+      model.name.toLowerCase().includes(searchTerm) ||
+      model.bio?.toLowerCase().includes(searchTerm) ||
+      model.country?.toLowerCase().includes(searchTerm)
     )
   }
   
-  // Sort
-  switch (sort) {
-    case 'videos':
-      models.sort((a, b) => b.videoCount - a.videoCount)
-      break
-    case 'name':
-      models.sort((a, b) => a.name.localeCompare(b.name))
-      break
-    case 'latest':
-      // Keep default order
-      break
-    case 'popular':
-    default:
-      models.sort((a, b) => b.views - a.views)
-  }
+  models = sortModels(models, sort)
   
   const totalCount = models.length
   const totalPages = Math.ceil(totalCount / limit)
@@ -208,22 +239,42 @@ export async function getModels({ page = 1, limit = 24, sort = 'popular', search
   }
 }
 
+/**
+ * Get top models by views
+ * @param {number} limit - Maximum number of models to return
+ * @returns {Promise<Array>} Array of top models
+ */
 export async function getTopModels(limit = 8) {
   await delay()
-  return mockModels
+  
+  return [...mockModels]
     .sort((a, b) => b.views - a.views)
     .slice(0, limit)
 }
 
+/**
+ * Get model by slug
+ * @param {string} slug - Model slug
+ * @returns {Promise<object|null>} Model object or null
+ */
 export async function getModelBySlug(slug) {
   await delay()
-  return mockModels.find(m => m.slug === slug) || null
+  
+  return mockModels.find(model => model.slug === slug) || null
 }
 
+/**
+ * Get videos for a specific model
+ * @param {string} slug - Model slug
+ * @param {object} options - Query options
+ * @returns {Promise<object>} Paginated video results
+ */
 export async function getModelVideos(slug, { page = 1, limit = 24 } = {}) {
   await delay()
   
-  const videos = mockVideos.filter(v => v.models.some(m => m.slug === slug))
+  const videos = mockVideos.filter(video =>
+    video.models.some(model => model.slug === slug)
+  )
   
   const totalCount = videos.length
   const totalPages = Math.ceil(totalCount / limit)
@@ -238,13 +289,20 @@ export async function getModelVideos(slug, { page = 1, limit = 24 } = {}) {
   }
 }
 
+/**
+ * Search models
+ * @param {string} query - Search query
+ * @param {number} limit - Maximum number of models to return
+ * @returns {Promise<object>} Search results with models and total count
+ */
 export async function searchModels(query, limit = 8) {
   await delay()
-  const searchLower = query.toLowerCase()
-  const models = mockModels.filter(m => 
-    m.name.toLowerCase().includes(searchLower) ||
-    m.bio?.toLowerCase().includes(searchLower) ||
-    m.country?.toLowerCase().includes(searchLower)
+  
+  const searchTerm = query.toLowerCase()
+  const models = mockModels.filter(model =>
+    model.name.toLowerCase().includes(searchTerm) ||
+    model.bio?.toLowerCase().includes(searchTerm) ||
+    model.country?.toLowerCase().includes(searchTerm)
   )
   
   return {
@@ -253,30 +311,21 @@ export async function searchModels(query, limit = 8) {
   }
 }
 
-// ============================================
-// PRODUCERS
-// ============================================
+// =============================================================================
+// PRODUCER FUNCTIONS
+// =============================================================================
 
+/**
+ * Get paginated producers with sorting
+ * @param {object} options - Query options
+ * @returns {Promise<object>} Paginated producer results
+ */
 export async function getProducers({ page = 1, limit = 24, sort = 'popular' } = {}) {
   await delay()
   
   let producers = [...mockProducers]
   
-  // Sort
-  switch (sort) {
-    case 'videos':
-      producers.sort((a, b) => b.videoCount - a.videoCount)
-      break
-    case 'name':
-      producers.sort((a, b) => a.name.localeCompare(b.name))
-      break
-    case 'latest':
-      // Keep default order
-      break
-    case 'popular':
-    default:
-      producers.sort((a, b) => b.views - a.views)
-  }
+  producers = sortProducers(producers, sort)
   
   const totalCount = producers.length
   const totalPages = Math.ceil(totalCount / limit)
@@ -291,15 +340,27 @@ export async function getProducers({ page = 1, limit = 24, sort = 'popular' } = 
   }
 }
 
+/**
+ * Get producer by slug
+ * @param {string} slug - Producer slug
+ * @returns {Promise<object|null>} Producer object or null
+ */
 export async function getProducerBySlug(slug) {
   await delay()
-  return mockProducers.find(p => p.slug === slug) || null
+  
+  return mockProducers.find(producer => producer.slug === slug) || null
 }
 
+/**
+ * Get videos for a specific producer
+ * @param {string} slug - Producer slug
+ * @param {object} options - Query options
+ * @returns {Promise<object>} Paginated video results
+ */
 export async function getProducerVideos(slug, { page = 1, limit = 24 } = {}) {
   await delay()
   
-  const videos = mockVideos.filter(v => v.producer?.slug === slug)
+  const videos = mockVideos.filter(video => video.producer?.slug === slug)
   
   const totalCount = videos.length
   const totalPages = Math.ceil(totalCount / limit)
@@ -311,5 +372,76 @@ export async function getProducerVideos(slug, { page = 1, limit = 24 } = {}) {
     totalPages,
     totalCount,
     page,
+  }
+}
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+/**
+ * Sort videos by specified criteria
+ * @param {Array} videos - Array of videos to sort
+ * @param {string} sort - Sort criteria
+ * @returns {Array} Sorted videos array
+ */
+function sortVideos(videos, sort) {
+  const sortedVideos = [...videos]
+  
+  switch (sort) {
+    case 'popular':
+    case 'views':
+      return sortedVideos.sort((a, b) => b.views - a.views)
+    case 'trending':
+      return sortedVideos.sort((a, b) => b.likes - a.likes)
+    case 'duration':
+      return sortedVideos.sort((a, b) => b.duration - a.duration)
+    case 'latest':
+    default:
+      return sortedVideos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  }
+}
+
+/**
+ * Sort models by specified criteria
+ * @param {Array} models - Array of models to sort
+ * @param {string} sort - Sort criteria
+ * @returns {Array} Sorted models array
+ */
+function sortModels(models, sort) {
+  const sortedModels = [...models]
+  
+  switch (sort) {
+    case 'videos':
+      return sortedModels.sort((a, b) => b.videoCount - a.videoCount)
+    case 'name':
+      return sortedModels.sort((a, b) => a.name.localeCompare(b.name))
+    case 'latest':
+      return sortedModels
+    case 'popular':
+    default:
+      return sortedModels.sort((a, b) => b.views - a.views)
+  }
+}
+
+/**
+ * Sort producers by specified criteria
+ * @param {Array} producers - Array of producers to sort
+ * @param {string} sort - Sort criteria
+ * @returns {Array} Sorted producers array
+ */
+function sortProducers(producers, sort) {
+  const sortedProducers = [...producers]
+  
+  switch (sort) {
+    case 'videos':
+      return sortedProducers.sort((a, b) => b.videoCount - a.videoCount)
+    case 'name':
+      return sortedProducers.sort((a, b) => a.name.localeCompare(b.name))
+    case 'latest':
+      return sortedProducers
+    case 'popular':
+    default:
+      return sortedProducers.sort((a, b) => b.views - a.views)
   }
 }

@@ -1,1 +1,26 @@
-/* Custom Payload Admin Styles */
+/* Payload CMS Admin Custom Styles */
+
+/* Override Payload admin panel with dark theme */
+:root {
+  --theme-elevation-0: #0a0a0a;
+  --theme-elevation-50: #111111;
+  --theme-elevation-100: #1a1a1a;
+  --theme-elevation-150: #222222;
+  --theme-elevation-200: #2a2a2a;
+  --theme-elevation-250: #333333;
+  --theme-elevation-300: #3d3d3d;
+  --theme-elevation-350: #474747;
+  --theme-elevation-400: #525252;
+  --theme-elevation-450: #5c5c5c;
+  --theme-elevation-500: #666666;
+  --theme-elevation-550: #757575;
+  --theme-elevation-600: #858585;
+  --theme-elevation-650: #949494;
+  --theme-elevation-700: #a3a3a3;
+  --theme-elevation-750: #b3b3b3;
+  --theme-elevation-800: #c2c2c2;
+  --theme-elevation-850: #d1d1d1;
+  --theme-elevation-900: #e0e0e0;
+  --theme-elevation-950: #f0f0f0;
+  --theme-elevation-1000: #ffffff;
+}

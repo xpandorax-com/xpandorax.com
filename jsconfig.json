@@ -2,8 +2,13 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/collections/*": ["./src/collections/*"]
     }
   },
-  "exclude": ["node_modules", ".next"]
+  "include": ["src/**/*", "payload.config.js"],
+  "exclude": ["node_modules"]
 }

@@ -1,14 +1,29 @@
-/* THIS FILE WAS GENERATED AUTOMATICALLY BY PAYLOAD. */
-/* DO NOT MODIFY IT BECAUSE IT COULD BE REWRITTEN AT ANY TIME. */
-import config from '@payload-config'
-import { RootLayout } from '@payloadcms/next/layouts'
-import React from 'react'
-import './custom.scss'
+/* eslint-disable @next/next/no-page-custom-font */
+import '@/app/globals.css'
 
-export default function Layout({ children }) {
+export const metadata = {
+  title: {
+    default: 'Admin | XpandoraX',
+    template: '%s | Admin | XpandoraX',
+  },
+  description: 'XpandoraX Admin Dashboard',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
+
+export default function AdminLayout({ children }) {
   return (
-    <RootLayout config={config}>
-      {children}
-    </RootLayout>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      </head>
+      <body>
+        {children}
+      </body>
+    </html>
   )
 }

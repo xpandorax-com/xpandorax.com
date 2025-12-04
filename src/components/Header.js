@@ -5,20 +5,20 @@ import { useState, useEffect, useCallback } from 'react'
 import { useTheme } from './ThemeProvider'
 import SearchForm from './SearchForm'
 
+const navigationLinks = [
+  { href: '/videos', label: 'Videos' },
+  { href: '/models', label: 'Models' },
+  { href: '/pictures', label: 'Pictures' },
+  { href: '/producers', label: 'Studios' },
+  { href: '/categories', label: 'Categories' },
+  { href: '/contact', label: 'Contact' },
+]
+
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const { theme, toggleTheme } = useTheme()
 
-  const navLinks = [
-    { href: '/videos', label: 'Videos', icon: '🎥' },
-    { href: '/models', label: 'Models', icon: '👤' },
-    { href: '/pictures', label: 'Pictures', icon: '🖼️' },
-    { href: '/producers', label: 'Studios', icon: '🏢' },
-    { href: '/contact', label: 'Contact', icon: '📧' },
-  ]
-
-  // Handle scroll effect for sticky header
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10)
@@ -27,70 +27,68 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Close mobile menu on route change or escape key
   useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') setMobileMenuOpen(false)
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false)
+      }
     }
-    
+
     if (mobileMenuOpen) {
       document.addEventListener('keydown', handleEscape)
-      // Prevent body scroll when menu is open
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
-    
+
     return () => {
       document.removeEventListener('keydown', handleEscape)
       document.body.style.overflow = ''
     }
   }, [mobileMenuOpen])
 
-  // Close menu when clicking outside
-  const handleOverlayClick = useCallback(() => {
+  const closeMobileMenu = useCallback(() => {
     setMobileMenuOpen(false)
   }, [])
 
   return (
     <>
-      <header 
-        className={`sticky top-0 z-50 transition-all duration-300 safe-area-top ${
-          isScrolled 
-            ? 'bg-gray-950/98 backdrop-blur-md shadow-lg shadow-black/20' 
-            : 'bg-gray-950/95 backdrop-blur-sm'
-        } border-b border-gray-800`}
+      <header
+        className={`sticky top-0 z-50 transition-all duration-300 ${
+          isScrolled
+            ? 'bg-surface-950/98 backdrop-blur-md shadow-lg shadow-black/20'
+            : 'bg-surface-950/95 backdrop-blur-sm'
+        } border-b border-surface-800`}
       >
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 md:h-18">
+          <div className="flex items-center justify-between h-16 lg:h-18">
             {/* Logo */}
-            <Link 
-              href="/" 
-              className="flex items-center gap-2 shrink-0 touch-target"
+            <Link
+              href="/"
+              className="flex items-center gap-2 shrink-0"
               aria-label="XpandoraX Home"
             >
-              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
                 XpandoraX
               </span>
             </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1" role="navigation" aria-label="Main navigation">
-              {navLinks.map((link) => (
+              {navigationLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="px-4 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors whitespace-nowrap"
+                  className="px-4 py-2 rounded-lg text-surface-300 hover:text-white hover:bg-surface-800/50 transition-colors whitespace-nowrap"
                 >
-                  <span className="mr-1.5" aria-hidden="true">{link.icon}</span>
                   {link.label}
                 </Link>
               ))}
             </nav>
 
             {/* Right Side Actions */}
-            <div className="flex items-center gap-1 sm:gap-2">
-              {/* Search - Desktop/Tablet */}
+            <div className="flex items-center gap-2">
+              {/* Search - Desktop */}
               <div className="hidden md:block w-48 lg:w-64">
                 <SearchForm placeholder="Search..." compact />
               </div>
@@ -98,7 +96,7 @@ export default function Header() {
               {/* Search Icon - Mobile */}
               <Link
                 href="/search"
-                className="md:hidden p-2.5 rounded-lg hover:bg-gray-800 transition-colors touch-target"
+                className="md:hidden p-2.5 rounded-lg hover:bg-surface-800 transition-colors"
                 aria-label="Search"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,24 +107,31 @@ export default function Header() {
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2.5 rounded-lg hover:bg-gray-800 transition-colors touch-target"
+                className="p-2.5 rounded-lg hover:bg-surface-800 transition-colors"
                 aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
               >
-                {theme === 'dark' ? '🌙' : '☀️'}
+                {theme === 'dark' ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                )}
               </button>
 
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2.5 rounded-lg hover:bg-gray-800 transition-colors touch-target"
+                className="lg:hidden p-2.5 rounded-lg hover:bg-surface-800 transition-colors"
                 aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={mobileMenuOpen}
-                aria-controls="mobile-menu"
               >
-                <svg 
-                  className="w-6 h-6 transition-transform duration-200" 
-                  fill="none" 
-                  stroke="currentColor" 
+                <svg
+                  className="w-6 h-6 transition-transform duration-200"
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                   style={{ transform: mobileMenuOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
                 >
@@ -144,30 +149,29 @@ export default function Header() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div 
-          className="mobile-menu-overlay lg:hidden"
-          onClick={handleOverlayClick}
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          onClick={closeMobileMenu}
           aria-hidden="true"
         />
       )}
 
-      {/* Mobile Slide-in Menu */}
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div 
-          id="mobile-menu"
-          className="mobile-menu lg:hidden"
+        <div
+          className="fixed top-0 right-0 w-80 max-w-full h-full bg-surface-950 border-l border-surface-800 z-50 lg:hidden overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-label="Navigation menu"
         >
-          {/* Mobile Menu Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-800">
-            <span className="text-lg font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
+          {/* Menu Header */}
+          <div className="flex items-center justify-between p-4 border-b border-surface-800">
+            <span className="text-lg font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
               Menu
             </span>
             <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="p-2 rounded-lg hover:bg-gray-800 transition-colors touch-target"
+              onClick={closeMobileMenu}
+              className="p-2 rounded-lg hover:bg-surface-800 transition-colors"
               aria-label="Close menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,38 +181,36 @@ export default function Header() {
           </div>
 
           {/* Mobile Search */}
-          <div className="p-4 border-b border-gray-800">
+          <div className="p-4 border-b border-surface-800">
             <SearchForm placeholder="Search videos, models..." />
           </div>
 
-          {/* Mobile Navigation Links */}
+          {/* Navigation Links */}
           <nav className="py-2" role="navigation" aria-label="Mobile navigation">
-            {navLinks.map((link, index) => (
+            {navigationLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="mobile-nav-link"
-                style={{ animationDelay: `${index * 50}ms` }}
+                onClick={closeMobileMenu}
+                className="flex items-center justify-between px-4 py-3 text-surface-300 hover:text-white hover:bg-surface-800/50 transition-colors"
               >
-                <span className="text-xl" aria-hidden="true">{link.icon}</span>
                 <span className="font-medium">{link.label}</span>
-                <svg className="w-5 h-5 ml-auto text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-surface-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
             ))}
           </nav>
 
-          {/* Mobile Menu Footer */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800 bg-gray-950 safe-area-bottom">
-            <div className="flex items-center justify-between text-sm text-gray-400">
+          {/* Menu Footer */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-surface-800 bg-surface-950">
+            <div className="flex items-center justify-between text-sm text-surface-400">
               <span>Theme</span>
               <button
                 onClick={toggleTheme}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-800 hover:bg-surface-700 transition-colors"
               >
-                {theme === 'dark' ? '🌙 Dark' : '☀️ Light'}
+                {theme === 'dark' ? 'Dark' : 'Light'}
               </button>
             </div>
           </div>

@@ -7,7 +7,6 @@ const dirname = path.dirname(filename)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Logo configuration: uses NEXT_PUBLIC_LOGO_URL env var from Vercel
   images: {
     remotePatterns: [
       {
@@ -25,35 +24,17 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
         ],
       },
       {
         source: '/api/:path*',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-store, max-age=0',
-          },
+          { key: 'Cache-Control', value: 'no-store, max-age=0' },
         ],
       },
     ]
@@ -74,7 +55,6 @@ const nextConfig = {
       '.js': ['.ts', '.tsx', '.js', '.jsx'],
     }
     
-    // Optimize bundle size
     if (!isServer) {
       config.optimization.splitChunks = {
         chunks: 'all',

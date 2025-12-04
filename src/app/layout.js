@@ -39,14 +39,14 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: '#ef4444',
+  themeColor: '#dc2626',
   viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="bg-gray-950 text-white min-h-screen flex flex-col antialiased">
+      <body className="bg-surface-950 text-white min-h-screen flex flex-col antialiased">
         <ThemeProvider>
           <Header />
           <main className="flex-1 pb-16 md:pb-0">
