@@ -1,0 +1,12 @@
+# XpandoraX Robots.txt
+# https://xpandorax.com/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /age-gate
+Disallow: /_next/
+
+# Sitemaps
+Sitemap: https://xpandorax.com/sitemap.xml
