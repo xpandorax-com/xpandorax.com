@@ -2,6 +2,7 @@ import './globals.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import BottomNav from '@/components/BottomNav'
 
 export const metadata = {
   title: {
@@ -36,7 +37,10 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
   themeColor: '#ef4444',
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }) {
@@ -45,10 +49,11 @@ export default function RootLayout({ children }) {
       <body className="bg-gray-950 text-white min-h-screen flex flex-col antialiased">
         <ThemeProvider>
           <Header />
-          <main className="flex-1">
+          <main className="flex-1 pb-16 md:pb-0">
             {children}
           </main>
           <Footer />
+          <BottomNav />
         </ThemeProvider>
       </body>
     </html>

@@ -6,12 +6,23 @@
   --foreground-rgb: 255, 255, 255;
   --background-start-rgb: 15, 15, 15;
   --background-end-rgb: 0, 0, 0;
+  /* Touch-friendly sizing */
+  --touch-target-min: 44px;
+  --spacing-mobile: 16px;
+  --spacing-tablet: 24px;
+  --spacing-desktop: 32px;
 }
 
 [data-theme="light"] {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 245, 245, 245;
+}
+
+/* Smooth scrolling for the entire site */
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -23,12 +34,32 @@ body {
     )
     rgb(var(--background-start-rgb));
   min-height: 100vh;
+  /* Prevent horizontal scroll on mobile */
+  overflow-x: hidden;
+  /* Better text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent zoom on input focus for iOS */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
+}
+
+/* Hide scrollbar on mobile for cleaner look */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
 }
 
 ::-webkit-scrollbar-track {
@@ -104,15 +135,28 @@ body {
 /* Button hover effects */
 .btn-primary {
   @apply bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-red-600/30;
+  /* Touch-friendly minimum size */
+  min-height: var(--touch-target-min);
+  @apply flex items-center justify-center;
 }
 
 .btn-secondary {
   @apply bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200;
+  /* Touch-friendly minimum size */
+  min-height: var(--touch-target-min);
+  @apply flex items-center justify-center;
 }
 
 /* Card styles */
 .card {
   @apply bg-gray-900/80 backdrop-blur-sm rounded-xl border border-gray-800 overflow-hidden transition-all duration-300 hover:border-red-600/50;
+}
+
+/* Touch-friendly card on mobile */
+@media (max-width: 768px) {
+  .card {
+    @apply active:scale-[0.98] transition-transform;
+  }
 }
 
 /* Focus styles for accessibility */
@@ -124,4 +168,300 @@ body {
 /* Age gate blur */
 .age-gate-blur {
   backdrop-filter: blur(20px);
+}
+
+/* ========================================
+   RESPONSIVE NAVIGATION STYLES
+   ======================================== */
+
+/* Mobile menu overlay */
+.mobile-menu-overlay {
+  @apply fixed inset-0 bg-black/60 backdrop-blur-sm z-40;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Mobile menu slide-in */
+.mobile-menu {
+  @apply fixed top-0 right-0 h-full w-[280px] max-w-[85vw] bg-gray-950 z-50 shadow-2xl;
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Mobile menu link styles */
+.mobile-nav-link {
+  @apply flex items-center gap-3 px-4 py-4 text-gray-300 hover:text-white hover:bg-gray-800/50 transition-all duration-200 border-b border-gray-800/50;
+  min-height: var(--touch-target-min);
+}
+
+.mobile-nav-link:active {
+  @apply bg-gray-800;
+}
+
+/* ========================================
+   RESPONSIVE GRID UTILITIES
+   ======================================== */
+
+/* Responsive container with dynamic padding */
+.container-responsive {
+  @apply container mx-auto;
+  padding-left: var(--spacing-mobile);
+  padding-right: var(--spacing-mobile);
+}
+
+@media (min-width: 768px) {
+  .container-responsive {
+    padding-left: var(--spacing-tablet);
+    padding-right: var(--spacing-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    padding-left: var(--spacing-desktop);
+    padding-right: var(--spacing-desktop);
+  }
+}
+
+/* Touch-friendly spacing between items */
+.touch-spacing > * + * {
+  margin-top: 12px;
+}
+
+@media (min-width: 768px) {
+  .touch-spacing > * + * {
+    margin-top: 16px;
+  }
+}
+
+/* ========================================
+   RESPONSIVE VIDEO GRID
+   ======================================== */
+
+/* Video grid optimized for different screens */
+.video-grid-responsive {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 640px) {
+  .video-grid-responsive {
+    gap: 16px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .video-grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .video-grid-responsive {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .video-grid-responsive {
+    gap: 20px;
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (min-width: 1536px) {
+  .video-grid-responsive {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* ========================================
+   TOUCH-FRIENDLY COMPONENTS
+   ======================================== */
+
+/* Touch-friendly buttons and links */
+.touch-target {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  @apply flex items-center justify-center;
+}
+
+/* Swipe hint for carousels */
+.swipe-hint {
+  @apply relative overflow-x-auto snap-x snap-mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.swipe-hint::-webkit-scrollbar {
+  display: none;
+}
+
+.swipe-hint > * {
+  @apply snap-start;
+}
+
+/* Pull-to-refresh indicator area */
+.pull-refresh-area {
+  @apply pt-2;
+}
+
+/* ========================================
+   RESPONSIVE TYPOGRAPHY
+   ======================================== */
+
+/* Fluid typography for headings */
+.text-responsive-hero {
+  font-size: clamp(1.75rem, 5vw, 3.5rem);
+  line-height: 1.1;
+}
+
+.text-responsive-title {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  line-height: 1.2;
+}
+
+.text-responsive-subtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.4;
+}
+
+/* ========================================
+   SAFE AREA SUPPORT (iPhone notch, etc.)
+   ======================================== */
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* ========================================
+   BOTTOM NAVIGATION (Mobile)
+   ======================================== */
+
+.bottom-nav {
+  @apply fixed bottom-0 left-0 right-0 bg-gray-950/95 backdrop-blur-sm border-t border-gray-800 z-50;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+.bottom-nav-item {
+  @apply flex flex-col items-center justify-center py-2 px-3 text-gray-400 hover:text-white transition-colors;
+  min-height: 56px;
+}
+
+.bottom-nav-item.active {
+  @apply text-red-500;
+}
+
+/* ========================================
+   VIDEO PLAYER MOBILE OPTIMIZATIONS
+   ======================================== */
+
+/* Larger touch targets for video controls on mobile */
+@media (max-width: 768px) {
+  .video-controls-mobile button {
+    min-width: 48px;
+    min-height: 48px;
+  }
+  
+  .video-progress-mobile {
+    height: 8px;
+    @apply cursor-pointer;
+  }
+}
+
+/* Landscape mode video optimization */
+@media (orientation: landscape) and (max-height: 500px) {
+  .video-fullscreen-landscape {
+    @apply fixed inset-0 z-[100];
+  }
+}
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+/* Skeleton loading for responsive grids */
+.skeleton-responsive {
+  @apply rounded-lg;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ========================================
+   ACCESSIBILITY ENHANCEMENTS
+   ======================================== */
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  .card {
+    border-width: 2px;
+  }
+  
+  .btn-primary, .btn-secondary {
+    border: 2px solid currentColor;
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white;
+    color: black;
+  }
 }
