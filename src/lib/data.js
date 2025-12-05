@@ -3,7 +3,7 @@
  * Provides functions to fetch and manipulate content data
  */
 
-import { mockVideos, mockCategories, mockModels, mockProducers } from './mockData'
+import { mockVideos, mockCategories, mockModels, mockProducers, mockGalleries } from './mockData'
 
 const delay = (ms = 50) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -443,5 +443,103 @@ function sortProducers(producers, sort) {
     case 'popular':
     default:
       return sortedProducers.sort((a, b) => b.views - a.views)
+  }
+}
+
+// =============================================================================
+// GALLERY FUNCTIONS
+// =============================================================================
+
+/**
+ * Get paginated galleries with filtering and sorting
+ * @param {object} options - Query options
+ * @returns {Promise<object>} Paginated gallery results
+ */
+export async function getGalleries({ page = 1, limit = 12, sort = 'latest', category = '', model = '' } = {}) {
+  await delay()
+  
+  let galleries = [...mockGalleries]
+  
+  if (category) {
+    galleries = galleries.filter(gallery => gallery.category === category)
+  }
+  
+  if (model) {
+    galleries = galleries.filter(gallery => gallery.model === model)
+  }
+  
+  galleries = sortGalleries(galleries, sort)
+  
+  const totalCount = galleries.length
+  const totalPages = Math.ceil(totalCount / limit)
+  const startIndex = (page - 1) * limit
+  const paginatedGalleries = galleries.slice(startIndex, startIndex + limit)
+  
+  return {
+    galleries: paginatedGalleries,
+    totalPages,
+    totalCount,
+    page,
+  }
+}
+
+/**
+ * Get featured galleries
+ * @param {number} limit - Maximum number of galleries to return
+ * @returns {Promise<Array>} Array of featured galleries
+ */
+export async function getFeaturedGalleries(limit = 6) {
+  await delay()
+  
+  return mockGalleries
+    .filter(gallery => gallery.featured)
+    .sort((a, b) => b.views - a.views)
+    .slice(0, limit)
+}
+
+/**
+ * Get gallery by ID or slug
+ * @param {string} id - Gallery ID or slug
+ * @returns {Promise<object|null>} Gallery object or null
+ */
+export async function getGalleryById(id) {
+  await delay()
+  
+  return mockGalleries.find(gallery => gallery.id === id || gallery.slug === id) || null
+}
+
+/**
+ * Get galleries by model
+ * @param {string} modelSlug - Model slug
+ * @param {number} limit - Maximum number of galleries to return
+ * @returns {Promise<Array>} Array of galleries
+ */
+export async function getGalleriesByModel(modelSlug, limit = 6) {
+  await delay()
+  
+  return mockGalleries
+    .filter(gallery => gallery.model === modelSlug)
+    .slice(0, limit)
+}
+
+/**
+ * Sort galleries by specified criteria
+ * @param {Array} galleries - Array of galleries to sort
+ * @param {string} sort - Sort criteria
+ * @returns {Array} Sorted galleries array
+ */
+function sortGalleries(galleries, sort) {
+  const sortedGalleries = [...galleries]
+  
+  switch (sort) {
+    case 'popular':
+      return sortedGalleries.sort((a, b) => b.views - a.views)
+    case 'most-liked':
+      return sortedGalleries.sort((a, b) => b.likes - a.likes)
+    case 'photos':
+      return sortedGalleries.sort((a, b) => b.photoCount - a.photoCount)
+    case 'latest':
+    default:
+      return sortedGalleries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   }
 }
