@@ -81,13 +81,9 @@ function GalleryCard({ gallery }) {
           </p>
 
           <div className="flex items-center justify-between text-xs text-surface-500">
-            <Link 
-              href={`/model/${gallery.model}`} 
-              className="hover:text-primary-400 transition-colors"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <span className="hover:text-primary-400 transition-colors">
               {gallery.modelName}
-            </Link>
+            </span>
             <span>{formatRelativeTime(gallery.createdAt)}</span>
           </div>
 
