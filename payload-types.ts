@@ -129,7 +129,14 @@ export interface UserAuthOperations {
 export interface User {
   id: string;
   name?: string | null;
-  role: 'admin' | 'user';
+  /**
+   * User permission level
+   */
+  role: 'admin' | 'editor' | 'user';
+  /**
+   * URL to the user avatar image
+   */
+  avatar?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -154,23 +161,68 @@ export interface User {
  */
 export interface Video {
   id: string;
+  /**
+   * The title displayed for this video
+   */
   title: string;
+  /**
+   * Unique URL identifier for this video
+   */
+  slug: string;
+  /**
+   * Detailed description of the video content
+   */
   description?: string | null;
-  thumbnail: string;
+  /**
+   * URL to the video thumbnail image
+   */
+  thumbnail?: string | null;
+  /**
+   * URL to the video file or embed source
+   */
   videoUrl: string;
+  /**
+   * Video duration in seconds
+   */
   duration?: number | null;
-  views?: number | null;
-  categories?: (string | Category)[] | null;
-  models?: (string | Model)[] | null;
-  producer?: (string | null) | Producer;
+  quality?: ('4K' | '1080p' | '720p' | '480p') | null;
+  /**
+   * Keywords for search and categorization
+   */
   tags?:
     | {
         tag?: string | null;
         id?: string | null;
       }[]
     | null;
-  featured?: boolean | null;
-  premium?: boolean | null;
+  /**
+   * Assign this video to categories
+   */
+  categories?: (string | Category)[] | null;
+  /**
+   * Models appearing in this video
+   */
+  models?: (string | Model)[] | null;
+  /**
+   * The studio or producer of this video
+   */
+  producer?: (string | null) | Producer;
+  /**
+   * Publishing status
+   */
+  status: 'draft' | 'published' | 'featured' | 'archived';
+  /**
+   * Total view count
+   */
+  views?: number | null;
+  /**
+   * Total likes
+   */
+  likes?: number | null;
+  /**
+   * When this video was published
+   */
+  publishedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -180,13 +232,30 @@ export interface Video {
  */
 export interface Category {
   id: string;
+  /**
+   * Display name for this category
+   */
   name: string;
   /**
-   * URL-friendly identifier
+   * Unique URL identifier for this category
    */
   slug: string;
+  /**
+   * Brief description of this category
+   */
   description?: string | null;
-  icon?: string | null;
+  /**
+   * URL to the category thumbnail image
+   */
+  thumbnail?: string | null;
+  /**
+   * Lower numbers appear first
+   */
+  order?: number | null;
+  /**
+   * Show in featured sections
+   */
+  featured?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -196,13 +265,55 @@ export interface Category {
  */
 export interface Model {
   id: string;
+  /**
+   * Stage or professional name
+   */
   name: string;
+  /**
+   * Unique URL identifier
+   */
   slug: string;
+  /**
+   * URL to the model profile image
+   */
+  avatar?: string | null;
+  /**
+   * Professional biography
+   */
   bio?: string | null;
-  image?: string | null;
-  nationality?: string | null;
+  country?: string | null;
+  /**
+   * Must be 18 or older
+   */
   age?: number | null;
+  /**
+   * Example: 5'7" or 170cm
+   */
+  height?: string | null;
+  /**
+   * Example: 34-24-36
+   */
+  measurements?: string | null;
+  hairColor?: string | null;
+  eyeColor?: string | null;
+  socialLinks?: {
+    twitter?: string | null;
+    instagram?: string | null;
+    website?: string | null;
+    onlyfans?: string | null;
+  };
+  /**
+   * Verified profile
+   */
   verified?: boolean | null;
+  /**
+   * Total profile views
+   */
+  views?: number | null;
+  /**
+   * Total subscribers
+   */
+  subscribers?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -212,12 +323,51 @@ export interface Model {
  */
 export interface Producer {
   id: string;
+  /**
+   * Official studio or producer name
+   */
   name: string;
+  /**
+   * Unique URL identifier
+   */
   slug: string;
+  /**
+   * Studio description and overview
+   */
   description?: string | null;
+  /**
+   * URL to the studio logo
+   */
   logo?: string | null;
+  /**
+   * URL to the studio banner image
+   */
+  banner?: string | null;
+  /**
+   * Official website URL
+   */
   website?: string | null;
+  /**
+   * Business contact email
+   */
+  email?: string | null;
+  country?: string | null;
+  /**
+   * Year the studio was established
+   */
+  foundedYear?: number | null;
+  /**
+   * Verified studio profile
+   */
   verified?: boolean | null;
+  /**
+   * Total profile views
+   */
+  views?: number | null;
+  /**
+   * Total subscribers
+   */
+  subscribers?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -314,6 +464,7 @@ export interface PayloadMigration {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  avatar?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -337,22 +488,25 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface VideosSelect<T extends boolean = true> {
   title?: T;
+  slug?: T;
   description?: T;
   thumbnail?: T;
   videoUrl?: T;
   duration?: T;
-  views?: T;
-  categories?: T;
-  models?: T;
-  producer?: T;
+  quality?: T;
   tags?:
     | T
     | {
         tag?: T;
         id?: T;
       };
-  featured?: T;
-  premium?: T;
+  categories?: T;
+  models?: T;
+  producer?: T;
+  status?: T;
+  views?: T;
+  likes?: T;
+  publishedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -364,7 +518,9 @@ export interface CategoriesSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
   description?: T;
-  icon?: T;
+  thumbnail?: T;
+  order?: T;
+  featured?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -375,11 +531,25 @@ export interface CategoriesSelect<T extends boolean = true> {
 export interface ModelsSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
+  avatar?: T;
   bio?: T;
-  image?: T;
-  nationality?: T;
+  country?: T;
   age?: T;
+  height?: T;
+  measurements?: T;
+  hairColor?: T;
+  eyeColor?: T;
+  socialLinks?:
+    | T
+    | {
+        twitter?: T;
+        instagram?: T;
+        website?: T;
+        onlyfans?: T;
+      };
   verified?: T;
+  views?: T;
+  subscribers?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -392,8 +562,14 @@ export interface ProducersSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   logo?: T;
+  banner?: T;
   website?: T;
+  email?: T;
+  country?: T;
+  foundedYear?: T;
   verified?: T;
+  views?: T;
+  subscribers?: T;
   updatedAt?: T;
   createdAt?: T;
 }
