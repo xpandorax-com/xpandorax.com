@@ -14,11 +14,78 @@ interface VideoPlayerProps {
   onEnded?: () => void;
 }
 
+// List of known video hosting domains that use iframe embeds
+const EMBED_HOSTS = [
+  // Adult video hosts
+  "abyss.to",
+  "short.icu",      // Abyss.to embed domain
+  "doodstream.com",
+  "dood.to",
+  "dood.so",
+  "dood.watch",
+  "dood.ws",
+  "dood.pm",
+  "streamtape.com",
+  "streamtape.to",
+  "streamsb.net",
+  "streamsb.com",
+  "sbplay.org",
+  "vidoza.net",
+  "filemoon.sx",
+  "filemoon.to",
+  "voe.sx",
+  "upstream.to",
+  "mixdrop.co",
+  "mixdrop.to",
+  "netu.tv",
+  "hxfile.co",
+  "vtube.to",
+  "wolfstream.tv",
+  // Mainstream video hosts
+  "youtube.com",
+  "youtu.be",
+  "vimeo.com",
+  "dailymotion.com",
+  "twitch.tv",
+  "facebook.com",
+  "streamable.com",
+  "vidyard.com",
+  "wistia.com",
+  "loom.com",
+  // Generic patterns
+  "player.",
+  "embed.",
+];
+
+/**
+ * Check if URL is an iframe embed based on known hosts or patterns
+ */
+function isEmbedUrl(url: string): boolean {
+  if (!url) return false;
+  
+  const lowerUrl = url.toLowerCase();
+  
+  // Check for common embed patterns
+  if (lowerUrl.includes("/embed/") || 
+      lowerUrl.includes("/embed?") ||
+      lowerUrl.includes("/e/") ||
+      lowerUrl.includes("/player/") ||
+      lowerUrl.includes("iframe") ||
+      lowerUrl.includes("/watch/")) {
+    return true;
+  }
+  
+  // Check against known embed hosts
+  return EMBED_HOSTS.some(host => lowerUrl.includes(host));
+}
+
 /**
  * Plyr-style Video Player Component
  * 
  * Supports:
- * - Abyss.to embed URLs (iframe mode)
+ * - Multiple video hosting platforms (iframe mode):
+ *   - Abyss.to, DoodStream, StreamTape, Filemoon, VOE, etc.
+ *   - YouTube, Vimeo, Dailymotion, Twitch, etc.
  * - Direct video URLs (native Plyr mode)
  * - Custom controls with Plyr styling
  */
@@ -37,9 +104,7 @@ export function VideoPlayer({
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Determine if this is an iframe embed or direct video
-  const isIframeEmbed = embedUrl.includes("embed") || 
-                        embedUrl.includes("abyss.to") || 
-                        embedUrl.includes("iframe");
+  const isIframeEmbed = isEmbedUrl(embedUrl);
 
   const handlePlay = useCallback(() => {
     setHasStarted(true);
@@ -126,7 +191,7 @@ export function VideoPlayer({
           )}
           
           {isIframeEmbed ? (
-            // Iframe embed (Abyss.to, etc.)
+            // Iframe embed (Abyss.to, DoodStream, Filemoon, YouTube, etc.)
             <iframe
               ref={iframeRef}
               src={embedUrl}
@@ -136,10 +201,9 @@ export function VideoPlayer({
                 isLoading && "invisible"
               )}
               allowFullScreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
               onLoad={handleLoad}
-              loading="lazy"
-              sandbox="allow-scripts allow-same-origin allow-presentation allow-fullscreen"
+              referrerPolicy="no-referrer-when-downgrade"
             />
           ) : (
             // Native video with Plyr controls
