@@ -40,17 +40,22 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
-  const { user } = await getSession(request, context);
+  try {
+    const { user } = await getSession(request, context);
 
-  if (user) {
-    // Check if user needs to change password
-    if (user.mustChangePassword) {
-      return redirect("/change-password");
+    if (user) {
+      // Check if user needs to change password
+      if (user.mustChangePassword) {
+        return redirect("/change-password");
+      }
+      return redirect("/");
     }
-    return redirect("/");
-  }
 
-  return json({});
+    return json({});
+  } catch (error) {
+    console.error("Login loader error:", error);
+    return json({});
+  }
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
@@ -91,7 +96,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
 
   // Check if account is locked
   if (isAccountLocked(user.lockedUntil)) {
-    const remainingTime = Math.ceil((user.lockedUntil!.getTime() - Date.now()) / 60000);
+    const lockTime = typeof user.lockedUntil === 'number' ? user.lockedUntil : user.lockedUntil!.getTime();
+    const remainingTime = Math.ceil((lockTime - Date.now()) / 60000);
     return json(
       { error: `Account is locked. Please try again in ${remainingTime} minutes.`, locked: true },
       { status: 403 }

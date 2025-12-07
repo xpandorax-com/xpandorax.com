@@ -96,9 +96,10 @@ export function validatePasswordStrength(password: string): {
 }
 
 // Check if account is locked
-export function isAccountLocked(lockedUntil: Date | null): boolean {
+export function isAccountLocked(lockedUntil: Date | number | null | undefined): boolean {
   if (!lockedUntil) return false;
-  return new Date() < lockedUntil;
+  const lockTime = typeof lockedUntil === 'number' ? lockedUntil : lockedUntil.getTime();
+  return Date.now() < lockTime;
 }
 
 // Calculate lockout end time
