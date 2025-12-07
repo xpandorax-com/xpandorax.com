@@ -1,9 +1,7 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link, useSearchParams } from "@remix-run/react";
-import { getSession } from "~/lib/auth";
 import { VideoCard } from "~/components/video-card";
-import { AdContainer } from "~/components/ads";
 import { Button } from "~/components/ui/button";
 import {
   Select,
@@ -13,7 +11,6 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
-import type { AdConfig } from "~/types";
 import { createSanityClient, getSlug, type SanityCategory, type SanityVideo } from "~/lib/sanity";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -45,16 +42,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
   const pageSize = 24;
   const offset = (page - 1) * pageSize;
 
-  const { user } = await getSession(request, context);
   const env = context.cloudflare.env;
-
-  // Check premium status
-  let isPremium = false;
-  if (user?.isPremium) {
-    isPremium = user.premiumExpiresAt
-      ? new Date(user.premiumExpiresAt) > new Date()
-      : true;
-  }
 
   // Create Sanity client
   const sanity = createSanityClient(env);
@@ -114,26 +102,17 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     isPremium: v.isPremium || false,
   }));
 
-  // Ad config for non-premium users
-  const adConfig: AdConfig | null = isPremium
-    ? null
-    : {
-        exoclickZoneId: env.EXOCLICK_ZONE_ID || "",
-        juicyadsZoneId: env.JUICYADS_ZONE_ID || "",
-      };
-
   return json({
     category,
     videos: categoryVideos,
     page,
     totalPages,
     sort,
-    adConfig,
   });
 }
 
 export default function CategoryPage() {
-  const { category, videos: categoryVideos, page, totalPages, sort, adConfig } =
+  const { category, videos: categoryVideos, page, totalPages, sort } =
     useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -145,9 +124,6 @@ export default function CategoryPage() {
 
   return (
     <div className="container py-6 space-y-6">
-      {/* Top Ad Banner */}
-      <AdContainer adConfig={adConfig} position="top" />
-
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
@@ -249,9 +225,6 @@ export default function CategoryPage() {
           </Button>
         </div>
       )}
-
-      {/* Bottom Ad Banner */}
-      <AdContainer adConfig={adConfig} position="bottom" />
     </div>
   );
 }

@@ -12,7 +12,6 @@ interface VideoPlayerProps {
   onPlay?: () => void;
   onPause?: () => void;
   onEnded?: () => void;
-  showPrerollAd?: boolean;
 }
 
 /**
@@ -21,7 +20,6 @@ interface VideoPlayerProps {
  * Supports:
  * - Abyss.to embed URLs (iframe mode)
  * - Direct video URLs (native Plyr mode)
- * - Pre-roll ad compatibility
  * - Custom controls with Plyr styling
  */
 export function VideoPlayer({
@@ -32,12 +30,9 @@ export function VideoPlayer({
   onPlay,
   onPause,
   onEnded,
-  showPrerollAd = false,
 }: VideoPlayerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasStarted, setHasStarted] = useState(false);
-  const [showAdOverlay, setShowAdOverlay] = useState(showPrerollAd);
-  const [adCountdown, setAdCountdown] = useState(5);
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -47,50 +42,19 @@ export function VideoPlayer({
                         embedUrl.includes("iframe");
 
   const handlePlay = useCallback(() => {
-    if (showPrerollAd && !hasStarted) {
-      // Show pre-roll ad overlay
-      setShowAdOverlay(true);
-      setAdCountdown(5);
-      
-      // Countdown timer for ad
-      const timer = setInterval(() => {
-        setAdCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            setShowAdOverlay(false);
-            setHasStarted(true);
-            onPlay?.();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      
-      // Cleanup not needed for this synchronous operation
-    } else {
-      setHasStarted(true);
-      onPlay?.();
-    }
-  }, [showPrerollAd, hasStarted, onPlay]);
+    setHasStarted(true);
+    onPlay?.();
+  }, [onPlay]);
 
   const handleLoad = () => {
     setIsLoading(false);
-  };
-
-  const handleSkipAd = () => {
-    if (adCountdown === 0) {
-      setShowAdOverlay(false);
-      setHasStarted(true);
-      onPlay?.();
-    }
   };
 
   useEffect(() => {
     // Reset state when embed URL changes
     setIsLoading(true);
     setHasStarted(false);
-    setShowAdOverlay(showPrerollAd);
-  }, [embedUrl, showPrerollAd]);
+  }, [embedUrl]);
 
   // Load Plyr CSS
   useEffect(() => {
@@ -112,33 +76,7 @@ export function VideoPlayer({
         className
       )}
     >
-      {/* Pre-roll Ad Overlay */}
-      {showAdOverlay && hasStarted === false && showPrerollAd && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black">
-          <div className="absolute top-4 right-4 rounded bg-black/70 px-3 py-1 text-sm text-white">
-            Ad • {adCountdown > 0 ? `Skip in ${adCountdown}s` : ""}
-          </div>
-          
-          {/* Ad Content Area - This is where ExoClick/JuicyAds pre-roll would go */}
-          <div className="flex h-full w-full items-center justify-center">
-            <div className="text-center text-white">
-              <p className="text-lg">Advertisement</p>
-              <p className="text-sm text-muted-foreground">Video will play shortly...</p>
-            </div>
-          </div>
-          
-          {adCountdown === 0 && (
-            <button
-              onClick={handleSkipAd}
-              className="absolute bottom-4 right-4 rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
-            >
-              Skip Ad →
-            </button>
-          )}
-        </div>
-      )}
-
-      {!hasStarted && !showAdOverlay ? (
+      {!hasStarted ? (
         // Thumbnail with Plyr-style play button
         <button
           onClick={handlePlay}
@@ -437,51 +375,6 @@ function PlyrNativePlayer({ src, poster, onLoad, onPause, onEnded }: PlyrNativeP
           >
             <Play className="ml-1 h-7 w-7 text-white" fill="white" />
           </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/**
- * VideoPlayerWithAds - Wrapper component that integrates with ExoClick/JuicyAds
- * Use this when you need pre-roll or overlay ads
- */
-interface VideoPlayerWithAdsProps extends VideoPlayerProps {
-  adConfig?: {
-    prerollEnabled?: boolean;
-    overlayEnabled?: boolean;
-    exoclickZoneId?: string;
-    juicyadsZoneId?: string;
-  };
-}
-
-export function VideoPlayerWithAds({
-  adConfig,
-  ...playerProps
-}: VideoPlayerWithAdsProps) {
-  const [adCompleted, setAdCompleted] = useState(false);
-
-  // If no ad config or ads disabled, render regular player
-  if (!adConfig?.prerollEnabled && !adConfig?.overlayEnabled) {
-    return <VideoPlayer {...playerProps} />;
-  }
-
-  return (
-    <div className="relative">
-      <VideoPlayer
-        {...playerProps}
-        showPrerollAd={adConfig.prerollEnabled && !adCompleted}
-        onPlay={() => {
-          setAdCompleted(true);
-          playerProps.onPlay?.();
-        }}
-      />
-      
-      {/* Overlay ad container - positioned below or beside video */}
-      {adConfig.overlayEnabled && adConfig.exoclickZoneId && (
-        <div className="mt-2" id="video-overlay-ad">
-          {/* ExoClick overlay ad will be injected here */}
         </div>
       )}
     </div>

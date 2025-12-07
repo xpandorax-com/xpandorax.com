@@ -2,9 +2,8 @@ import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link } from "@remix-run/react";
 import { getSession } from "~/lib/auth";
-import { VideoPlayer, VideoPlayerWithAds } from "~/components/video-player";
+import { VideoPlayer } from "~/components/video-player";
 import { VideoCard } from "~/components/video-card";
-import { AdContainer } from "~/components/ads";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
@@ -18,7 +17,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { formatDuration, formatViews, formatDate } from "~/lib/utils";
-import type { AdConfig } from "~/types";
 import { createSanityClient, getSlug, type SanityVideo, type SanityCategory } from "~/lib/sanity";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -150,58 +148,30 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     actress: v.actress ? { name: v.actress.name } : null,
   }));
 
-  // Ad config for non-premium users
-  const adConfig: AdConfig | null = isPremium
-    ? null
-    : {
-        exoclickZoneId: env.EXOCLICK_ZONE_ID || "",
-        juicyadsZoneId: env.JUICYADS_ZONE_ID || "",
-      };
-
   return json({
     video,
     relatedVideos,
     canWatch,
     isPremium,
-    adConfig,
   });
 }
 
 export default function VideoPage() {
-  const { video, relatedVideos, canWatch, isPremium, adConfig } =
+  const { video, relatedVideos, canWatch, isPremium } =
     useLoaderData<typeof loader>();
 
   return (
     <div className="container py-6">
-      {/* Top Ad Banner */}
-      <AdContainer adConfig={adConfig} position="top" />
-
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-4">
           {/* Video Player */}
           {canWatch ? (
-            adConfig ? (
-              // Non-premium users see Plyr player with ad support
-              <VideoPlayerWithAds
-                embedUrl={video.abyssEmbed}
-                thumbnailUrl={video.thumbnail}
-                title={video.title}
-                adConfig={{
-                  prerollEnabled: true,
-                  overlayEnabled: false,
-                  exoclickZoneId: adConfig.exoclickZoneId,
-                  juicyadsZoneId: adConfig.juicyadsZoneId,
-                }}
-              />
-            ) : (
-              // Premium users see clean Plyr player without ads
-              <VideoPlayer
-                embedUrl={video.abyssEmbed}
-                thumbnailUrl={video.thumbnail}
-                title={video.title}
-              />
-            )
+            <VideoPlayer
+              embedUrl={video.abyssEmbed}
+              thumbnailUrl={video.thumbnail}
+              title={video.title}
+            />
           ) : (
             <div className="relative aspect-video overflow-hidden rounded-lg bg-muted">
               {video.thumbnail && (
@@ -312,9 +282,6 @@ export default function VideoPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Sidebar Ad */}
-          <AdContainer adConfig={adConfig} position="sidebar" />
-
           {/* Related Videos */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -334,9 +301,6 @@ export default function VideoPage() {
           </div>
         </div>
       </div>
-
-      {/* Bottom Ad Banner */}
-      <AdContainer adConfig={adConfig} position="bottom" />
     </div>
   );
 }

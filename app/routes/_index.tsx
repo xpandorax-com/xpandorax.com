@@ -4,10 +4,8 @@ import { useLoaderData, Link } from "@remix-run/react";
 import { getSession } from "~/lib/auth";
 import { VideoCard } from "~/components/video-card";
 import { CategoryCard } from "~/components/category-card";
-import { AdContainer } from "~/components/ads";
 import { Button } from "~/components/ui/button";
 import { ChevronRight, TrendingUp, Sparkles, Grid3X3 } from "lucide-react";
-import type { AdConfig } from "~/types";
 import { createSanityClient, getSlug, type SanityVideo, type SanityCategory } from "~/lib/sanity";
 
 export const meta: MetaFunction = () => {
@@ -112,30 +110,19 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     videoCount: c.videoCount || 0,
   }));
 
-  // Ad config for non-premium users
-  const adConfig: AdConfig | null = isPremium
-    ? null
-    : {
-        exoclickZoneId: env.EXOCLICK_ZONE_ID || "",
-        juicyadsZoneId: env.JUICYADS_ZONE_ID || "",
-      };
-
   return json({
     latestVideos,
     trendingVideos,
     categories: allCategories,
-    adConfig,
   });
 }
 
 export default function Index() {
-  const { latestVideos, trendingVideos, categories, adConfig } =
+  const { latestVideos, trendingVideos, categories } =
     useLoaderData<typeof loader>();
 
   return (
     <div className="container py-6 space-y-10">
-      {/* Top Ad Banner */}
-      <AdContainer adConfig={adConfig} position="top" />
 
       {/* Latest Videos Section */}
       <section>
@@ -177,9 +164,6 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Middle Ad Banner */}
-      <AdContainer adConfig={adConfig} position="bottom" />
-
       {/* Categories Section */}
       <section>
         <div className="flex items-center justify-between mb-4">
@@ -199,9 +183,6 @@ export default function Index() {
           ))}
         </div>
       </section>
-
-      {/* Bottom Ad Banner */}
-      <AdContainer adConfig={adConfig} position="bottom" />
     </div>
   );
 }

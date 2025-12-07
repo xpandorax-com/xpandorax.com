@@ -75,7 +75,8 @@ export default {
       name: 'isPublished',
       title: 'Published',
       type: 'boolean',
-      initialValue: false,
+      initialValue: true,
+      description: 'Toggle ON to show this video on the website',
     },
     {
       name: 'actress',
