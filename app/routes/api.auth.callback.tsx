@@ -5,6 +5,17 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
+  const error = url.searchParams.get("error");
+  const errorDescription = url.searchParams.get("error_description");
+
+  // Handle OAuth errors from GitHub
+  if (error) {
+    console.error("GitHub OAuth error:", error, errorDescription);
+    return new Response(`GitHub OAuth error: ${errorDescription || error}`, { 
+      status: 400,
+      headers: { "Content-Type": "text/plain" }
+    });
+  }
 
   if (!code) {
     return new Response("Missing authorization code", { status: 400 });
@@ -19,7 +30,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const clientSecret = env.GITHUB_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    return new Response("GitHub OAuth not configured", { status: 500 });
+    return new Response("GitHub OAuth not configured. Please set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET secrets.", { status: 500 });
   }
 
   try {
@@ -44,7 +55,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     };
 
     if (tokenData.error || !tokenData.access_token) {
-      console.error("OAuth error:", tokenData);
+      console.error("Token exchange error:", tokenData);
       return new Response(`OAuth error: ${tokenData.error_description || tokenData.error}`, { 
         status: 400 
       });
@@ -52,41 +63,63 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 
     const accessToken = tokenData.access_token;
 
-    // Return HTML that sends the token back to Decap CMS
-    const html = `
-<!DOCTYPE html>
+    // Return HTML that sends the token back to Decap CMS via postMessage
+    const responseData = JSON.stringify({ token: accessToken, provider: "github" });
+    
+    const html = `<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <title>Authentication Complete</title>
+  <style>
+    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #1a1a2e; color: white; }
+    .container { text-align: center; }
+    .spinner { border: 3px solid #333; border-top: 3px solid #8b5cf6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <div class="spinner"></div>
+    <p>Authenticating with GitHub...</p>
+    <p style="font-size: 12px; opacity: 0.7;">This window will close automatically.</p>
+  </div>
   <script>
     (function() {
-      function receiveMessage(e) {
-        console.log("receiveMessage", e);
-        window.opener.postMessage(
-          'authorization:github:success:${JSON.stringify({ token: accessToken, provider: "github" })}',
-          e.origin
-        );
-        window.close();
+      const data = ${responseData};
+      
+      function sendMessage() {
+        if (window.opener) {
+          // Send success message to opener (Decap CMS)
+          window.opener.postMessage(
+            'authorization:github:success:' + JSON.stringify(data),
+            '*'
+          );
+          setTimeout(function() { window.close(); }, 1000);
+        } else {
+          document.body.innerHTML = '<div class="container"><p>Authentication successful!</p><p>You can close this window.</p></div>';
+        }
       }
-      window.addEventListener("message", receiveMessage, false);
-      window.opener.postMessage("authorizing:github", "*");
+      
+      // Try sending immediately
+      sendMessage();
+      
+      // Also listen for message requests
+      window.addEventListener('message', function(e) {
+        if (e.data === 'authorizing:github') {
+          sendMessage();
+        }
+      });
     })();
   </script>
-  <p>Authenticating with GitHub...</p>
-  <p>If this window doesn't close automatically, please close it manually.</p>
 </body>
-</html>
-`;
+</html>`;
 
     return new Response(html, {
-      headers: {
-        "Content-Type": "text/html",
-      },
+      headers: { "Content-Type": "text/html" },
     });
   } catch (error) {
     console.error("OAuth callback error:", error);
-    return new Response("Authentication failed", { status: 500 });
+    return new Response("Authentication failed: " + String(error), { status: 500 });
   }
 }
