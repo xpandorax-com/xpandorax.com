@@ -2,9 +2,8 @@ backend:
   name: github
   repo: xpandorax-com/xpandorax.com
   branch: main
-  # Using Sveltia CMS OAuth proxy (free service for GitHub auth)
-  base_url: https://api.sveltia.com
-  auth_endpoint: /auth
+  base_url: https://xpandorax.com
+  auth_endpoint: /api/auth
 
 # Media files will be stored in public/images
 media_folder: public/images
