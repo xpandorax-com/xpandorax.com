@@ -1,25 +1,99 @@
-import { Argon2id } from "oslo/password";
-import { generateIdFromEntropySize } from "lucia";
 import { eq } from "drizzle-orm";
 import type { Database } from "~/db";
 import { users, type User, type NewUser } from "~/db/schema";
 
-// Oslo Argon2id instance for password hashing (Cloudflare Workers compatible)
-const argon2id = new Argon2id();
+// Cloudflare Workers-compatible password hashing using Web Crypto API (PBKDF2)
+const ITERATIONS = 100000;
+const SALT_LENGTH = 16;
+const KEY_LENGTH = 32;
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
 
 export async function hashPassword(password: string): Promise<string> {
-  return await argon2id.hash(password);
+  const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+  const encoder = new TextEncoder();
+  const passwordBuffer = encoder.encode(password);
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    passwordBuffer,
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: salt,
+      iterations: ITERATIONS,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    KEY_LENGTH * 8
+  );
+
+  const saltBase64 = arrayBufferToBase64(salt.buffer);
+  const hashBase64 = arrayBufferToBase64(derivedBits);
+
+  return `${saltBase64}:${hashBase64}`;
 }
 
 export async function verifyPassword(
   hashedPassword: string,
   password: string
 ): Promise<boolean> {
-  return await argon2id.verify(hashedPassword, password);
+  const [saltBase64, storedHashBase64] = hashedPassword.split(":");
+  if (!saltBase64 || !storedHashBase64) {
+    return false;
+  }
+
+  const salt = new Uint8Array(base64ToArrayBuffer(saltBase64));
+  const encoder = new TextEncoder();
+  const passwordBuffer = encoder.encode(password);
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    passwordBuffer,
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: salt,
+      iterations: ITERATIONS,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    KEY_LENGTH * 8
+  );
+
+  const computedHashBase64 = arrayBufferToBase64(derivedBits);
+  return computedHashBase64 === storedHashBase64;
 }
 
 export function generateUserId(): string {
-  return generateIdFromEntropySize(10); // 16 characters
+  const bytes = crypto.getRandomValues(new Uint8Array(10));
+  return arrayBufferToBase64(bytes.buffer).replace(/[+/=]/g, "").slice(0, 16);
 }
 
 export async function createUser(
