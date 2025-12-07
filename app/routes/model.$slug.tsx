@@ -37,7 +37,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  const db = createDatabase(context.cloudflare.env.DATABASE);
+  const db = createDatabase(context.cloudflare.env.DB);
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
   const limit = 24;

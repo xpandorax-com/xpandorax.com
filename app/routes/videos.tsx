@@ -29,7 +29,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const limit = 36;
   const offset = (page - 1) * limit;
 
-  const db = createDatabase(context.cloudflare.env.DATABASE);
+  const db = createDatabase(context.cloudflare.env.DB);
 
   let orderBy;
   switch (sort) {

@@ -46,7 +46,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
   const sort = url.searchParams.get("sort") || "latest";
   const pageSize = 24;
 
-  const db = createDatabase(context.cloudflare.env.DATABASE);
+  const db = createDatabase(context.cloudflare.env.DB);
   const { user } = await getSession(request, context);
   const env = context.cloudflare.env;
 

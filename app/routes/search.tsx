@@ -45,7 +45,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     });
   }
 
-  const db = createDatabase(context.cloudflare.env.DATABASE);
+  const db = createDatabase(context.cloudflare.env.DB);
   const searchTerm = `%${query.toLowerCase()}%`;
 
   // Search videos

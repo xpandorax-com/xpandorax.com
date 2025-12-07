@@ -16,12 +16,11 @@ globs = ["**/*.js"]
 [assets]
 directory = "./build/client"
 
-# D1 Database binding - UNCOMMENT and replace ID after creating:
-# wrangler d1 create xpandorax-db
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "xpandorax-db"
-# database_id = "YOUR_D1_DATABASE_ID"
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "xpandorax-com"
+database_id = "1e1e0001-2d13-4c0e-b5c6-83f26ab8732e"
 
 # R2 Storage for uploads (thumbnails) - UNCOMMENT after creating:
 # wrangler r2 bucket create xpandorax-uploads
