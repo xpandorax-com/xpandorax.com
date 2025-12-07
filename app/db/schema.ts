@@ -13,6 +13,14 @@ export const users = sqliteTable("users", {
   lemonSqueezyCustomerId: text("lemon_squeezy_customer_id"),
   lemonSqueezySubscriptionId: text("lemon_squeezy_subscription_id"),
   role: text("role", { enum: ["user", "admin"] }).notNull().default("user"),
+  // Security fields
+  mustChangePassword: integer("must_change_password", { mode: "boolean" }).notNull().default(false),
+  passwordResetToken: text("password_reset_token"),
+  passwordResetExpires: integer("password_reset_expires", { mode: "timestamp" }),
+  failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
+  lockedUntil: integer("locked_until", { mode: "timestamp" }),
+  lastLoginAt: integer("last_login_at", { mode: "timestamp" }),
+  lastLoginIp: text("last_login_ip"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
