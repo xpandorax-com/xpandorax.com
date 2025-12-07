@@ -22,6 +22,7 @@ export function createLucia(db: Database) {
         isPremium: attributes.isPremium,
         premiumExpiresAt: attributes.premiumExpiresAt,
         role: attributes.role,
+        mustChangePassword: attributes.mustChangePassword,
       };
     },
   });
@@ -41,6 +42,7 @@ interface DatabaseUserAttributes {
   isPremium: boolean;
   premiumExpiresAt: Date | null;
   role: "user" | "admin";
+  mustChangePassword: boolean;
 }
 
 export type Auth = ReturnType<typeof createLucia>;
