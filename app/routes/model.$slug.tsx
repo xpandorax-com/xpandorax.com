@@ -1,15 +1,13 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
-import { eq, desc, sql } from "drizzle-orm";
-import { createDatabase } from "~/db";
-import { actresses, videos, videoActresses } from "~/db/schema";
 import { VideoCard } from "~/components/video-card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
 import { Users, Video, Calendar, ArrowLeft } from "lucide-react";
 import { formatDate } from "~/lib/utils";
+import { createSanityClient, getSlug, type SanityActress, type SanityVideo } from "~/lib/sanity";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data?.actress) {
@@ -37,49 +35,66 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  const db = createDatabase(context.cloudflare.env.DB);
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
   const limit = 24;
   const offset = (page - 1) * limit;
 
-  // Get actress
-  const actress = await db.query.actresses.findFirst({
-    where: eq(actresses.slug, slug),
-  });
+  const sanity = createSanityClient(context.cloudflare.env);
 
-  if (!actress) {
+  // Fetch model with videos from Sanity
+  const actressRaw = await sanity.fetch<(SanityActress & { 
+    videos: SanityVideo[];
+    videoCount: number;
+    createdAt?: string;
+  }) | null>(
+    `*[_type == "actress" && slug.current == $slug][0] {
+      _id,
+      name,
+      slug,
+      bio,
+      "image": image.asset->url,
+      "_createdAt": _createdAt,
+      "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true]),
+      "videos": *[_type == "video" && actress._ref == ^._id && isPublished == true] | order(publishedAt desc) [$offset...$end] {
+        _id,
+        title,
+        slug,
+        "thumbnail": thumbnail.asset->url,
+        duration,
+        views,
+        isPremium
+      }
+    }`,
+    { slug, offset, end: offset + limit }
+  );
+
+  if (!actressRaw) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  // Get videos for this actress using the junction table
-  const actressVideos = await db
-    .select({
-      id: videos.id,
-      slug: videos.slug,
-      title: videos.title,
-      thumbnail: videos.thumbnail,
-      duration: videos.duration,
-      views: videos.views,
-      isPremium: videos.isPremium,
-      createdAt: videos.createdAt,
-    })
-    .from(videos)
-    .innerJoin(videoActresses, eq(videos.id, videoActresses.videoId))
-    .where(eq(videoActresses.actressId, actress.id))
-    .orderBy(desc(videos.createdAt))
-    .limit(limit)
-    .offset(offset);
-
-  // Get total count
-  const [countResult] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(videos)
-    .innerJoin(videoActresses, eq(videos.id, videoActresses.videoId))
-    .where(eq(videoActresses.actressId, actress.id));
-
-  const total = countResult?.count || 0;
+  const total = actressRaw.videoCount || 0;
   const totalPages = Math.ceil(total / limit);
+
+  // Transform data
+  const actress = {
+    id: actressRaw._id,
+    slug: getSlug(actressRaw.slug),
+    name: actressRaw.name,
+    bio: actressRaw.bio || null,
+    image: actressRaw.image || null,
+    createdAt: actressRaw.createdAt || null,
+  };
+
+  const actressVideos = (actressRaw.videos || []).map((v) => ({
+    id: v._id,
+    slug: getSlug(v.slug),
+    title: v.title,
+    thumbnail: v.thumbnail || null,
+    duration: v.duration || null,
+    views: v.views || 0,
+    isPremium: v.isPremium || false,
+  }));
 
   return json({
     actress,

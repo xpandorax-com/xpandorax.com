@@ -1,9 +1,6 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link } from "@remix-run/react";
-import { desc, eq } from "drizzle-orm";
-import { createDatabase } from "~/db";
-import { videos, categories, actresses, videoCategories } from "~/db/schema";
 import { getSession } from "~/lib/auth";
 import { VideoCard } from "~/components/video-card";
 import { CategoryCard } from "~/components/category-card";
@@ -11,6 +8,7 @@ import { AdContainer } from "~/components/ads";
 import { Button } from "~/components/ui/button";
 import { ChevronRight, TrendingUp, Sparkles, Grid3X3 } from "lucide-react";
 import type { AdConfig } from "~/types";
+import { createSanityClient, getSlug, type SanityVideo, type SanityCategory } from "~/lib/sanity";
 
 export const meta: MetaFunction = () => {
   return [
@@ -26,7 +24,6 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
-  const db = createDatabase(context.cloudflare.env.DB);
   const { user } = await getSession(request, context);
   const env = context.cloudflare.env;
 
@@ -38,31 +35,82 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       : true;
   }
 
-  // Fetch latest videos
-  const latestVideos = await db.query.videos.findMany({
-    where: eq(videos.isPublished, true),
-    orderBy: [desc(videos.publishedAt)],
-    limit: 8,
-    with: {
-      actress: true,
-    },
-  });
+  // Create Sanity client
+  const sanity = createSanityClient(env);
 
-  // Fetch trending videos (most views)
-  const trendingVideos = await db.query.videos.findMany({
-    where: eq(videos.isPublished, true),
-    orderBy: [desc(videos.views)],
-    limit: 8,
-    with: {
-      actress: true,
-    },
-  });
+  // Fetch latest videos from Sanity
+  const latestVideosRaw = await sanity.fetch<SanityVideo[]>(
+    `*[_type == "video" && isPublished == true] | order(publishedAt desc)[0...8] {
+      _id,
+      title,
+      slug,
+      "thumbnail": thumbnail.asset->url,
+      duration,
+      views,
+      isPremium,
+      "actress": actress->{
+        name
+      }
+    }`
+  );
 
-  // Fetch categories
-  const allCategories = await db.query.categories.findMany({
-    orderBy: [desc(categories.videoCount)],
-    limit: 12,
-  });
+  // Fetch trending videos (most views) from Sanity
+  const trendingVideosRaw = await sanity.fetch<SanityVideo[]>(
+    `*[_type == "video" && isPublished == true] | order(views desc)[0...8] {
+      _id,
+      title,
+      slug,
+      "thumbnail": thumbnail.asset->url,
+      duration,
+      views,
+      isPremium,
+      "actress": actress->{
+        name
+      }
+    }`
+  );
+
+  // Fetch categories from Sanity
+  const categoriesRaw = await sanity.fetch<SanityCategory[]>(
+    `*[_type == "category"] | order(sortOrder asc)[0...12] {
+      _id,
+      name,
+      slug,
+      "thumbnail": thumbnail.asset->url,
+      "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true])
+    }`
+  );
+
+  // Transform Sanity data to match component expectations
+  const latestVideos = latestVideosRaw.map((v) => ({
+    id: v._id,
+    slug: getSlug(v.slug),
+    title: v.title,
+    thumbnail: v.thumbnail || null,
+    duration: v.duration || null,
+    views: v.views || 0,
+    isPremium: v.isPremium || false,
+    actress: v.actress ? { name: v.actress.name } : null,
+  }));
+
+  const trendingVideos = trendingVideosRaw.map((v) => ({
+    id: v._id,
+    slug: getSlug(v.slug),
+    title: v.title,
+    thumbnail: v.thumbnail || null,
+    duration: v.duration || null,
+    views: v.views || 0,
+    isPremium: v.isPremium || false,
+    actress: v.actress ? { name: v.actress.name } : null,
+  }));
+
+  const allCategories = categoriesRaw.map((c) => ({
+    id: c._id,
+    slug: getSlug(c.slug),
+    name: c.name,
+    thumbnail: c.thumbnail || null,
+    videoCount: c.videoCount || 0,
+  }));
 
   // Ad config for non-premium users
   const adConfig: AdConfig | null = isPremium

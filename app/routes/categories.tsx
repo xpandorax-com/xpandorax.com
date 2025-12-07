@@ -1,14 +1,12 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
-import { desc } from "drizzle-orm";
-import { createDatabase } from "~/db";
-import { categories } from "~/db/schema";
 import { getSession } from "~/lib/auth";
 import { CategoryCard } from "~/components/category-card";
 import { AdContainer } from "~/components/ads";
 import { Grid3X3 } from "lucide-react";
 import type { AdConfig } from "~/types";
+import { createSanityClient, getSlug, type SanityCategory } from "~/lib/sanity";
 
 export const meta: MetaFunction = () => {
   return [
@@ -20,7 +18,6 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
-  const db = createDatabase(context.cloudflare.env.DB);
   const { user } = await getSession(request, context);
   const env = context.cloudflare.env;
 
@@ -32,10 +29,27 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       : true;
   }
 
-  // Fetch all categories
-  const allCategories = await db.query.categories.findMany({
-    orderBy: [desc(categories.videoCount)],
-  });
+  // Create Sanity client
+  const sanity = createSanityClient(env);
+
+  // Fetch all categories from Sanity
+  const categoriesRaw = await sanity.fetch<SanityCategory[]>(
+    `*[_type == "category"] | order(sortOrder asc) {
+      _id,
+      name,
+      slug,
+      "thumbnail": thumbnail.asset->url,
+      "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true])
+    }`
+  );
+
+  const allCategories = categoriesRaw.map((c) => ({
+    id: c._id,
+    slug: getSlug(c.slug),
+    name: c.name,
+    thumbnail: c.thumbnail || null,
+    videoCount: c.videoCount || 0,
+  }));
 
   // Ad config for non-premium users
   const adConfig: AdConfig | null = isPremium

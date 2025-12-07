@@ -1,9 +1,6 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link, useSearchParams } from "@remix-run/react";
-import { eq, desc, asc, and } from "drizzle-orm";
-import { createDatabase } from "~/db";
-import { categories, videos, videoCategories } from "~/db/schema";
 import { getSession } from "~/lib/auth";
 import { VideoCard } from "~/components/video-card";
 import { AdContainer } from "~/components/ads";
@@ -17,6 +14,7 @@ import {
 } from "~/components/ui/select";
 import { ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
 import type { AdConfig } from "~/types";
+import { createSanityClient, getSlug, type SanityCategory, type SanityVideo } from "~/lib/sanity";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data?.category) {
@@ -45,8 +43,8 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
   const page = parseInt(url.searchParams.get("page") || "1");
   const sort = url.searchParams.get("sort") || "latest";
   const pageSize = 24;
+  const offset = (page - 1) * pageSize;
 
-  const db = createDatabase(context.cloudflare.env.DB);
   const { user } = await getSession(request, context);
   const env = context.cloudflare.env;
 
@@ -58,40 +56,63 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       : true;
   }
 
-  // Fetch category
-  const category = await db.query.categories.findFirst({
-    where: eq(categories.slug, slug),
-  });
-
-  if (!category) {
-    throw new Response("Not Found", { status: 404 });
-  }
+  // Create Sanity client
+  const sanity = createSanityClient(env);
 
   // Build order by based on sort
   const orderBy = sort === "popular"
-    ? desc(videos.views)
+    ? "views desc"
     : sort === "oldest"
-    ? asc(videos.publishedAt)
-    : desc(videos.publishedAt);
+    ? "publishedAt asc"
+    : "publishedAt desc";
 
-  // Fetch videos in this category
-  const categoryVideos = await db
-    .select({
-      video: videos,
-    })
-    .from(videoCategories)
-    .innerJoin(videos, eq(videoCategories.videoId, videos.id))
-    .where(
-      and(
-        eq(videoCategories.categoryId, category.id),
-        eq(videos.isPublished, true)
-      )
-    )
-    .orderBy(orderBy)
-    .limit(pageSize)
-    .offset((page - 1) * pageSize);
+  // Fetch category with videos from Sanity
+  const categoryRaw = await sanity.fetch<(SanityCategory & { videos: SanityVideo[] }) | null>(
+    `*[_type == "category" && slug.current == $slug][0] {
+      _id,
+      name,
+      slug,
+      description,
+      "thumbnail": thumbnail.asset->url,
+      "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true]),
+      "videos": *[_type == "video" && references(^._id) && isPublished == true] | order(${orderBy}) [$offset...$end] {
+        _id,
+        title,
+        slug,
+        "thumbnail": thumbnail.asset->url,
+        duration,
+        views,
+        isPremium
+      }
+    }`,
+    { slug, offset, end: offset + pageSize }
+  );
 
-  const totalPages = Math.ceil(category.videoCount / pageSize);
+  if (!categoryRaw) {
+    throw new Response("Not Found", { status: 404 });
+  }
+
+  const totalPages = Math.ceil((categoryRaw.videoCount || 0) / pageSize);
+
+  // Transform data
+  const category = {
+    id: categoryRaw._id,
+    slug: getSlug(categoryRaw.slug),
+    name: categoryRaw.name,
+    description: categoryRaw.description || null,
+    thumbnailUrl: categoryRaw.thumbnail || null,
+    videoCount: categoryRaw.videoCount || 0,
+  };
+
+  const categoryVideos = (categoryRaw.videos || []).map((v) => ({
+    id: v._id,
+    slug: getSlug(v.slug),
+    title: v.title,
+    thumbnail: v.thumbnail || null,
+    duration: v.duration || null,
+    views: v.views || 0,
+    isPremium: v.isPremium || false,
+  }));
 
   // Ad config for non-premium users
   const adConfig: AdConfig | null = isPremium
@@ -103,7 +124,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
 
   return json({
     category,
-    videos: categoryVideos.map((cv) => cv.video),
+    videos: categoryVideos,
     page,
     totalPages,
     sort,

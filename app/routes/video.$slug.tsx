@@ -1,9 +1,6 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link } from "@remix-run/react";
-import { eq } from "drizzle-orm";
-import { createDatabase } from "~/db";
-import { videos, videoCategories, categories, actresses } from "~/db/schema";
 import { getSession } from "~/lib/auth";
 import { VideoPlayer, VideoPlayerWithAds } from "~/components/video-player";
 import { VideoCard } from "~/components/video-card";
@@ -22,6 +19,7 @@ import {
 } from "lucide-react";
 import { formatDuration, formatViews, formatDate } from "~/lib/utils";
 import type { AdConfig } from "~/types";
+import { createSanityClient, getSlug, type SanityVideo, type SanityCategory } from "~/lib/sanity";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data?.video) {
@@ -45,7 +43,6 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  const db = createDatabase(context.cloudflare.env.DB);
   const { user } = await getSession(request, context);
   const env = context.cloudflare.env;
 
@@ -57,44 +54,101 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       : true;
   }
 
-  // Fetch video with relations
-  const video = await db.query.videos.findFirst({
-    where: eq(videos.slug, slug),
-    with: {
-      actress: true,
-    },
-  });
+  // Create Sanity client
+  const sanity = createSanityClient(env);
 
-  if (!video) {
+  // Fetch video from Sanity
+  const videoRaw = await sanity.fetch<SanityVideo | null>(
+    `*[_type == "video" && slug.current == $slug][0] {
+      _id,
+      title,
+      slug,
+      description,
+      "thumbnail": thumbnail.asset->url,
+      duration,
+      views,
+      likes,
+      isPremium,
+      abyssEmbed,
+      publishedAt,
+      "actress": actress->{
+        _id,
+        name,
+        slug,
+        "image": image.asset->url,
+        "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
+      },
+      "categories": categories[]->{
+        _id,
+        name,
+        slug
+      }
+    }`,
+    { slug }
+  );
+
+  if (!videoRaw) {
     throw new Response("Not Found", { status: 404 });
   }
 
   // Check if video is premium only and user is not premium
-  const canWatch = !video.isPremium || isPremium;
+  const canWatch = !videoRaw.isPremium || isPremium;
 
-  // Fetch video categories
-  const videoCats = await db
-    .select({
-      category: categories,
-    })
-    .from(videoCategories)
-    .innerJoin(categories, eq(videoCategories.categoryId, categories.id))
-    .where(eq(videoCategories.videoId, video.id));
+  // Fetch related videos from Sanity
+  const relatedVideosRaw = await sanity.fetch<SanityVideo[]>(
+    `*[_type == "video" && isPublished == true && _id != $videoId] | order(publishedAt desc)[0...6] {
+      _id,
+      title,
+      slug,
+      "thumbnail": thumbnail.asset->url,
+      duration,
+      views,
+      isPremium,
+      "actress": actress->{
+        name
+      }
+    }`,
+    { videoId: videoRaw._id }
+  );
 
-  // Increment view count
-  await db
-    .update(videos)
-    .set({ views: video.views + 1 })
-    .where(eq(videos.id, video.id));
+  // Transform data
+  const video = {
+    id: videoRaw._id,
+    slug: getSlug(videoRaw.slug),
+    title: videoRaw.title,
+    description: videoRaw.description || null,
+    thumbnail: videoRaw.thumbnail || null,
+    duration: videoRaw.duration || null,
+    views: videoRaw.views || 0,
+    likes: videoRaw.likes || 0,
+    isPremium: videoRaw.isPremium || false,
+    premiumOnly: videoRaw.isPremium || false,
+    abyssEmbed: videoRaw.abyssEmbed || "",
+    publishedAt: videoRaw.publishedAt || null,
+    actress: videoRaw.actress ? {
+      id: videoRaw.actress._id,
+      name: videoRaw.actress.name,
+      slug: getSlug(videoRaw.actress.slug),
+      thumbnailUrl: videoRaw.actress.image || null,
+      videoCount: videoRaw.actress.videoCount || 0,
+    } : null,
+    categories: (videoRaw.categories || []).map((c) => ({
+      id: c._id,
+      name: c.name,
+      slug: getSlug(c.slug),
+    })),
+  };
 
-  // Fetch related videos (same actress or category)
-  const relatedVideos = await db.query.videos.findMany({
-    where: eq(videos.isPublished, true),
-    limit: 6,
-    with: {
-      actress: true,
-    },
-  });
+  const relatedVideos = relatedVideosRaw.map((v) => ({
+    id: v._id,
+    slug: getSlug(v.slug),
+    title: v.title,
+    thumbnail: v.thumbnail || null,
+    duration: v.duration || null,
+    views: v.views || 0,
+    isPremium: v.isPremium || false,
+    actress: v.actress ? { name: v.actress.name } : null,
+  }));
 
   // Ad config for non-premium users
   const adConfig: AdConfig | null = isPremium
@@ -105,11 +159,8 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       };
 
   return json({
-    video: {
-      ...video,
-      categories: videoCats.map((vc) => vc.category),
-    },
-    relatedVideos: relatedVideos.filter((v) => v.id !== video.id),
+    video,
+    relatedVideos,
     canWatch,
     isPremium,
     adConfig,

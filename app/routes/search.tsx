@@ -1,10 +1,6 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, useSearchParams, Form } from "@remix-run/react";
-import { like, or, desc, eq, sql } from "drizzle-orm";
-import { createDatabase } from "~/db";
-import { videos, actresses, categories } from "~/db/schema";
-import { getOptionalUser } from "~/lib/auth";
 import { VideoCard } from "~/components/video-card";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
@@ -13,6 +9,7 @@ import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
 import { Search, Video, Users, Folder, X } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { createSanityClient, getSlug, type SanityVideo, type SanityActress, type SanityCategory } from "~/lib/sanity";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const query = data?.query || "";
@@ -45,93 +42,96 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     });
   }
 
-  const db = createDatabase(context.cloudflare.env.DB);
-  const searchTerm = `%${query.toLowerCase()}%`;
+  const sanity = createSanityClient(context.cloudflare.env);
 
   // Search videos
-  const [videoResults, videoCountResult] = await Promise.all([
+  const [videoResults, totalVideos] = await Promise.all([
     type === "videos"
-      ? db
-          .select()
-          .from(videos)
-          .where(
-            or(
-              sql`lower(${videos.title}) like ${searchTerm}`,
-              sql`lower(${videos.description}) like ${searchTerm}`
-            )
-          )
-          .orderBy(desc(videos.createdAt))
-          .limit(limit)
-          .offset(offset)
-      : Promise.resolve([]),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(videos)
-      .where(
-        or(
-          sql`lower(${videos.title}) like ${searchTerm}`,
-          sql`lower(${videos.description}) like ${searchTerm}`
+      ? sanity.fetch<SanityVideo[]>(
+          `*[_type == "video" && isPublished == true && (title match $query + "*" || description match $query + "*")] | order(publishedAt desc) [$offset...$end] {
+            _id,
+            title,
+            slug,
+            "thumbnail": thumbnail.asset->url,
+            duration,
+            views,
+            isPremium
+          }`,
+          { query, offset, end: offset + limit }
         )
-      ),
+      : Promise.resolve([]),
+    sanity.fetch<number>(
+      `count(*[_type == "video" && isPublished == true && (title match $query + "*" || description match $query + "*")])`,
+      { query }
+    ),
   ]);
 
-  // Search actresses
-  const [actressResults, actressCountResult] = await Promise.all([
+  // Search actresses/models
+  const [actressResults, totalActresses] = await Promise.all([
     type === "actresses"
-      ? db
-          .select()
-          .from(actresses)
-          .where(
-            or(
-              sql`lower(${actresses.name}) like ${searchTerm}`,
-              sql`lower(${actresses.bio}) like ${searchTerm}`
-            )
-          )
-          .orderBy(actresses.name)
-          .limit(limit)
-          .offset(offset)
-      : Promise.resolve([]),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(actresses)
-      .where(
-        or(
-          sql`lower(${actresses.name}) like ${searchTerm}`,
-          sql`lower(${actresses.bio}) like ${searchTerm}`
+      ? sanity.fetch<(SanityActress & { videoCount: number })[]>(
+          `*[_type == "actress" && (name match $query + "*" || bio match $query + "*")] | order(name asc) [$offset...$end] {
+            _id,
+            name,
+            slug,
+            "image": image.asset->url,
+            "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
+          }`,
+          { query, offset, end: offset + limit }
         )
-      ),
+      : Promise.resolve([]),
+    sanity.fetch<number>(
+      `count(*[_type == "actress" && (name match $query + "*" || bio match $query + "*")])`,
+      { query }
+    ),
   ]);
 
   // Search categories
-  const [categoryResults, categoryCountResult] = await Promise.all([
+  const [categoryResults, totalCategories] = await Promise.all([
     type === "categories"
-      ? db
-          .select()
-          .from(categories)
-          .where(
-            or(
-              sql`lower(${categories.name}) like ${searchTerm}`,
-              sql`lower(${categories.description}) like ${searchTerm}`
-            )
-          )
-          .orderBy(categories.name)
-          .limit(limit)
-          .offset(offset)
-      : Promise.resolve([]),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(categories)
-      .where(
-        or(
-          sql`lower(${categories.name}) like ${searchTerm}`,
-          sql`lower(${categories.description}) like ${searchTerm}`
+      ? sanity.fetch<(SanityCategory & { videoCount: number })[]>(
+          `*[_type == "category" && (name match $query + "*" || description match $query + "*")] | order(name asc) [$offset...$end] {
+            _id,
+            name,
+            slug,
+            "thumbnail": thumbnail.asset->url,
+            "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true])
+          }`,
+          { query, offset, end: offset + limit }
         )
-      ),
+      : Promise.resolve([]),
+    sanity.fetch<number>(
+      `count(*[_type == "category" && (name match $query + "*" || description match $query + "*")])`,
+      { query }
+    ),
   ]);
 
-  const totalVideos = videoCountResult[0]?.count || 0;
-  const totalActresses = actressCountResult[0]?.count || 0;
-  const totalCategories = categoryCountResult[0]?.count || 0;
+  // Transform data
+  const videos = videoResults.map((v) => ({
+    id: v._id,
+    slug: getSlug(v.slug),
+    title: v.title,
+    thumbnail: v.thumbnail || null,
+    duration: v.duration || null,
+    views: v.views || 0,
+    isPremium: v.isPremium || false,
+  }));
+
+  const actresses = actressResults.map((a) => ({
+    id: a._id,
+    slug: getSlug(a.slug),
+    name: a.name,
+    image: a.image || null,
+    videoCount: a.videoCount || 0,
+  }));
+
+  const categories = categoryResults.map((c) => ({
+    id: c._id,
+    slug: getSlug(c.slug),
+    name: c.name,
+    thumbnail: c.thumbnail || null,
+    videoCount: c.videoCount || 0,
+  }));
 
   const currentTotal =
     type === "videos"
@@ -143,9 +143,9 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   return json({
     query,
     type,
-    videos: videoResults,
-    actresses: actressResults,
-    categories: categoryResults,
+    videos,
+    actresses,
+    categories,
     totalVideos,
     totalActresses,
     totalCategories,

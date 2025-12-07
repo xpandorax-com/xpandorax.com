@@ -1,9 +1,6 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
-import { desc, asc, sql } from "drizzle-orm";
-import { createDatabase } from "~/db";
-import { videos } from "~/db/schema";
 import { VideoCard } from "~/components/video-card";
 import { Button } from "~/components/ui/button";
 import {
@@ -14,6 +11,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Video, SlidersHorizontal } from "lucide-react";
+import { createSanityClient, getSlug, type SanityVideo } from "~/lib/sanity";
 
 export const meta: MetaFunction = () => {
   return [
@@ -29,36 +27,57 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const limit = 36;
   const offset = (page - 1) * limit;
 
-  const db = createDatabase(context.cloudflare.env.DB);
+  const sanity = createSanityClient(context.cloudflare.env);
 
   let orderBy;
   switch (sort) {
     case "oldest":
-      orderBy = asc(videos.createdAt);
+      orderBy = "publishedAt asc";
       break;
     case "popular":
-      orderBy = desc(videos.views);
+      orderBy = "views desc";
       break;
     case "title":
-      orderBy = asc(videos.title);
+      orderBy = "title asc";
       break;
     case "newest":
     default:
-      orderBy = desc(videos.createdAt);
+      orderBy = "publishedAt desc";
       break;
   }
 
-  const [videoList, totalResult] = await Promise.all([
-    db.select().from(videos).orderBy(orderBy).limit(limit).offset(offset),
-    db.select({ count: sql<number>`count(*)` }).from(videos),
+  // Fetch videos with pagination
+  const [videosRaw, totalCount] = await Promise.all([
+    sanity.fetch<SanityVideo[]>(
+      `*[_type == "video" && isPublished == true] | order(${orderBy}) [$offset...$end] {
+        _id,
+        title,
+        slug,
+        "thumbnail": thumbnail.asset->url,
+        duration,
+        views,
+        isPremium
+      }`,
+      { offset, end: offset + limit }
+    ),
+    sanity.fetch<number>(`count(*[_type == "video" && isPublished == true])`),
   ]);
 
-  const total = totalResult[0]?.count || 0;
-  const totalPages = Math.ceil(total / limit);
+  const videoList = videosRaw.map((v) => ({
+    id: v._id,
+    slug: getSlug(v.slug),
+    title: v.title,
+    thumbnail: v.thumbnail || null,
+    duration: v.duration || null,
+    views: v.views || 0,
+    isPremium: v.isPremium || false,
+  }));
+
+  const totalPages = Math.ceil(totalCount / limit);
 
   return json({
     videos: videoList,
-    total,
+    total: totalCount,
     page,
     totalPages,
     sort,

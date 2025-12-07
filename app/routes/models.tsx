@@ -1,9 +1,6 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
-import { desc, sql, eq } from "drizzle-orm";
-import { createDatabase } from "~/db";
-import { actresses } from "~/db/schema";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -15,6 +12,7 @@ import {
 } from "~/components/ui/select";
 import { Users, Search, Grid, List } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { createSanityClient, getSlug, type SanityActress } from "~/lib/sanity";
 
 export const meta: MetaFunction = () => {
   return [
@@ -31,48 +29,58 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const limit = 36;
   const offset = (page - 1) * limit;
 
-  const db = createDatabase(context.cloudflare.env.DB);
+  const sanity = createSanityClient(context.cloudflare.env);
 
-  let query = db.select().from(actresses).$dynamic();
-
-  // Apply search filter
-  if (search) {
-    const searchTerm = `%${search.toLowerCase()}%`;
-    query = query.where(sql`lower(${actresses.name}) like ${searchTerm}`);
-  }
-
-  // Apply sorting
+  // Build order by based on sort
+  let orderBy;
   switch (sort) {
     case "name":
-      query = query.orderBy(actresses.name);
+      orderBy = "name asc";
       break;
     case "newest":
-      query = query.orderBy(desc(actresses.createdAt));
+      orderBy = "_createdAt desc";
       break;
     case "popular":
     default:
-      query = query.orderBy(desc(actresses.videoCount));
+      orderBy = "videoCount desc";
       break;
   }
 
-  const [actressList, totalResult] = await Promise.all([
-    query.limit(limit).offset(offset),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(actresses)
-      .where(
-        search
-          ? sql`lower(${actresses.name}) like ${`%${search.toLowerCase()}%`}`
-          : undefined
-      ),
+  // Build search filter
+  const searchFilter = search
+    ? `&& (name match "*${search}*" || bio match "*${search}*")`
+    : "";
+
+  // Fetch models with pagination
+  const [actressesRaw, totalCount] = await Promise.all([
+    sanity.fetch<(SanityActress & { videoCount: number })[]>(
+      `*[_type == "actress" ${searchFilter}] {
+        _id,
+        name,
+        slug,
+        "image": image.asset->url,
+        "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
+      } | order(${orderBy}) [$offset...$end]`,
+      { offset, end: offset + limit }
+    ),
+    sanity.fetch<number>(
+      `count(*[_type == "actress" ${searchFilter}])`
+    ),
   ]);
 
-  const total = totalResult[0]?.count || 0;
-  const totalPages = Math.ceil(total / limit);
+  const actressList = actressesRaw.map((a) => ({
+    id: a._id,
+    slug: getSlug(a.slug),
+    name: a.name,
+    image: a.image || null,
+    videoCount: a.videoCount || 0,
+  }));
+
+  const totalPages = Math.ceil(totalCount / limit);
 
   return json({
     actresses: actressList,
-    total,
+    total: totalCount,
     page,
     totalPages,
     sort,
