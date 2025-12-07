@@ -1,34 +1,54 @@
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
+# Dependencies
+node_modules/
+.pnpm-store/
 
-# testing
-/coverage
+# Build outputs
+build/
+.cache/
+dist/
+.next/
+out/
 
-# next.js
-/.next/
-/out/
+# Environment variables
+.env
+.env.local
+.env.production
+.dev.vars
 
-# production
-/build
+# Cloudflare
+.wrangler/
+.mf/
 
-# misc
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
 .DS_Store
+Thumbs.db
 *.pem
 
-# debug
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
-.env
+# TypeScript
+*.tsbuildinfo
 
-# vercel
+# Drizzle
+drizzle/meta/
+
+# Test
+coverage/
+
+# Vercel (legacy)
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Lock files (keep package-lock.json)
+yarn.lock
+pnpm-lock.yaml
+

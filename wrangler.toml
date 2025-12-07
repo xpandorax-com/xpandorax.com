@@ -1,0 +1,43 @@
+name = "xpandorax"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+pages_build_output_dir = "./build/client"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "xpandorax-db"
+database_id = "YOUR_D1_DATABASE_ID" # Replace after running: wrangler d1 create xpandorax-db
+
+# R2 Storage for uploads (thumbnails)
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "xpandorax-uploads"
+
+# KV namespace for caching (optional)
+[[kv_namespaces]]
+binding = "CACHE"
+id = "YOUR_KV_NAMESPACE_ID" # Replace after running: wrangler kv:namespace create CACHE
+
+# Environment variables (set these in Cloudflare dashboard for production)
+[vars]
+APP_URL = "http://localhost:8788"
+APP_NAME = "XpandoraX"
+
+# Production environment
+[env.production]
+vars = { APP_URL = "https://xpandorax.com", APP_NAME = "XpandoraX" }
+
+# Preview environment
+[env.preview]
+vars = { APP_URL = "https://preview.xpandorax.com", APP_NAME = "XpandoraX Preview" }
+
+# Secrets (set via wrangler secret put <NAME>):
+# - PAYLOAD_SECRET
+# - LEMON_SQUEEZY_API_KEY
+# - LEMON_SQUEEZY_WEBHOOK_SECRET
+# - LEMON_SQUEEZY_STORE_ID
+# - LEMON_SQUEEZY_VARIANT_ID
+# - EXOCLICK_ZONE_ID
+# - JUICYADS_SPOT_ID
