@@ -22,6 +22,9 @@ export default defineConfig({
         v3_throwAbortReason: true,
         v3_lazyRouteDiscovery: true,
       },
+      buildEnd: async () => {
+        // Post-build: ensure the server bundle is compatible
+      },
     }),
     tsconfigPaths(),
   ],
@@ -29,7 +32,8 @@ export default defineConfig({
     resolve: {
       conditions: ["workerd", "worker", "browser"],
     },
-    external: ["node:async_hooks"],
+    target: "webworker",
+    noExternal: true,
   },
   resolve: {
     mainFields: ["browser", "module", "main"],

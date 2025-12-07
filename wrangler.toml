@@ -3,6 +3,15 @@ main = "./worker.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Don't bundle the remix build, it's already built
+[build]
+watch_dir = "app"
+
+# Rules for modules
+[[rules]]
+type = "ESModule"
+globs = ["**/*.js"]
+
 # Serve static assets from the client build
 [assets]
 directory = "./build/client"

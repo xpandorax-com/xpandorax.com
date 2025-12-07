@@ -1,6 +1,4 @@
-import { createRequestHandler, type ServerBuild } from "@remix-run/cloudflare";
-
-declare const __STATIC_CONTENT: KVNamespace;
+import { createRequestHandler, type ServerBuild, type AppLoadContext } from "@remix-run/cloudflare";
 
 export interface Env {
   DB: D1Database;
@@ -14,14 +12,16 @@ export interface Env {
   EXOCLICK_ZONE_ID: string;
   JUICYADS_ZONE_ID: string;
   SITE_URL: string;
-  __STATIC_CONTENT: KVNamespace;
 }
 
-// This will be replaced during build
-// @ts-expect-error - build import
-import * as build from "./build/server/index.js";
+// Dynamically import the build to avoid bundling issues
+const getBuild = async (): Promise<ServerBuild> => {
+  // @ts-expect-error - dynamic import of build
+  const build = await import("./build/server/index.js");
+  return build as unknown as ServerBuild;
+};
 
-const handleRemixRequest = createRequestHandler(build as unknown as ServerBuild);
+let cachedBuild: ServerBuild | null = null;
 
 export default {
   async fetch(
@@ -30,14 +30,20 @@ export default {
     ctx: ExecutionContext
   ): Promise<Response> {
     try {
-      const loadContext = {
+      if (!cachedBuild) {
+        cachedBuild = await getBuild();
+      }
+      
+      const handleRequest = createRequestHandler(cachedBuild);
+      
+      const loadContext: AppLoadContext = {
         cloudflare: {
           env,
           ctx,
         },
       };
 
-      return await handleRemixRequest(request, loadContext);
+      return await handleRequest(request, loadContext);
     } catch (error) {
       console.error("Worker error:", error);
       return new Response("Internal Server Error", { status: 500 });
