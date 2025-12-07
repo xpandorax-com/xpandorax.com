@@ -1,0 +1,246 @@
+import { createClient } from "@sanity/client";
+import imageUrlBuilder from "@sanity/image-url";
+import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+
+// Environment type for Sanity config
+export interface SanityEnv {
+  SANITY_PROJECT_ID?: string;
+  SANITY_DATASET?: string;
+  SANITY_API_TOKEN?: string;
+}
+
+// Check if Sanity is configured
+export function isSanityConfigured(env: SanityEnv): boolean {
+  return !!(env.SANITY_PROJECT_ID && env.SANITY_PROJECT_ID !== "your-project-id");
+}
+
+// Sanity client configuration
+// You'll need to set these environment variables in Cloudflare
+export function createSanityClient(env: SanityEnv) {
+  const projectId = env.SANITY_PROJECT_ID || "your-project-id";
+  const dataset = env.SANITY_DATASET || "production";
+  
+  return createClient({
+    projectId,
+    dataset,
+    apiVersion: "2024-01-01",
+    useCdn: true, // Use CDN for faster reads
+    token: env.SANITY_API_TOKEN, // Optional: for authenticated requests
+  });
+}
+
+// Image URL builder
+export function createImageBuilder(client: ReturnType<typeof createSanityClient>) {
+  return imageUrlBuilder(client);
+}
+
+export function urlFor(client: ReturnType<typeof createSanityClient>, source: SanityImageSource) {
+  return createImageBuilder(client).image(source);
+}
+
+// ==================== SANITY QUERIES ====================
+
+// Videos
+export const VIDEOS_QUERY = `*[_type == "video" && isPublished == true] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  description,
+  "thumbnail": thumbnail.asset->url,
+  duration,
+  views,
+  likes,
+  isPremium,
+  abyssEmbed,
+  publishedAt,
+  "actress": actress->{
+    _id,
+    name,
+    slug,
+    "image": image.asset->url
+  },
+  "categories": categories[]->{
+    _id,
+    name,
+    slug
+  }
+}`;
+
+export const VIDEO_BY_SLUG_QUERY = `*[_type == "video" && slug.current == $slug][0] {
+  _id,
+  title,
+  slug,
+  description,
+  "thumbnail": thumbnail.asset->url,
+  duration,
+  views,
+  likes,
+  isPremium,
+  abyssEmbed,
+  publishedAt,
+  "actress": actress->{
+    _id,
+    name,
+    slug,
+    "image": image.asset->url
+  },
+  "categories": categories[]->{
+    _id,
+    name,
+    slug
+  }
+}`;
+
+export const FEATURED_VIDEOS_QUERY = `*[_type == "video" && isPublished == true && isFeatured == true] | order(publishedAt desc)[0...8] {
+  _id,
+  title,
+  slug,
+  description,
+  "thumbnail": thumbnail.asset->url,
+  duration,
+  views,
+  isPremium
+}`;
+
+export const RECENT_VIDEOS_QUERY = `*[_type == "video" && isPublished == true] | order(publishedAt desc)[0...12] {
+  _id,
+  title,
+  slug,
+  description,
+  "thumbnail": thumbnail.asset->url,
+  duration,
+  views,
+  isPremium
+}`;
+
+export const PREMIUM_VIDEOS_QUERY = `*[_type == "video" && isPublished == true && isPremium == true] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  description,
+  "thumbnail": thumbnail.asset->url,
+  duration,
+  views,
+  isPremium
+}`;
+
+// Categories
+export const CATEGORIES_QUERY = `*[_type == "category"] | order(sortOrder asc) {
+  _id,
+  name,
+  slug,
+  description,
+  "thumbnail": thumbnail.asset->url,
+  "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true])
+}`;
+
+export const CATEGORY_BY_SLUG_QUERY = `*[_type == "category" && slug.current == $slug][0] {
+  _id,
+  name,
+  slug,
+  description,
+  "thumbnail": thumbnail.asset->url,
+  "videos": *[_type == "video" && references(^._id) && isPublished == true] | order(publishedAt desc) {
+    _id,
+    title,
+    slug,
+    "thumbnail": thumbnail.asset->url,
+    duration,
+    views,
+    isPremium
+  }
+}`;
+
+// Models/Actresses
+export const MODELS_QUERY = `*[_type == "actress"] | order(name asc) {
+  _id,
+  name,
+  slug,
+  bio,
+  "image": image.asset->url,
+  "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
+}`;
+
+export const MODEL_BY_SLUG_QUERY = `*[_type == "actress" && slug.current == $slug][0] {
+  _id,
+  name,
+  slug,
+  bio,
+  "image": image.asset->url,
+  "videos": *[_type == "video" && actress._ref == ^._id && isPublished == true] | order(publishedAt desc) {
+    _id,
+    title,
+    slug,
+    "thumbnail": thumbnail.asset->url,
+    duration,
+    views,
+    isPremium
+  }
+}`;
+
+// Search
+export const SEARCH_QUERY = `*[_type == "video" && isPublished == true && (
+  title match $query + "*" ||
+  description match $query + "*"
+)] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  description,
+  "thumbnail": thumbnail.asset->url,
+  duration,
+  views,
+  isPremium
+}`;
+
+// Stats
+export const STATS_QUERY = `{
+  "totalVideos": count(*[_type == "video"]),
+  "publishedVideos": count(*[_type == "video" && isPublished == true]),
+  "totalCategories": count(*[_type == "category"]),
+  "totalActresses": count(*[_type == "actress"]),
+  "premiumVideos": count(*[_type == "video" && isPremium == true])
+}`;
+
+// ==================== TYPE DEFINITIONS ====================
+
+export interface SanityVideo {
+  _id: string;
+  title: string;
+  slug: { current: string } | string;
+  description?: string;
+  thumbnail?: string;
+  duration?: number;
+  views: number;
+  likes: number;
+  isPremium: boolean;
+  abyssEmbed: string;
+  publishedAt?: string;
+  actress?: SanityActress;
+  categories?: SanityCategory[];
+}
+
+export interface SanityCategory {
+  _id: string;
+  name: string;
+  slug: { current: string } | string;
+  description?: string;
+  thumbnail?: string;
+  videoCount?: number;
+  videos?: SanityVideo[];
+}
+
+export interface SanityActress {
+  _id: string;
+  name: string;
+  slug: { current: string } | string;
+  bio?: string;
+  image?: string;
+  videoCount?: number;
+  videos?: SanityVideo[];
+}
+
+// Helper to get slug string from Sanity slug object
+export function getSlug(slug: { current: string } | string): string {
+  return typeof slug === "string" ? slug : slug.current;
+}

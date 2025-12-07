@@ -48,10 +48,12 @@ vars = { APP_URL = "https://xpandorax.com", APP_NAME = "XpandoraX" }
 vars = { APP_URL = "https://preview.xpandorax.com", APP_NAME = "XpandoraX Preview" }
 
 # Secrets (set via wrangler secret put <NAME>):
-# - PAYLOAD_SECRET
 # - LEMON_SQUEEZY_API_KEY
 # - LEMON_SQUEEZY_WEBHOOK_SECRET
 # - LEMON_SQUEEZY_STORE_ID
 # - LEMON_SQUEEZY_VARIANT_ID
 # - EXOCLICK_ZONE_ID
 # - JUICYADS_SPOT_ID
+# - SANITY_PROJECT_ID (from sanity.io dashboard)
+# - SANITY_DATASET (usually "production")
+# - SANITY_API_TOKEN (optional, for write access)

@@ -1,9 +1,6 @@
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/cloudflare";
 import { json, redirect } from "@remix-run/cloudflare";
 import { useActionData, Form, Link, useNavigation } from "@remix-run/react";
-import { eq } from "drizzle-orm";
-import { createDatabase } from "~/db";
-import { users } from "~/db/schema";
 import {
   getSession,
   verifyPassword,
@@ -11,14 +8,8 @@ import {
   createSessionCookie,
   getUserByEmail,
 } from "~/lib/auth";
-import {
-  checkRateLimit,
-  getClientIp,
-  isAccountLocked,
-  calculateLockoutEnd,
-  SECURITY_CONFIG,
-} from "~/lib/security";
 import { loginSchema } from "~/lib/validations";
+import { createDatabase } from "~/db";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -30,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { AlertCircle, Loader2, LogIn, Lock } from "lucide-react";
+import { AlertCircle, Loader2, LogIn } from "lucide-react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -42,15 +33,9 @@ export const meta: MetaFunction = () => {
 export async function loader({ request, context }: LoaderFunctionArgs) {
   try {
     const { user } = await getSession(request, context);
-
     if (user) {
-      // Check if user needs to change password
-      if (user.mustChangePassword) {
-        return redirect("/change-password");
-      }
       return redirect("/");
     }
-
     return json({});
   } catch (error) {
     console.error("Login loader error:", error);
@@ -62,17 +47,6 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const formData = await request.formData();
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const clientIp = getClientIp(request);
-
-  // Rate limiting
-  const rateLimitKey = `login:${clientIp}`;
-  const rateLimit = checkRateLimit(rateLimitKey);
-  if (!rateLimit.allowed) {
-    return json(
-      { error: `Too many login attempts. Please try again in ${rateLimit.retryAfter} seconds.`, locked: true },
-      { status: 429 }
-    );
-  }
 
   // Validate input
   const result = loginSchema.safeParse({ email, password });
@@ -94,76 +68,22 @@ export async function action({ request, context }: ActionFunctionArgs) {
     );
   }
 
-  // Check if account is locked
-  if (isAccountLocked(user.lockedUntil)) {
-    const lockTime = typeof user.lockedUntil === 'number' ? user.lockedUntil : user.lockedUntil!.getTime();
-    const remainingTime = Math.ceil((lockTime - Date.now()) / 60000);
-    return json(
-      { error: `Account is locked. Please try again in ${remainingTime} minutes.`, locked: true },
-      { status: 403 }
-    );
-  }
-
   // Verify password
   const validPassword = await verifyPassword(user.hashedPassword, password);
   if (!validPassword) {
-    // Increment failed login attempts
-    const newFailedAttempts = (user.failedLoginAttempts || 0) + 1;
-    const shouldLock = newFailedAttempts >= SECURITY_CONFIG.MAX_FAILED_LOGIN_ATTEMPTS;
-    
-    await db
-      .update(users)
-      .set({
-        failedLoginAttempts: newFailedAttempts,
-        lockedUntil: shouldLock ? calculateLockoutEnd() : null,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, user.id));
-
-    if (shouldLock) {
-      return json(
-        { error: `Too many failed attempts. Account locked for ${SECURITY_CONFIG.LOCKOUT_DURATION / 60000} minutes.`, locked: true },
-        { status: 403 }
-      );
-    }
-
-    const remainingAttempts = SECURITY_CONFIG.MAX_FAILED_LOGIN_ATTEMPTS - newFailedAttempts;
     return json(
-      { error: `Invalid email or password. ${remainingAttempts} attempts remaining.` },
+      { error: "Invalid email or password" },
       { status: 400 }
     );
   }
-
-  // Reset failed login attempts and update last login info
-  await db
-    .update(users)
-    .set({
-      failedLoginAttempts: 0,
-      lockedUntil: null,
-      lastLoginAt: new Date(),
-      lastLoginIp: clientIp,
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, user.id));
 
   // Create session
   const lucia = createLucia(db);
   const session = await lucia.createSession(user.id, {});
   const sessionCookie = createSessionCookie(lucia, session.id);
 
-  // Check if user must change password
-  if (user.mustChangePassword) {
-    return redirect("/change-password", {
-      headers: {
-        "Set-Cookie": sessionCookie,
-      },
-    });
-  }
-
-  // Redirect admin to admin panel, regular users to home
-  const redirectTo = user.role === "admin" ? "/admin" : "/";
-
-  return redirect(redirectTo, {
+  // Redirect to home
+  return redirect("/", {
     headers: {
       "Set-Cookie": sessionCookie,
     },
@@ -187,16 +107,8 @@ export default function LoginPage() {
         <Form method="post">
           <CardContent className="space-y-4">
             {actionData?.error && (
-              <div className={`flex items-center gap-2 rounded-md p-3 text-sm ${
-                actionData.locked 
-                  ? "bg-red-500/10 text-red-500" 
-                  : "bg-destructive/10 text-destructive"
-              }`}>
-                {actionData.locked ? (
-                  <Lock className="h-4 w-4" />
-                ) : (
-                  <AlertCircle className="h-4 w-4" />
-                )}
+              <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4" />
                 {actionData.error}
               </div>
             )}
@@ -215,15 +127,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link 
-                  to="/forgot-password" 
-                  className="text-xs text-primary hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 name="password"
