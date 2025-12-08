@@ -49,6 +49,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
+    console.log("Login attempt for email:", email);
+
     // Validate input
     const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
@@ -67,10 +69,13 @@ export async function action({ request, context }: ActionFunctionArgs) {
       );
     }
 
+    console.log("Creating database connection...");
     const db = createDatabase(context.cloudflare.env.DB);
 
     // Find user by email
+    console.log("Looking up user by email...");
     const user = await getUserByEmail(db, email);
+    console.log("User found:", user ? "yes" : "no");
     if (!user) {
       return json(
         { error: "Invalid email or password" },
@@ -79,7 +84,9 @@ export async function action({ request, context }: ActionFunctionArgs) {
     }
 
     // Verify password
+    console.log("Verifying password...");
     const validPassword = await verifyPassword(user.hashedPassword, password);
+    console.log("Password valid:", validPassword);
     if (!validPassword) {
       return json(
         { error: "Invalid email or password" },
@@ -88,8 +95,10 @@ export async function action({ request, context }: ActionFunctionArgs) {
     }
 
     // Create session
+    console.log("Creating session for user:", user.id);
     const lucia = createLucia(db);
     const session = await lucia.createSession(user.id, {});
+    console.log("Session created:", session.id);
     const sessionCookie = createSessionCookie(lucia, session.id);
 
     // Redirect to home
@@ -99,7 +108,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("Login error:", error instanceof Error ? error.message : error);
+    console.error("Login error stack:", error instanceof Error ? error.stack : "no stack");
     return json(
       { error: "An unexpected error occurred. Please try again." },
       { status: 500 }

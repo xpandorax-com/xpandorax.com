@@ -11,7 +11,8 @@ export function createLucia(db: Database) {
     sessionCookie: {
       name: "xpandorax_session",
       attributes: {
-        secure: process.env.NODE_ENV === "production",
+        // Always secure in production (Cloudflare Workers)
+        secure: true,
         sameSite: "lax",
       },
     },
