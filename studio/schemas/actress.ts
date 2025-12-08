@@ -80,6 +80,13 @@ export default {
       ],
       description: 'Add photos of the model for the picture gallery',
     },
+    {
+      name: 'views',
+      title: 'Views',
+      type: 'number',
+      initialValue: 0,
+      description: 'Total views for this model and their pictures',
+    },
   ],
   preview: {
     select: {

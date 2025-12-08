@@ -1,10 +1,11 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link } from "@remix-run/react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "~/components/ui/button";
 import { Image as ImageIcon, ChevronLeft, ChevronRight, X, ZoomIn, Users } from "lucide-react";
 import { createSanityClient, getSlug } from "~/lib/sanity";
+import { trackView } from "~/lib/view-tracker";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ interface GalleryImageWithModel {
   modelName: string;
   modelSlug: string;
   modelImage?: string;
+  modelId: string;
 }
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
@@ -75,6 +77,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
             modelName: model.name,
             modelSlug: getSlug(model.slug),
             modelImage: model.image,
+            modelId: model._id,
           });
         }
       });
@@ -97,6 +100,22 @@ export default function PicturesPage() {
   const { images, total, page, totalPages } = useLoaderData<typeof loader>();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const isOpen = selectedIndex !== null;
+  const trackedViews = useRef<Set<string>>(new Set());
+
+  // Track view when an image is opened in lightbox
+  useEffect(() => {
+    if (selectedIndex !== null && images[selectedIndex]) {
+      const image = images[selectedIndex];
+      const viewKey = `${image.modelId}-${image.url}`;
+      
+      // Only track if we haven't tracked this specific image in this session
+      if (!trackedViews.current.has(viewKey)) {
+        trackedViews.current.add(viewKey);
+        // Track as a picture view (tracks on the actress/model)
+        trackView("picture", image.modelId);
+      }
+    }
+  }, [selectedIndex, images]);
 
   const openLightbox = (index: number) => {
     setSelectedIndex(index);

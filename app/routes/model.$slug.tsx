@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Users, Video, Calendar, ArrowLeft, Image as ImageIcon } from "lucide-react";
 import { formatDate } from "~/lib/utils";
 import { createSanityClient, getSlug, type SanityActress, type SanityVideo, type SanityGalleryImage } from "~/lib/sanity";
+import { useViewTracker } from "~/lib/view-tracker";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data?.actress) {
@@ -124,6 +125,9 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
 export default function ModelDetailPage() {
   const data = useLoaderData<typeof loader>();
   const { actress, videos: actressVideos, gallery, total, page, totalPages } = data;
+
+  // Track model/actress view when page loads
+  useViewTracker({ type: "actress", id: actress.id });
 
   return (
     <div className="container py-8">

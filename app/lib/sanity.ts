@@ -236,6 +236,7 @@ export interface SanityActress {
   slug: { current: string } | string;
   bio?: string;
   image?: string;
+  views?: number;
   videoCount?: number;
   videos?: SanityVideo[];
   gallery?: SanityGalleryImage[];

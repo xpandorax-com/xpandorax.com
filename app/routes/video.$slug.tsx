@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { formatDuration, formatViews, formatDate } from "~/lib/utils";
 import { createSanityClient, getSlug, type SanityVideo, type SanityCategory } from "~/lib/sanity";
+import { useViewTracker } from "~/lib/view-tracker";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data?.video) {
@@ -165,6 +166,9 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
 export default function VideoPage() {
   const { video, relatedVideos, canWatch, isPremium } =
     useLoaderData<typeof loader>();
+
+  // Track video view when page loads
+  useViewTracker({ type: "video", id: video.id, enabled: canWatch });
 
   // Build all available servers (primary + additional)
   const allServers: VideoServer[] = [
