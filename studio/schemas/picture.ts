@@ -1,3 +1,5 @@
+import { R2ImageArrayInput } from '../components/R2ImageArrayInput';
+
 // Picture schema for XpandoraX - Standalone pictures not tied to models
 export default {
   name: 'picture',
@@ -21,33 +23,57 @@ export default {
       validation: (Rule) => Rule.required(),
     },
     {
+      name: 'thumbnail',
+      title: 'Thumbnail',
+      type: 'image',
+      options: {
+        hotspot: true,
+      },
+      description: 'Small preview image (stored in Sanity CDN for fast loading)',
+      validation: (Rule) => Rule.required(),
+    },
+    {
       name: 'images',
-      title: 'Images',
+      title: 'Full Images (R2)',
       type: 'array',
       of: [
         {
-          type: 'image',
-          options: {
-            hotspot: true,
-          },
+          type: 'object',
           fields: [
+            {
+              name: 'url',
+              title: 'Image URL',
+              type: 'url',
+            },
             {
               name: 'caption',
               title: 'Caption',
               type: 'string',
-              description: 'Optional caption for this image',
             },
             {
               name: 'alt',
               title: 'Alt Text',
               type: 'string',
-              description: 'Alternative text for accessibility',
             },
           ],
+          preview: {
+            select: {
+              url: 'url',
+              caption: 'caption',
+            },
+            prepare({ url, caption }) {
+              return {
+                title: caption || 'Image',
+                subtitle: url ? url.split('/').pop() : 'No URL',
+              };
+            },
+          },
         },
       ],
-      description: 'Upload one or more images. The first image will be used as the thumbnail.',
-      validation: (Rule) => Rule.required().min(1).error('At least one image is required'),
+      description: 'Full-size images uploaded to Cloudflare R2',
+      components: {
+        input: R2ImageArrayInput,
+      },
     },
     {
       name: 'actress',
@@ -85,16 +111,17 @@ export default {
   preview: {
     select: {
       title: 'title',
+      media: 'thumbnail',
       images: 'images',
       actressName: 'actress.name',
     },
     prepare(selection) {
-      const { title, images, actressName } = selection;
+      const { title, media, images, actressName } = selection;
       const imageCount = images?.length || 0;
       return {
         title,
         subtitle: `${imageCount} image${imageCount !== 1 ? 's' : ''}${actressName ? ` • Model: ${actressName}` : ''}`,
-        media: images?.[0],
+        media,
       };
     },
   },

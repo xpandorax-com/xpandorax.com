@@ -54,6 +54,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       _id: string;
       title: string;
       slug: { current: string } | string;
+      thumbnail?: string;
       images?: Array<{
         _key: string;
         url?: string;
@@ -71,9 +72,10 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
         _id,
         title,
         slug,
+        "thumbnail": thumbnail.asset->url,
         "images": images[] {
           _key,
-          "url": asset->url,
+          url,
           caption,
           alt
         },
