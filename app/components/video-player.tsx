@@ -11,7 +11,6 @@ export interface VideoServer {
 
 interface VideoPlayerProps {
   embedUrl: string;
-  servers?: VideoServer[];
   thumbnailUrl?: string | null;
   title: string;
   className?: string;
@@ -19,40 +18,19 @@ interface VideoPlayerProps {
 }
 
 /**
- * Video Player Component with Multi-Server Support
- * 
- * Supports iframe embeds from:
- * - Abyss.to, DoodStream, StreamTape, Filemoon, VOE, etc.
- * - YouTube, Vimeo, Dailymotion, Twitch, etc.
+ * Simple Video Player Component using iframe embeds
  */
 export function VideoPlayer({
   embedUrl,
-  servers = [],
   thumbnailUrl,
   title,
   className,
   onPlay,
 }: VideoPlayerProps) {
-  // Build all available servers (primary + additional)
-  const allServers: VideoServer[] = [
-    { name: "Server 1", url: embedUrl },
-    ...servers,
-  ];
-  
-  const [activeServerIndex, setActiveServerIndex] = useState(0);
-  const [showServerMenu, setShowServerMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasStarted, setHasStarted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  const currentUrl = allServers[activeServerIndex]?.url || embedUrl;
-
-  const handleServerChange = (index: number) => {
-    setActiveServerIndex(index);
-    setIsLoading(true);
-    setShowServerMenu(false);
-  };
 
   const handlePlay = () => {
     setHasStarted(true);
@@ -67,20 +45,7 @@ export function VideoPlayer({
     // Reset state when embed URL changes
     setIsLoading(true);
     setHasStarted(false);
-    setActiveServerIndex(0);
   }, [embedUrl]);
-
-  // Close server menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (showServerMenu) {
-        setShowServerMenu(false);
-      }
-    };
-    
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [showServerMenu]);
 
   return (
     <div
@@ -141,7 +106,7 @@ export function VideoPlayer({
           
           <iframe
             ref={iframeRef}
-            src={currentUrl}
+            src={embedUrl}
             title={title}
             className={cn(
               "h-full w-full border-0",
@@ -152,49 +117,48 @@ export function VideoPlayer({
             onLoad={handleLoad}
             referrerPolicy="no-referrer-when-downgrade"
           />
-          
-          {/* Server Selector - only show if multiple servers */}
-          {allServers.length > 1 && (
-            <div className="absolute top-3 right-3 z-20">
-              <div className="relative">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowServerMenu(!showServerMenu);
-                  }}
-                  className="flex items-center gap-2 rounded-lg bg-black/80 px-3 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-black/90"
-                >
-                  <Server className="h-4 w-4" />
-                  <span>{allServers[activeServerIndex]?.name}</span>
-                </button>
-                
-                {showServerMenu && (
-                  <div 
-                    className="absolute right-0 top-full mt-1 min-w-[140px] overflow-hidden rounded-lg bg-zinc-900 shadow-xl ring-1 ring-white/10"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {allServers.map((server, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleServerChange(index)}
-                        className={cn(
-                          "flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800",
-                          activeServerIndex === index
-                            ? "bg-primary/20 text-primary"
-                            : "text-white"
-                        )}
-                      >
-                        <Server className="h-3.5 w-3.5" />
-                        {server.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Server Selector Component - displays server options as buttons
+ */
+interface ServerSelectorProps {
+  servers: VideoServer[];
+  activeIndex: number;
+  onServerChange: (index: number) => void;
+  className?: string;
+}
+
+export function ServerSelector({
+  servers,
+  activeIndex,
+  onServerChange,
+  className,
+}: ServerSelectorProps) {
+  return (
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+        <Server className="h-4 w-4" />
+        Servers:
+      </span>
+      {servers.map((server, index) => (
+        <button
+          key={index}
+          onClick={() => onServerChange(index)}
+          className={cn(
+            "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+            activeIndex === index
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+          )}
+        >
+          {server.name}
+        </button>
+      ))}
     </div>
   );
 }

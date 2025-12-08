@@ -1,8 +1,9 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link } from "@remix-run/react";
+import { useState } from "react";
 import { getSession } from "~/lib/auth";
-import { VideoPlayer, type VideoServer } from "~/components/video-player";
+import { VideoPlayer, ServerSelector, type VideoServer } from "~/components/video-player";
 import { VideoCard } from "~/components/video-card";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -165,6 +166,15 @@ export default function VideoPage() {
   const { video, relatedVideos, canWatch, isPremium } =
     useLoaderData<typeof loader>();
 
+  // Build all available servers (primary + additional)
+  const allServers: VideoServer[] = [
+    { name: "Server 1", url: video.abyssEmbed },
+    ...video.servers,
+  ];
+  
+  const [activeServerIndex, setActiveServerIndex] = useState(0);
+  const currentEmbedUrl = allServers[activeServerIndex]?.url || video.abyssEmbed;
+
   return (
     <div className="container py-6">
       <div className="grid gap-6 lg:grid-cols-3">
@@ -173,8 +183,7 @@ export default function VideoPage() {
           {/* Video Player */}
           {canWatch ? (
             <VideoPlayer
-              embedUrl={video.abyssEmbed}
-              servers={video.servers}
+              embedUrl={currentEmbedUrl}
               thumbnailUrl={video.thumbnail}
               title={video.title}
             />
@@ -202,6 +211,15 @@ export default function VideoPage() {
                 </Button>
               </div>
             </div>
+          )}
+
+          {/* Server Selector - below video player, above title */}
+          {canWatch && (
+            <ServerSelector
+              servers={allServers}
+              activeIndex={activeServerIndex}
+              onServerChange={setActiveServerIndex}
+            />
           )}
 
           {/* Video Info */}
