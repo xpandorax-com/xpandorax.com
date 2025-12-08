@@ -58,6 +58,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       description,
       "thumbnail": thumbnail.asset->url,
       duration,
+      views,
       abyssEmbed,
       servers,
       downloadLinks,
@@ -106,6 +107,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     description: videoRaw.description || null,
     thumbnail: videoRaw.thumbnail || null,
     duration: videoRaw.duration || null,
+    views: (videoRaw as { views?: number }).views || 0,
     abyssEmbed: videoRaw.abyssEmbed || "",
     servers: (videoRaw.servers || []).map((s: { name: string; url: string }) => ({
       name: s.name,
@@ -163,7 +165,12 @@ export default function VideoPage() {
   const [userInteraction, setUserInteraction] = useState<"like" | "dislike" | null>(null);
   const [likes, setLikes] = useState(0);
   const [dislikes, setDislikes] = useState(0);
-  const [views, setViews] = useState(0);
+  const [views, setViews] = useState(video.views || 0);
+
+  // Update views when video changes
+  useEffect(() => {
+    setViews(video.views || 0);
+  }, [video.views]);
 
   // Fetch initial interaction status
   useEffect(() => {
@@ -365,11 +372,12 @@ export default function VideoPage() {
                 View all <ChevronRight className="inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Link>
             </div>
-            {/* Mobile: horizontal scroll, Desktop: vertical grid */}
-            <div className="flex lg:grid gap-2 sm:gap-4 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
+            {/* Mobile: horizontal scroll, Desktop: vertical list with compact cards */}
+            <div className="flex lg:flex-col gap-2 sm:gap-3 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
               {relatedVideos.map((relatedVideo) => (
-                <div key={relatedVideo.id} className="w-[45%] sm:w-[200px] lg:w-auto shrink-0 lg:shrink">
-                  <VideoCard video={relatedVideo} />
+                <div key={relatedVideo.id} className="w-[45%] sm:w-[200px] lg:w-full shrink-0 lg:shrink">
+                  <VideoCard video={relatedVideo} size="compact" className="hidden lg:flex" />
+                  <VideoCard video={relatedVideo} className="lg:hidden" />
                 </div>
               ))}
             </div>

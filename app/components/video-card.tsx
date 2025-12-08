@@ -17,19 +17,26 @@ interface VideoCardVideo {
 interface VideoCardProps {
   video: VideoCardVideo;
   className?: string;
+  size?: "default" | "compact";
 }
 
-export function VideoCard({ video, className }: VideoCardProps) {
+export function VideoCard({ video, className, size = "default" }: VideoCardProps) {
+  const isCompact = size === "compact";
+  
   return (
     <Link
       to={`/video/${video.slug}`}
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-lg bg-card transition-colors hover:bg-accent cursor-pointer",
+        "group relative flex overflow-hidden rounded-lg bg-card transition-colors hover:bg-accent cursor-pointer",
+        isCompact ? "flex-row gap-2" : "flex-col",
         className
       )}
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video overflow-hidden bg-muted">
+      <div className={cn(
+        "relative overflow-hidden bg-muted shrink-0",
+        isCompact ? "w-28 sm:w-32 aspect-video rounded-lg" : "aspect-video"
+      )}>
         {video.thumbnail ? (
           <img
             src={video.thumbnail}
@@ -39,46 +46,71 @@ export function VideoCard({ video, className }: VideoCardProps) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <Play className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
+            <Play className={cn(
+              "text-muted-foreground",
+              isCompact ? "h-4 w-4" : "h-8 w-8 sm:h-12 sm:w-12"
+            )} />
           </div>
         )}
 
         {/* Play overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">
-          <div className="rounded-full bg-primary/90 p-2 sm:p-3 transition-transform scale-0 group-hover:scale-100">
-            <Play className="h-4 w-4 sm:h-6 sm:w-6 text-white" fill="white" />
+          <div className={cn(
+            "rounded-full bg-primary/90 transition-transform scale-0 group-hover:scale-100",
+            isCompact ? "p-1" : "p-2 sm:p-3"
+          )}>
+            <Play className={cn(
+              "text-white",
+              isCompact ? "h-2.5 w-2.5" : "h-4 w-4 sm:h-6 sm:w-6"
+            )} fill="white" />
           </div>
         </div>
 
         {/* Duration badge */}
         {video.duration && (
-          <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 flex items-center gap-0.5 sm:gap-1 rounded bg-black/80 px-1 sm:px-1.5 py-0.5 text-2xs sm:text-xs font-medium text-white">
-            <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+          <div className={cn(
+            "absolute flex items-center gap-0.5 rounded bg-black/80 font-medium text-white",
+            isCompact 
+              ? "bottom-0.5 right-0.5 px-1 py-0.5 text-[10px]" 
+              : "bottom-1 right-1 sm:bottom-2 sm:right-2 gap-0.5 sm:gap-1 px-1 sm:px-1.5 py-0.5 text-2xs sm:text-xs"
+          )}>
+            <Clock className={cn(isCompact ? "h-2 w-2" : "h-2.5 w-2.5 sm:h-3 sm:w-3")} />
             {formatDuration(video.duration)}
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-2 sm:p-3">
-        <h3 className="line-clamp-2 text-xs sm:text-sm font-medium leading-tight group-hover:text-primary">
+      <div className={cn(
+        "flex flex-1 flex-col min-w-0",
+        isCompact ? "py-0.5" : "p-2 sm:p-3"
+      )}>
+        <h3 className={cn(
+          "font-medium leading-tight group-hover:text-primary",
+          isCompact ? "line-clamp-2 text-xs" : "line-clamp-2 text-xs sm:text-sm"
+        )}>
           {video.title}
         </h3>
 
         {video.actress && (
-          <p className="mt-0.5 sm:mt-1 text-2xs sm:text-xs text-muted-foreground truncate">
+          <p className={cn(
+            "text-muted-foreground truncate",
+            isCompact ? "mt-0.5 text-[10px]" : "mt-0.5 sm:mt-1 text-2xs sm:text-xs"
+          )}>
             {video.actress.name}
           </p>
         )}
 
-        <div className="mt-auto flex items-center gap-2 sm:gap-3 pt-1 sm:pt-2 text-2xs sm:text-xs text-muted-foreground">
-          {video.views !== undefined && video.views > 0 && (
-            <span className="flex items-center gap-0.5 sm:gap-1">
-              <Eye className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-              {formatViews(video.views)}
-            </span>
-          )}
-        </div>
+        {!isCompact && (
+          <div className="mt-auto flex items-center gap-2 sm:gap-3 pt-1 sm:pt-2 text-2xs sm:text-xs text-muted-foreground">
+            {video.views !== undefined && video.views > 0 && (
+              <span className="flex items-center gap-0.5 sm:gap-1">
+                <Eye className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                {formatViews(video.views)}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </Link>
   );

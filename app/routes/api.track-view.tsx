@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
+import { createSanityWriteClient } from "~/lib/sanity";
 
 // Rate limiting map (in-memory, per worker instance)
 const viewedRecently = new Map<string, number>();
@@ -15,7 +16,7 @@ function cleanupOldEntries() {
   }
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   // Only allow POST requests
   if (request.method !== "POST") {
     return json({ error: "Method not allowed" }, { status: 405 });
@@ -57,11 +58,25 @@ export async function action({ request }: ActionFunctionArgs) {
     // Mark as viewed
     viewedRecently.set(rateKey, now);
 
-    // Note: View counts are now handled by Sanity CMS or external analytics
-    // This endpoint serves as a rate-limited acknowledgment of views
-    // You can integrate with Sanity's API to increment view counts if needed
+    // Increment view count in Sanity CMS
+    const env = context.cloudflare.env;
+    const sanityClient = createSanityWriteClient(env);
 
-    return json({ success: true, counted: true });
+    try {
+      // Use Sanity's patch API to increment the view count
+      await sanityClient
+        .patch(id)
+        .setIfMissing({ views: 0 })
+        .inc({ views: 1 })
+        .commit();
+
+      return json({ success: true, counted: true });
+    } catch (sanityError) {
+      console.error("Error updating Sanity view count:", sanityError);
+      // Still return success since the view was acknowledged
+      // The Sanity update failing shouldn't break the user experience
+      return json({ success: true, counted: true, warning: "View acknowledged but count update may have failed" });
+    }
   } catch (error) {
     console.error("Error tracking view:", error);
     return json({ error: "Failed to track view" }, { status: 500 });
