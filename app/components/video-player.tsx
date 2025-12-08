@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Play, Loader2, Server } from "lucide-react";
+import { Play, Loader2, Server, ExternalLink, AlertTriangle } from "lucide-react";
 import { cn } from "~/lib/utils";
 
 export interface VideoServer {
@@ -29,6 +29,7 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasStarted, setHasStarted] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -41,11 +42,33 @@ export function VideoPlayer({
     setIsLoading(false);
   };
 
+  const handleError = () => {
+    setIsLoading(false);
+    setHasError(true);
+  };
+
+  const openInNewTab = () => {
+    window.open(embedUrl, '_blank', 'noopener,noreferrer');
+  };
+
   useEffect(() => {
     // Reset state when embed URL changes
     setIsLoading(true);
     setHasStarted(false);
+    setHasError(false);
   }, [embedUrl]);
+
+  // Set a timeout to detect if iframe fails to load (X-Frame-Options block)
+  useEffect(() => {
+    if (hasStarted && isLoading) {
+      const timeout = setTimeout(() => {
+        // If still loading after 10 seconds, likely blocked
+        setHasError(true);
+        setIsLoading(false);
+      }, 10000);
+      return () => clearTimeout(timeout);
+    }
+  }, [hasStarted, isLoading]);
 
   return (
     <div
@@ -95,11 +118,32 @@ export function VideoPlayer({
       ) : (
         // Video iframe
         <div className="relative h-full w-full">
-          {isLoading && (
+          {isLoading && !hasError && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
               <div className="flex flex-col items-center gap-3">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
                 <p className="text-sm text-zinc-400">Loading video...</p>
+              </div>
+            </div>
+          )}
+          
+          {hasError && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
+              <div className="flex flex-col items-center gap-4 text-center px-4">
+                <AlertTriangle className="h-12 w-12 text-yellow-500" />
+                <div>
+                  <p className="text-lg font-medium text-white">Video embed blocked</p>
+                  <p className="text-sm text-zinc-400 mt-1">
+                    This server doesn't allow embedding. Try a different server or open directly.
+                  </p>
+                </div>
+                <button
+                  onClick={openInNewTab}
+                  className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open in New Tab
+                </button>
               </div>
             </div>
           )}
@@ -110,11 +154,12 @@ export function VideoPlayer({
             title={title}
             className={cn(
               "h-full w-full border-0",
-              isLoading && "invisible"
+              (isLoading || hasError) && "invisible"
             )}
             allowFullScreen
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
             onLoad={handleLoad}
+            onError={handleError}
             referrerPolicy="no-referrer-when-downgrade"
           />
         </div>
