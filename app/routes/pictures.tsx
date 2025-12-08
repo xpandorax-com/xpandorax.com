@@ -54,8 +54,12 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       _id: string;
       title: string;
       slug: { current: string } | string;
-      thumbnail?: string;
-      r2ImageUrl?: string;
+      images?: Array<{
+        _key: string;
+        url?: string;
+        caption?: string;
+        alt?: string;
+      }>;
       actress?: {
         _id: string;
         name: string;
@@ -67,8 +71,12 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
         _id,
         title,
         slug,
-        "thumbnail": thumbnail.asset->url,
-        r2ImageUrl,
+        "images": images[] {
+          _key,
+          "url": asset->url,
+          caption,
+          alt
+        },
         "actress": actress->{
           _id,
           name,
@@ -108,19 +116,21 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   // Combine all images
   const allImages: GalleryImageWithModel[] = [];
 
-  // Add pictures from Pictures schema first
+  // Add pictures from Pictures schema first (each picture can have multiple images)
   picturesFromSchema.forEach((pic) => {
-    // Prefer R2 URL for full image, fallback to thumbnail
-    const imageUrl = pic.r2ImageUrl || pic.thumbnail;
-    if (imageUrl) {
-      allImages.push({
-        url: imageUrl,
-        caption: pic.title,
-        alt: pic.title,
-        modelName: pic.actress?.name || "Unknown",
-        modelSlug: pic.actress ? getSlug(pic.actress.slug) : "",
-        modelImage: pic.actress?.image,
-        modelId: pic.actress?._id || pic._id,
+    if (pic.images && pic.images.length > 0) {
+      pic.images.forEach((img) => {
+        if (img.url) {
+          allImages.push({
+            url: img.url,
+            caption: img.caption || pic.title,
+            alt: img.alt || pic.title,
+            modelName: pic.actress?.name || "Unknown",
+            modelSlug: pic.actress ? getSlug(pic.actress.slug) : "",
+            modelImage: pic.actress?.image,
+            modelId: pic.actress?._id || pic._id,
+          });
+        }
       });
     }
   });

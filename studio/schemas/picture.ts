@@ -21,20 +21,33 @@ export default {
       validation: (Rule) => Rule.required(),
     },
     {
-      name: 'thumbnail',
-      title: 'Thumbnail',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
-      description: 'Thumbnail image displayed in picture listings (stored in Sanity CDN)',
-      validation: (Rule) => Rule.required(),
-    },
-    {
-      name: 'r2ImageUrl',
-      title: 'Full Image URL (R2)',
-      type: 'url',
-      description: 'URL of the full-size image stored in Cloudflare R2. Use the upload API at /api/upload-picture to get this URL.',
+      name: 'images',
+      title: 'Images',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: {
+            hotspot: true,
+          },
+          fields: [
+            {
+              name: 'caption',
+              title: 'Caption',
+              type: 'string',
+              description: 'Optional caption for this image',
+            },
+            {
+              name: 'alt',
+              title: 'Alt Text',
+              type: 'string',
+              description: 'Alternative text for accessibility',
+            },
+          ],
+        },
+      ],
+      description: 'Upload one or more images. The first image will be used as the thumbnail.',
+      validation: (Rule) => Rule.required().min(1).error('At least one image is required'),
     },
     {
       name: 'actress',
@@ -72,15 +85,16 @@ export default {
   preview: {
     select: {
       title: 'title',
-      media: 'thumbnail',
+      images: 'images',
       actressName: 'actress.name',
     },
     prepare(selection) {
-      const { title, media, actressName } = selection;
+      const { title, images, actressName } = selection;
+      const imageCount = images?.length || 0;
       return {
         title,
-        subtitle: actressName ? `Model: ${actressName}` : '',
-        media,
+        subtitle: `${imageCount} image${imageCount !== 1 ? 's' : ''}${actressName ? ` • Model: ${actressName}` : ''}`,
+        media: images?.[0],
       };
     },
   },
