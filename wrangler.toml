@@ -22,11 +22,10 @@ binding = "DB"
 database_name = "xpandorax-com"
 database_id = "1e1e0001-2d13-4c0e-b5c6-83f26ab8732e"
 
-# R2 Storage for uploads (thumbnails) - UNCOMMENT after creating:
-# wrangler r2 bucket create xpandorax-uploads
-# [[r2_buckets]]
-# binding = "STORAGE"
-# bucket_name = "xpandorax-uploads"
+# R2 Storage for media files
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "xpandorax-com"
 
 # KV namespace for caching (optional) - UNCOMMENT and replace ID after creating:
 # wrangler kv:namespace create CACHE

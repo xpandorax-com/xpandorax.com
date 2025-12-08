@@ -9,11 +9,16 @@ dist/
 .next/
 out/
 
-# Environment variables
+# Environment variables - NEVER COMMIT SECRETS!
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
 .dev.vars
+*.vars
+
+# Cloudflare secrets
+wrangler.*.toml
+!wrangler.toml
 
 # Cloudflare
 .wrangler/

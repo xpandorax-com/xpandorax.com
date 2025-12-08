@@ -14,7 +14,7 @@ interface Env {
   // D1 Database
   DB: D1Database;
 
-  // R2 Storage
+  // R2 Storage (bound via wrangler.toml - NO API KEYS NEEDED AT RUNTIME)
   MEDIA: R2Bucket;
 
   // KV Cache
@@ -22,6 +22,16 @@ interface Env {
 
   // App config
   SITE_URL: string;
+  APP_URL?: string;
+  APP_NAME?: string;
+
+  // Cloudflare R2 S3-compatible API (only for external/server-side uploads)
+  R2_ACCOUNT_ID?: string;
+  R2_BUCKET_NAME?: string;
+  R2_ACCESS_KEY_ID?: string;
+  R2_SECRET_ACCESS_KEY?: string;
+  R2_ENDPOINT?: string;
+  R2_PUBLIC_URL?: string;
 
   // Sanity CMS
   SANITY_PROJECT_ID?: string;
