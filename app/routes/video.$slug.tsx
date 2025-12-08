@@ -2,7 +2,7 @@ import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link } from "@remix-run/react";
 import { getSession } from "~/lib/auth";
-import { VideoPlayer } from "~/components/video-player";
+import { VideoPlayer, type VideoServer } from "~/components/video-player";
 import { VideoCard } from "~/components/video-card";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -68,6 +68,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       likes,
       isPremium,
       abyssEmbed,
+      servers,
       publishedAt,
       "actress": actress->{
         _id,
@@ -122,6 +123,10 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     isPremium: videoRaw.isPremium || false,
     premiumOnly: videoRaw.isPremium || false,
     abyssEmbed: videoRaw.abyssEmbed || "",
+    servers: (videoRaw.servers || []).map((s: { name: string; url: string }) => ({
+      name: s.name,
+      url: s.url,
+    })) as VideoServer[],
     publishedAt: videoRaw.publishedAt || null,
     actress: videoRaw.actress ? {
       id: videoRaw.actress._id,
@@ -169,6 +174,7 @@ export default function VideoPage() {
           {canWatch ? (
             <VideoPlayer
               embedUrl={video.abyssEmbed}
+              servers={video.servers}
               thumbnailUrl={video.thumbnail}
               title={video.title}
             />

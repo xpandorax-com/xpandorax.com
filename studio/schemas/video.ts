@@ -36,10 +36,42 @@ export default {
     },
     {
       name: 'abyssEmbed',
-      title: 'Abyss Embed URL',
+      title: 'Primary Embed URL',
       type: 'url',
-      description: 'e.g., https://abyss.to/embed/abc123',
+      description: 'Main video embed URL (e.g., https://short.icu/abc123)',
       validation: (Rule) => Rule.required(),
+    },
+    {
+      name: 'servers',
+      title: 'Additional Servers',
+      type: 'array',
+      description: 'Add backup/alternative video servers',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'name',
+              title: 'Server Name',
+              type: 'string',
+              description: 'e.g., Server 2, DoodStream, Filemoon',
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'url',
+              title: 'Embed URL',
+              type: 'url',
+              validation: (Rule) => Rule.required(),
+            },
+          ],
+          preview: {
+            select: {
+              title: 'name',
+              subtitle: 'url',
+            },
+          },
+        },
+      ],
     },
     {
       name: 'duration',
