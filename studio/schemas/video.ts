@@ -157,14 +157,6 @@ export default {
       title: 'Published At',
       type: 'datetime',
     },
-    {
-      name: 'views',
-      title: 'Views',
-      type: 'number',
-      initialValue: 0,
-      description: 'Total view count for this video',
-      readOnly: true,
-    },
   ],
   preview: {
     select: {

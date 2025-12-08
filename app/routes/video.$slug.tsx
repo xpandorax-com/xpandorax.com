@@ -20,6 +20,9 @@ import {
 import { formatDuration, formatViews, formatDate, cn } from "~/lib/utils";
 import { createSanityClient, getSlug, type SanityVideo } from "~/lib/sanity";
 import { useViewTracker } from "~/lib/view-tracker";
+import { drizzle } from "drizzle-orm/d1";
+import { eq, and } from "drizzle-orm";
+import { contentViews } from "~/db/schema";
 import type { RootLoaderData } from "~/types";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -58,7 +61,6 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       description,
       "thumbnail": thumbnail.asset->url,
       duration,
-      views,
       abyssEmbed,
       servers,
       downloadLinks,
@@ -82,6 +84,21 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
   if (!videoRaw) {
     throw new Response("Not Found", { status: 404 });
   }
+
+  // Fetch view count from D1 database
+  const db = drizzle(env.DB);
+  const viewResult = await db
+    .select({ views: contentViews.views })
+    .from(contentViews)
+    .where(
+      and(
+        eq(contentViews.contentId, videoRaw._id),
+        eq(contentViews.contentType, "video")
+      )
+    )
+    .limit(1);
+  
+  const viewCount = viewResult[0]?.views || 0;
 
   // Fetch related videos from Sanity
   const relatedVideosRaw = await sanity.fetch<SanityVideo[]>(
@@ -107,7 +124,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     description: videoRaw.description || null,
     thumbnail: videoRaw.thumbnail || null,
     duration: videoRaw.duration || null,
-    views: (videoRaw as { views?: number }).views || 0,
+    views: viewCount,
     abyssEmbed: videoRaw.abyssEmbed || "",
     servers: (videoRaw.servers || []).map((s: { name: string; url: string }) => ({
       name: s.name,

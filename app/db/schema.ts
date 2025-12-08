@@ -80,6 +80,18 @@ export const comments = sqliteTable("comments", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// ==================== CONTENT VIEWS TABLE ====================
+// Tracks view counts for videos, pictures, and actresses (content managed by Sanity)
+
+export const contentViews = sqliteTable("content_views", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  contentId: text("content_id").notNull(), // Sanity content _id
+  contentType: text("content_type", { enum: ["video", "picture", "actress"] }).notNull(),
+  views: integer("views").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
 // ==================== RELATIONS ====================
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -129,3 +141,5 @@ export type VideoInteraction = typeof videoInteractions.$inferSelect;
 export type NewVideoInteraction = typeof videoInteractions.$inferInsert;
 export type Comment = typeof comments.$inferSelect;
 export type NewComment = typeof comments.$inferInsert;
+export type ContentView = typeof contentViews.$inferSelect;
+export type NewContentView = typeof contentViews.$inferInsert;

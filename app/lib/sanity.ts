@@ -219,7 +219,6 @@ export interface SanityVideo {
   thumbnail?: string;
   previewVideo?: string;
   duration?: number;
-  views?: number;
   abyssEmbed: string;
   servers?: { name: string; url: string }[];
   downloadLinks?: { name: string; url: string }[];

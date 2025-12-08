@@ -1,6 +1,8 @@
-import type { ActionFunctionArgs } from "@remix-run/cloudflare";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { createSanityWriteClient } from "~/lib/sanity";
+import { drizzle } from "drizzle-orm/d1";
+import { eq, and, sql } from "drizzle-orm";
+import { contentViews } from "~/db/schema";
 
 // Rate limiting map (in-memory, per worker instance)
 const viewedRecently = new Map<string, number>();
@@ -58,23 +60,53 @@ export async function action({ request, context }: ActionFunctionArgs) {
     // Mark as viewed
     viewedRecently.set(rateKey, now);
 
-    // Increment view count in Sanity CMS
+    // Increment view count in D1 database
     const env = context.cloudflare.env;
-    const sanityClient = createSanityWriteClient(env);
+    const db = drizzle(env.DB);
 
     try {
-      // Use Sanity's patch API to increment the view count
-      await sanityClient
-        .patch(id)
-        .setIfMissing({ views: 0 })
-        .inc({ views: 1 })
-        .commit();
+      // Check if record exists
+      const existing = await db
+        .select()
+        .from(contentViews)
+        .where(
+          and(
+            eq(contentViews.contentId, id),
+            eq(contentViews.contentType, type as "video" | "picture" | "actress")
+          )
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        // Update existing record - increment views
+        await db
+          .update(contentViews)
+          .set({
+            views: sql`${contentViews.views} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(contentViews.contentId, id),
+              eq(contentViews.contentType, type as "video" | "picture" | "actress")
+            )
+          );
+      } else {
+        // Insert new record with 1 view
+        await db.insert(contentViews).values({
+          id: crypto.randomUUID(),
+          contentId: id,
+          contentType: type as "video" | "picture" | "actress",
+          views: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
 
       return json({ success: true, counted: true });
-    } catch (sanityError) {
-      console.error("Error updating Sanity view count:", sanityError);
+    } catch (dbError) {
+      console.error("Error updating D1 view count:", dbError);
       // Still return success since the view was acknowledged
-      // The Sanity update failing shouldn't break the user experience
       return json({ success: true, counted: true, warning: "View acknowledged but count update may have failed" });
     }
   } catch (error) {
@@ -83,7 +115,38 @@ export async function action({ request, context }: ActionFunctionArgs) {
   }
 }
 
-// Loader to handle non-POST requests
-export async function loader() {
-  return json({ error: "Method not allowed" }, { status: 405 });
+// Loader to get view count for a specific content
+export async function loader({ request, context }: LoaderFunctionArgs) {
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+  const type = url.searchParams.get("type");
+
+  if (!id || !type) {
+    return json({ error: "Missing id or type parameter" }, { status: 400 });
+  }
+
+  if (!["video", "picture", "actress"].includes(type)) {
+    return json({ error: "Invalid type" }, { status: 400 });
+  }
+
+  try {
+    const env = context.cloudflare.env;
+    const db = drizzle(env.DB);
+
+    const result = await db
+      .select({ views: contentViews.views })
+      .from(contentViews)
+      .where(
+        and(
+          eq(contentViews.contentId, id),
+          eq(contentViews.contentType, type as "video" | "picture" | "actress")
+        )
+      )
+      .limit(1);
+
+    return json({ views: result[0]?.views || 0 });
+  } catch (error) {
+    console.error("Error fetching view count:", error);
+    return json({ views: 0 });
+  }
 }

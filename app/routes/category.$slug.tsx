@@ -12,6 +12,9 @@ import {
 } from "~/components/ui/select";
 import { ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
 import { createSanityClient, getSlug, type SanityCategory, type SanityVideo } from "~/lib/sanity";
+import { drizzle } from "drizzle-orm/d1";
+import { eq, and, inArray } from "drizzle-orm";
+import { contentViews } from "~/db/schema";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data?.category) {
@@ -47,10 +50,8 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
   // Create Sanity client
   const sanity = createSanityClient(env);
 
-  // Build order by based on sort
-  const orderBy = sort === "popular"
-    ? "views desc"
-    : sort === "oldest"
+  // Build order by based on sort (note: popular sort will be handled after fetching views)
+  const orderBy = sort === "oldest"
     ? "publishedAt asc"
     : "publishedAt desc";
 
@@ -70,7 +71,6 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
         "thumbnail": thumbnail.asset->url,
         "previewVideo": previewVideo.asset->url,
         duration,
-        views,
         isPremium
       }
     }`,
@@ -83,6 +83,28 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
 
   const totalPages = Math.ceil((categoryRaw.videoCount || 0) / pageSize);
 
+  // Fetch view counts from D1 for all videos
+  const db = drizzle(env.DB);
+  const videoIds = (categoryRaw.videos || []).map(v => v._id);
+  
+  let viewsMap: Record<string, number> = {};
+  if (videoIds.length > 0) {
+    const viewsResult = await db
+      .select({ contentId: contentViews.contentId, views: contentViews.views })
+      .from(contentViews)
+      .where(
+        and(
+          inArray(contentViews.contentId, videoIds),
+          eq(contentViews.contentType, "video")
+        )
+      );
+    
+    viewsMap = viewsResult.reduce((acc, row) => {
+      acc[row.contentId] = row.views;
+      return acc;
+    }, {} as Record<string, number>);
+  }
+
   // Transform data
   const category = {
     id: categoryRaw._id,
@@ -93,16 +115,21 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     videoCount: categoryRaw.videoCount || 0,
   };
 
-  const categoryVideos = (categoryRaw.videos || []).map((v) => ({
+  let categoryVideos = (categoryRaw.videos || []).map((v) => ({
     id: v._id,
     slug: getSlug(v.slug),
     title: v.title,
     thumbnail: v.thumbnail || null,
     previewVideo: v.previewVideo || null,
     duration: v.duration || null,
-    views: v.views || 0,
-    isPremium: v.isPremium || false,
+    views: viewsMap[v._id] || 0,
+    isPremium: (v as { isPremium?: boolean }).isPremium || false,
   }));
+
+  // Sort by views if popular sort is selected
+  if (sort === "popular") {
+    categoryVideos = categoryVideos.sort((a, b) => b.views - a.views);
+  }
 
   return json({
     category,
