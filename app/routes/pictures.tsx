@@ -54,7 +54,8 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       _id: string;
       title: string;
       slug: { current: string } | string;
-      image?: string;
+      thumbnail?: string;
+      r2ImageUrl?: string;
       actress?: {
         _id: string;
         name: string;
@@ -66,7 +67,8 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
         _id,
         title,
         slug,
-        "image": image.asset->url,
+        "thumbnail": thumbnail.asset->url,
+        r2ImageUrl,
         "actress": actress->{
           _id,
           name,
@@ -108,9 +110,11 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 
   // Add pictures from Pictures schema first
   picturesFromSchema.forEach((pic) => {
-    if (pic.image) {
+    // Prefer R2 URL for full image, fallback to thumbnail
+    const imageUrl = pic.r2ImageUrl || pic.thumbnail;
+    if (imageUrl) {
       allImages.push({
-        url: pic.image,
+        url: imageUrl,
         caption: pic.title,
         alt: pic.title,
         modelName: pic.actress?.name || "Unknown",

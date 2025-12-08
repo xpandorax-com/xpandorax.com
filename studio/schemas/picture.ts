@@ -21,13 +21,20 @@ export default {
       validation: (Rule) => Rule.required(),
     },
     {
-      name: 'image',
-      title: 'Image',
+      name: 'thumbnail',
+      title: 'Thumbnail',
       type: 'image',
       options: {
         hotspot: true,
       },
+      description: 'Thumbnail image displayed in picture listings (stored in Sanity CDN)',
       validation: (Rule) => Rule.required(),
+    },
+    {
+      name: 'r2ImageUrl',
+      title: 'Full Image URL (R2)',
+      type: 'url',
+      description: 'URL of the full-size image stored in Cloudflare R2. Use the upload API at /api/upload-picture to get this URL.',
     },
     {
       name: 'actress',
@@ -65,7 +72,7 @@ export default {
   preview: {
     select: {
       title: 'title',
-      media: 'image',
+      media: 'thumbnail',
       actressName: 'actress.name',
     },
     prepare(selection) {
