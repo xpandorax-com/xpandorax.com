@@ -83,6 +83,38 @@ export default {
       ],
     },
     {
+      name: 'downloadLinks',
+      title: 'Download Links',
+      type: 'array',
+      description: 'Add download links for the video',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'name',
+              title: 'Link Name',
+              type: 'string',
+              description: 'e.g., 720p, 1080p, 4K, Download Server 1',
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'url',
+              title: 'Download URL',
+              type: 'url',
+              validation: (Rule) => Rule.required(),
+            },
+          ],
+          preview: {
+            select: {
+              title: 'name',
+              subtitle: 'url',
+            },
+          },
+        },
+      ],
+    },
+    {
       name: 'duration',
       title: 'Duration (seconds)',
       type: 'number',

@@ -1,8 +1,8 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link, useFetcher, useRouteLoaderData } from "@remix-run/react";
-import { useState, useEffect } from "react";
-import { VideoPlayer, ServerSelector, type VideoServer } from "~/components/video-player";
+import { useState, useEffect, useCallback } from "react";
+import { VideoPlayer, ServerSelector, type VideoServer, type DownloadLink } from "~/components/video-player";
 import { VideoCard } from "~/components/video-card";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -15,8 +15,9 @@ import {
   Clock,
   User,
   ChevronRight,
+  Download,
 } from "lucide-react";
-import { formatDuration, formatViews, formatDate } from "~/lib/utils";
+import { formatDuration, formatViews, formatDate, cn } from "~/lib/utils";
 import { createSanityClient, getSlug, type SanityVideo } from "~/lib/sanity";
 import { useViewTracker } from "~/lib/view-tracker";
 import type { RootLoaderData } from "~/types";
@@ -59,6 +60,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       duration,
       abyssEmbed,
       servers,
+      downloadLinks,
       publishedAt,
       "actress": actress->{
         _id,
@@ -109,6 +111,10 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       name: s.name,
       url: s.url,
     })) as VideoServer[],
+    downloadLinks: (videoRaw.downloadLinks || []).map((d: { name: string; url: string }) => ({
+      name: d.name,
+      url: d.url,
+    })) as DownloadLink[],
     publishedAt: videoRaw.publishedAt || null,
     actress: videoRaw.actress ? {
       id: videoRaw.actress._id,
@@ -215,6 +221,14 @@ export default function VideoPage() {
   const [activeServerIndex, setActiveServerIndex] = useState(0);
   const currentEmbedUrl = allServers[activeServerIndex]?.url || video.abyssEmbed;
 
+  // Handle server error - auto switch to next server
+  const handleServerError = useCallback((failedIndex: number) => {
+    const nextIndex = failedIndex + 1;
+    if (nextIndex < allServers.length) {
+      setActiveServerIndex(nextIndex);
+    }
+  }, [allServers.length]);
+
   return (
     <div className="container py-3 sm:py-6">
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
@@ -225,6 +239,9 @@ export default function VideoPage() {
             embedUrl={currentEmbedUrl}
             thumbnailUrl={video.thumbnail}
             title={video.title}
+            servers={allServers}
+            currentServerIndex={activeServerIndex}
+            onServerError={handleServerError}
           />
 
           {/* Server Selector - below video player, above title */}
@@ -233,6 +250,11 @@ export default function VideoPage() {
             activeIndex={activeServerIndex}
             onServerChange={setActiveServerIndex}
           />
+
+          {/* Download Links */}
+          {video.downloadLinks.length > 0 && (
+            <DownloadLinks links={video.downloadLinks} />
+          )}
 
           {/* Video Info */}
           <div className="space-y-3 sm:space-y-4">
@@ -353,6 +375,39 @@ export default function VideoPage() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Download Links Component - displays download options as buttons
+ */
+interface DownloadLinksProps {
+  links: DownloadLink[];
+  className?: string;
+}
+
+function DownloadLinks({ links, className }: DownloadLinksProps) {
+  return (
+    <div className={cn("flex flex-col sm:flex-row sm:items-center gap-2", className)}>
+      <span className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground shrink-0">
+        <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        Download:
+      </span>
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        {links.map((link, index) => (
+          <a
+            key={index}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap bg-green-600 text-white hover:bg-green-700 active:bg-green-800 min-h-[36px] sm:min-h-[auto] flex items-center gap-1.5"
+          >
+            <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            {link.name}
+          </a>
+        ))}
       </div>
     </div>
   );

@@ -221,6 +221,7 @@ export interface SanityVideo {
   duration?: number;
   abyssEmbed: string;
   servers?: { name: string; url: string }[];
+  downloadLinks?: { name: string; url: string }[];
   publishedAt?: string;
   actress?: SanityActress;
   producer?: SanityProducer;

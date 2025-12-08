@@ -1,10 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Play, Loader2, Server, ExternalLink, AlertTriangle, Maximize2 } from "lucide-react";
 import { cn } from "~/lib/utils";
 
 export interface VideoServer {
+  name: string;
+  url: string;
+}
+
+export interface DownloadLink {
   name: string;
   url: string;
 }
@@ -15,11 +20,14 @@ interface VideoPlayerProps {
   title: string;
   className?: string;
   onPlay?: () => void;
+  servers?: VideoServer[];
+  onServerError?: (failedIndex: number) => void;
+  currentServerIndex?: number;
 }
 
 /**
  * Simple Video Player Component using iframe embeds
- * Mobile-optimized with fullscreen support
+ * Mobile-optimized with fullscreen support and auto server switching
  */
 export function VideoPlayer({
   embedUrl,
@@ -27,11 +35,15 @@ export function VideoPlayer({
   title,
   className,
   onPlay,
+  servers = [],
+  onServerError,
+  currentServerIndex = 0,
 }: VideoPlayerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasStarted, setHasStarted] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [autoSwitchAttempted, setAutoSwitchAttempted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -57,6 +69,12 @@ export function VideoPlayer({
   const handleError = () => {
     setIsLoading(false);
     setHasError(true);
+    
+    // Auto-switch to next server if available
+    if (!autoSwitchAttempted && servers.length > 0 && currentServerIndex < servers.length - 1) {
+      setAutoSwitchAttempted(true);
+      onServerError?.(currentServerIndex);
+    }
   };
 
   const openInNewTab = () => {
@@ -79,19 +97,26 @@ export function VideoPlayer({
     setIsLoading(true);
     setHasStarted(false);
     setHasError(false);
+    setAutoSwitchAttempted(false);
   }, [embedUrl]);
 
   // Set a timeout to detect if iframe fails to load (X-Frame-Options block)
   useEffect(() => {
     if (hasStarted && isLoading) {
       const timeout = setTimeout(() => {
-        // If still loading after 10 seconds, likely blocked
+        // If still loading after 10 seconds, likely blocked - auto switch to next server
         setHasError(true);
         setIsLoading(false);
+        
+        // Auto-switch to next server if available
+        if (!autoSwitchAttempted && servers.length > 0 && currentServerIndex < servers.length - 1) {
+          setAutoSwitchAttempted(true);
+          onServerError?.(currentServerIndex);
+        }
       }, 10000);
       return () => clearTimeout(timeout);
     }
-  }, [hasStarted, isLoading]);
+  }, [hasStarted, isLoading, autoSwitchAttempted, servers.length, currentServerIndex, onServerError]);
 
   return (
     <div
