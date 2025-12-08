@@ -1,9 +1,9 @@
 import { Link, useLocation } from "@remix-run/react";
+import { useState } from "react";
 import {
   Home,
   Grid3X3,
   Users,
-  Crown,
   Search,
   User,
   LogOut,
@@ -12,6 +12,7 @@ import {
   Video,
   Image as ImageIcon,
   Building2,
+  X,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -21,17 +22,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose,
+} from "~/components/ui/sheet";
 import { cn } from "~/lib/utils";
 import type { User as UserType } from "lucia";
 
 interface HeaderProps {
   user: UserType | null;
-  isPremium: boolean;
   appName: string;
 }
 
-export function Header({ user, isPremium, appName }: HeaderProps) {
+export function Header({ user, appName }: HeaderProps) {
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
     { href: "/", label: "Home", icon: Home },
@@ -43,17 +52,112 @@ export function Header({ user, isPremium, appName }: HeaderProps) {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-top">
+      <div className="container flex h-14 sm:h-16 items-center">
+        {/* Mobile Menu Button */}
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetTrigger asChild className="md:hidden">
+            <Button variant="ghost" size="icon" className="mr-2 touch-target">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[280px] sm:w-[320px] p-0">
+            <SheetHeader className="p-4 border-b">
+              <SheetTitle className="text-left">
+                <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  {appName}
+                </span>
+              </SheetTitle>
+            </SheetHeader>
+            <nav className="flex flex-col p-4">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.href;
+                return (
+                  <SheetClose asChild key={item.href}>
+                    <Link
+                      to={item.href}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target",
+                        isActive
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      )}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Icon className="h-5 w-5" />
+                      {item.label}
+                    </Link>
+                  </SheetClose>
+                );
+              })}
+              
+              {/* Mobile User Section */}
+              <div className="mt-4 pt-4 border-t">
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="px-3 py-2">
+                      <p className="text-sm font-medium">{user.username}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <SheetClose asChild>
+                      <Link
+                        to="/account"
+                        className="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground touch-target"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Settings className="h-5 w-5" />
+                        Account
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link
+                        to="/logout"
+                        className="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-destructive hover:bg-destructive/10 touch-target"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <LogOut className="h-5 w-5" />
+                        Log out
+                      </Link>
+                    </SheetClose>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <SheetClose asChild>
+                      <Link
+                        to="/login"
+                        className="flex items-center justify-center gap-2 px-3 py-3 rounded-lg text-base font-medium border hover:bg-accent touch-target"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Log in
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link
+                        to="/register"
+                        className="flex items-center justify-center gap-2 px-3 py-3 rounded-lg text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 touch-target"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Sign up
+                      </Link>
+                    </SheetClose>
+                  </div>
+                )}
+              </div>
+            </nav>
+          </SheetContent>
+        </Sheet>
+
         {/* Logo */}
-        <Link to="/" className="mr-6 flex items-center space-x-2">
-          <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+        <Link to="/" className="mr-4 md:mr-6 flex items-center space-x-2">
+          <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             {appName}
           </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex md:flex-1 md:items-center md:gap-6">
+        <nav className="hidden md:flex md:flex-1 md:items-center md:gap-4 lg:gap-6">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href;
@@ -67,43 +171,29 @@ export function Header({ user, isPremium, appName }: HeaderProps) {
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {item.label}
+                <span className="hidden lg:inline">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Search */}
-        <div className="flex flex-1 items-center justify-end gap-4">
+        {/* Right Side Actions */}
+        <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
+          {/* Search */}
           <Link
             to="/search"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary touch-target p-2"
           >
-            <Search className="h-4 w-4" />
+            <Search className="h-5 w-5" />
             <span className="hidden sm:inline">Search</span>
           </Link>
-
-          {/* Premium Button (for non-premium users) */}
-          {!isPremium && (
-            <Button asChild variant="premium" size="sm" className="hidden sm:flex">
-              <Link to="/premium">
-                <Crown className="h-4 w-4" />
-                Remove Ads
-              </Link>
-            </Button>
-          )}
 
           {/* User Menu */}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button variant="ghost" size="icon" className="relative touch-target">
                   <User className="h-5 w-5" />
-                  {isPremium && (
-                    <span className="absolute -right-1 -top-1 flex h-3 w-3">
-                      <Crown className="h-3 w-3 text-yellow-500" />
-                    </span>
-                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -139,11 +229,11 @@ export function Header({ user, isPremium, appName }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
               <Button asChild variant="ghost" size="sm">
                 <Link to="/login">Log in</Link>
               </Button>
-              <Button asChild size="sm" className="hidden sm:flex">
+              <Button asChild size="sm">
                 <Link to="/register">Sign up</Link>
               </Button>
             </div>

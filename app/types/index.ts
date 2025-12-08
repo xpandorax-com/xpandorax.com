@@ -4,15 +4,8 @@ import type { Video, Category, Actress } from "~/db/schema";
 // Loader data types
 export interface RootLoaderData {
   user: User | null;
-  isPremium: boolean;
-  adConfig: AdConfig | null;
   appName: string;
   appUrl: string;
-}
-
-export interface AdConfig {
-  exoclickZoneId: string;
-  juicyadsZoneId: string;
 }
 
 export interface VideoWithRelations extends Video {

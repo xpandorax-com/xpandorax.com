@@ -98,23 +98,23 @@ export default function VideosPage() {
   };
 
   return (
-    <div className="container py-8">
+    <div className="container py-4 sm:py-8">
       {/* Header */}
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Video className="h-6 w-6" />
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <Video className="h-5 w-5 sm:h-6 sm:w-6" />
             All Videos
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm sm:text-base text-muted-foreground mt-0.5 sm:mt-1">
             Browse {data.total.toLocaleString()} videos
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+          <SlidersHorizontal className="h-4 w-4 text-muted-foreground hidden sm:block" />
           <Select value={data.sort} onValueChange={handleSortChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px] h-10 touch-target">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -130,7 +130,7 @@ export default function VideosPage() {
       {/* Video Grid */}
       {data.videos.length > 0 ? (
         <>
-          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {data.videos.map((video) => (
               <VideoCard
                 key={video.id}
@@ -149,42 +149,44 @@ export default function VideosPage() {
 
           {/* Pagination */}
           {data.totalPages > 1 && (
-            <div className="mt-8 flex justify-center gap-2">
-              {data.page > 1 && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={`/videos?${new URLSearchParams({
-                      sort: data.sort,
-                      page: String(data.page - 1),
-                    })}`}
-                  >
-                    Previous
-                  </a>
-                </Button>
-              )}
-              <span className="flex items-center px-4 text-sm text-muted-foreground">
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2">
+              <div className="flex gap-2 w-full sm:w-auto">
+                {data.page > 1 && (
+                  <Button variant="outline" asChild className="flex-1 sm:flex-none touch-target">
+                    <a
+                      href={`/videos?${new URLSearchParams({
+                        sort: data.sort,
+                        page: String(data.page - 1),
+                      })}`}
+                    >
+                      Previous
+                    </a>
+                  </Button>
+                )}
+                {data.page < data.totalPages && (
+                  <Button variant="outline" asChild className="flex-1 sm:flex-none touch-target">
+                    <a
+                      href={`/videos?${new URLSearchParams({
+                        sort: data.sort,
+                        page: String(data.page + 1),
+                      })}`}
+                    >
+                      Next
+                    </a>
+                  </Button>
+                )}
+              </div>
+              <span className="text-xs sm:text-sm text-muted-foreground order-first sm:order-none">
                 Page {data.page} of {data.totalPages}
               </span>
-              {data.page < data.totalPages && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={`/videos?${new URLSearchParams({
-                      sort: data.sort,
-                      page: String(data.page + 1),
-                    })}`}
-                  >
-                    Next
-                  </a>
-                </Button>
-              )}
             </div>
           )}
         </>
       ) : (
-        <div className="text-center py-16">
-          <Video className="mx-auto h-16 w-16 text-muted-foreground" />
-          <h2 className="mt-4 text-xl font-semibold">No Videos Yet</h2>
-          <p className="mt-2 text-muted-foreground">
+        <div className="text-center py-12 sm:py-16">
+          <Video className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
+          <h2 className="mt-3 sm:mt-4 text-lg sm:text-xl font-semibold">No Videos Yet</h2>
+          <p className="mt-1.5 sm:mt-2 text-sm sm:text-base text-muted-foreground">
             Check back later for new content.
           </p>
         </div>

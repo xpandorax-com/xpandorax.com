@@ -126,22 +126,22 @@ export default function Index() {
     useLoaderData<typeof loader>();
 
   return (
-    <div className="container py-6 space-y-10">
+    <div className="container py-4 sm:py-6 space-y-6 sm:space-y-10">
 
       {/* Latest Videos Section */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="flex items-center gap-2 text-2xl font-bold">
-            <Sparkles className="h-6 w-6 text-primary" />
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 className="flex items-center gap-1.5 sm:gap-2 text-lg sm:text-2xl font-bold">
+            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             Latest Videos
           </h2>
-          <Button asChild variant="ghost" size="sm">
+          <Button asChild variant="ghost" size="sm" className="text-xs sm:text-sm">
             <Link to="/videos?sort=latest">
-              View All <ChevronRight className="h-4 w-4" />
+              View All <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Link>
           </Button>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 stagger-children">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 stagger-children">
           {latestVideos.map((video) => (
             <VideoCard key={video.id} video={video} />
           ))}
@@ -150,18 +150,18 @@ export default function Index() {
 
       {/* Trending Videos Section */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="flex items-center gap-2 text-2xl font-bold">
-            <TrendingUp className="h-6 w-6 text-primary" />
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 className="flex items-center gap-1.5 sm:gap-2 text-lg sm:text-2xl font-bold">
+            <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             Trending Now
           </h2>
-          <Button asChild variant="ghost" size="sm">
+          <Button asChild variant="ghost" size="sm" className="text-xs sm:text-sm">
             <Link to="/videos?sort=popular">
-              View All <ChevronRight className="h-4 w-4" />
+              View All <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Link>
           </Button>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 stagger-children">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 stagger-children">
           {trendingVideos.map((video) => (
             <VideoCard key={video.id} video={video} />
           ))}
@@ -170,18 +170,18 @@ export default function Index() {
 
       {/* Categories Section */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="flex items-center gap-2 text-2xl font-bold">
-            <Grid3X3 className="h-6 w-6 text-primary" />
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 className="flex items-center gap-1.5 sm:gap-2 text-lg sm:text-2xl font-bold">
+            <Grid3X3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             Popular Categories
           </h2>
-          <Button asChild variant="ghost" size="sm">
+          <Button asChild variant="ghost" size="sm" className="text-xs sm:text-sm">
             <Link to="/categories">
-              View All <ChevronRight className="h-4 w-4" />
+              View All <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Link>
           </Button>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 stagger-children">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 stagger-children">
           {categories.map((category) => (
             <CategoryCard key={category.id} category={category} />
           ))}

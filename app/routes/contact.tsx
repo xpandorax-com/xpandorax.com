@@ -59,36 +59,36 @@ export default function ContactPage() {
   const isSubmitting = navigation.state === "submitting";
 
   return (
-    <div className="container max-w-6xl py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold">Contact Us</h1>
-        <p className="mt-2 text-muted-foreground">
+    <div className="container-responsive max-w-6xl py-4 sm:py-8 px-4">
+      <div className="text-center mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold">Contact Us</h1>
+        <p className="mt-2 text-sm sm:text-base text-muted-foreground">
           Have a question or concern? We&apos;re here to help.
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-6 sm:gap-8 lg:grid-cols-3">
         {/* Contact Form */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 order-2 lg:order-1">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="px-4 sm:px-6">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <MessageSquare className="h-5 w-5" />
                 Send us a Message
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 Fill out the form below and we&apos;ll get back to you as soon as possible.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6">
               {actionData?.success ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-                  <h3 className="text-xl font-semibold">Message Sent!</h3>
-                  <p className="text-muted-foreground mt-2">
+                  <CheckCircle className="h-12 w-12 sm:h-16 sm:w-16 text-green-500 mb-4" />
+                  <h3 className="text-lg sm:text-xl font-semibold">Message Sent!</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground mt-2">
                     Thank you for contacting us. We&apos;ll respond to your inquiry within 24-48 hours.
                   </p>
-                  <Button asChild className="mt-4">
+                  <Button asChild className="mt-4 touch-target">
                     <a href="/">Return to Homepage</a>
                   </Button>
                 </div>
@@ -96,25 +96,27 @@ export default function ContactPage() {
                 <Form method="post" className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Your Name</Label>
+                      <Label htmlFor="name" className="text-sm">Your Name</Label>
                       <Input
                         id="name"
                         name="name"
                         placeholder="John Doe"
                         required
+                        className="h-12 sm:h-10 text-base sm:text-sm"
                       />
                       {actionData?.errors?.name && (
                         <p className="text-sm text-destructive">{actionData.errors.name[0]}</p>
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
+                      <Label htmlFor="email" className="text-sm">Email Address</Label>
                       <Input
                         id="email"
                         name="email"
                         type="email"
                         placeholder="john@example.com"
                         required
+                        className="h-12 sm:h-10 text-base sm:text-sm"
                       />
                       {actionData?.errors?.email && (
                         <p className="text-sm text-destructive">{actionData.errors.email[0]}</p>
@@ -123,12 +125,13 @@ export default function ContactPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="subject">Subject</Label>
+                    <Label htmlFor="subject" className="text-sm">Subject</Label>
                     <Input
                       id="subject"
                       name="subject"
                       placeholder="How can we help you?"
                       required
+                      className="h-12 sm:h-10 text-base sm:text-sm"
                     />
                     {actionData?.errors?.subject && (
                       <p className="text-sm text-destructive">{actionData.errors.subject[0]}</p>
@@ -136,21 +139,21 @@ export default function ContactPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="message">Message</Label>
+                    <Label htmlFor="message" className="text-sm">Message</Label>
                     <textarea
                       id="message"
                       name="message"
                       rows={6}
                       placeholder="Please describe your question or concern in detail..."
                       required
-                      className="flex min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-3 sm:py-2 text-base sm:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     />
                     {actionData?.errors?.message && (
                       <p className="text-sm text-destructive">{actionData.errors.message[0]}</p>
                     )}
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full h-12 sm:h-10 touch-target" disabled={isSubmitting}>
                     {isSubmitting ? (
                       <>Sending...</>
                     ) : (
@@ -167,21 +170,21 @@ export default function ContactPage() {
         </div>
 
         {/* Contact Info Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
           {/* Quick Contact */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
+            <CardHeader className="px-4 sm:px-6 py-4">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Mail className="h-5 w-5" />
                 Quick Contact
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6">
               <div>
                 <p className="text-sm font-medium">General Inquiries</p>
                 <a
                   href="mailto:support@xpandorax.com"
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-primary hover:underline touch-manipulation"
                 >
                   support@xpandorax.com
                 </a>
@@ -190,7 +193,7 @@ export default function ContactPage() {
                 <p className="text-sm font-medium">DMCA / Copyright</p>
                 <a
                   href="mailto:dmca@xpandorax.com"
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-primary hover:underline touch-manipulation"
                 >
                   dmca@xpandorax.com
                 </a>
@@ -199,7 +202,7 @@ export default function ContactPage() {
                 <p className="text-sm font-medium">Business Inquiries</p>
                 <a
                   href="mailto:business@xpandorax.com"
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-primary hover:underline touch-manipulation"
                 >
                   business@xpandorax.com
                 </a>
@@ -209,30 +212,30 @@ export default function ContactPage() {
 
           {/* Help Topics */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
+            <CardHeader className="px-4 sm:px-6 py-4">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <HelpCircle className="h-5 w-5" />
                 Common Topics
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 px-4 sm:px-6">
               <a
                 href="/premium"
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary py-1 touch-manipulation"
               >
                 <AlertCircle className="h-4 w-4" />
                 Premium Subscription Help
               </a>
               <a
                 href="/dmca"
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary py-1 touch-manipulation"
               >
                 <Flag className="h-4 w-4" />
                 Report Copyright Issue
               </a>
               <a
                 href="/privacy"
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary py-1 touch-manipulation"
               >
                 <Shield className="h-4 w-4" />
                 Privacy Concerns
@@ -242,7 +245,7 @@ export default function ContactPage() {
 
           {/* Response Time */}
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6">
               <p className="text-sm text-muted-foreground">
                 <strong className="text-foreground">Response Time:</strong><br />
                 We typically respond to all inquiries within 24-48 business hours.

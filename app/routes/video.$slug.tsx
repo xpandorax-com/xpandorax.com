@@ -1,12 +1,13 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { useLoaderData, Link, useFetcher } from "@remix-run/react";
+import { useLoaderData, Link, useFetcher, useRouteLoaderData } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import { VideoPlayer, ServerSelector, type VideoServer } from "~/components/video-player";
 import { VideoCard } from "~/components/video-card";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
+import { Comments } from "~/components/comments";
 import {
   Eye,
   ThumbsUp,
@@ -18,6 +19,7 @@ import {
 import { formatDuration, formatViews, formatDate } from "~/lib/utils";
 import { createSanityClient, getSlug, type SanityVideo } from "~/lib/sanity";
 import { useViewTracker } from "~/lib/view-tracker";
+import type { RootLoaderData } from "~/types";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data?.video) {
@@ -141,6 +143,8 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
 export default function VideoPage() {
   const { video, relatedVideos } =
     useLoaderData<typeof loader>();
+  const rootData = useRouteLoaderData<RootLoaderData>("root");
+  const currentUserId = rootData?.user?.id;
 
   // Track view when page loads
   useViewTracker({ type: "video", id: video.id, enabled: true });
@@ -212,10 +216,10 @@ export default function VideoPage() {
   const currentEmbedUrl = allServers[activeServerIndex]?.url || video.abyssEmbed;
 
   return (
-    <div className="container py-6">
-      <div className="grid gap-6 lg:grid-cols-3">
+    <div className="container py-3 sm:py-6">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-3 sm:space-y-4">
           {/* Video Player */}
           <VideoPlayer
             embedUrl={currentEmbedUrl}
@@ -231,23 +235,23 @@ export default function VideoPage() {
           />
 
           {/* Video Info */}
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="space-y-2">
-                <h1 className="text-2xl font-bold">{video.title}</h1>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-2 flex-1 min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold break-words">{video.title}</h1>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     {formatViews(views)} views
                   </span>
                   {video.duration && (
                     <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
+                      <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       {formatDuration(video.duration)}
                     </span>
                   )}
                   {video.publishedAt && (
-                    <span>{formatDate(video.publishedAt)}</span>
+                    <span className="hidden xs:inline">{formatDate(video.publishedAt)}</span>
                   )}
                 </div>
               </div>
@@ -258,19 +262,19 @@ export default function VideoPage() {
                   variant={userInteraction === "like" ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleInteraction("like")}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1.5 sm:gap-2 touch-target h-9 sm:h-8 px-3"
                 >
                   <ThumbsUp className={`h-4 w-4 ${userInteraction === "like" ? "fill-current" : ""}`} />
-                  <span>{formatViews(likes)}</span>
+                  <span className="text-sm">{formatViews(likes)}</span>
                 </Button>
                 <Button
                   variant={userInteraction === "dislike" ? "destructive" : "outline"}
                   size="sm"
                   onClick={() => handleInteraction("dislike")}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1.5 sm:gap-2 touch-target h-9 sm:h-8 px-3"
                 >
                   <ThumbsDown className={`h-4 w-4 ${userInteraction === "dislike" ? "fill-current" : ""}`} />
-                  <span>{formatViews(dislikes)}</span>
+                  <span className="text-sm">{formatViews(dislikes)}</span>
                 </Button>
               </div>
             </div>
@@ -279,22 +283,22 @@ export default function VideoPage() {
             {video.actress && (
               <Link
                 to={`/model/${video.actress.slug}`}
-                className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent"
+                className="flex items-center gap-3 rounded-lg border p-2.5 sm:p-3 transition-colors hover:bg-accent active:bg-accent touch-target"
               >
                 {video.actress.thumbnailUrl ? (
                   <img
                     src={video.actress.thumbnailUrl}
                     alt={video.actress.name}
-                    className="h-12 w-12 rounded-full object-cover"
+                    className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                    <User className="h-6 w-6 text-muted-foreground" />
+                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-muted">
+                    <User className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
                   </div>
                 )}
-                <div>
-                  <p className="font-medium">{video.actress.name}</p>
-                  <p className="text-sm text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm sm:text-base truncate">{video.actress.name}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     {video.actress.videoCount} videos
                   </p>
                 </div>
@@ -303,10 +307,10 @@ export default function VideoPage() {
 
             {/* Categories */}
             {video.categories.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {video.categories.map((category) => (
                   <Link key={category.id} to={`/category/${category.slug}`}>
-                    <Badge variant="secondary" className="cursor-pointer hover:bg-secondary/80">
+                    <Badge variant="secondary" className="cursor-pointer hover:bg-secondary/80 text-xs sm:text-sm py-1 px-2 sm:py-1 sm:px-2.5">
                       {category.name}
                     </Badge>
                   </Link>
@@ -318,28 +322,33 @@ export default function VideoPage() {
             {video.description && (
               <>
                 <Separator />
-                <p className="text-muted-foreground">{video.description}</p>
+                <p className="text-sm sm:text-base text-muted-foreground">{video.description}</p>
               </>
             )}
+
+            {/* Comments Section */}
+            <Comments videoId={video.id} currentUserId={currentUserId} />
           </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Related Videos */}
-          <div className="space-y-4">
+        {/* Sidebar - Related Videos */}
+        <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold">Related Videos</h3>
+              <h3 className="font-semibold text-sm sm:text-base">Related Videos</h3>
               <Link
                 to="/videos"
-                className="text-sm text-muted-foreground hover:text-primary"
+                className="text-xs sm:text-sm text-muted-foreground hover:text-primary touch-target"
               >
-                View all <ChevronRight className="inline h-4 w-4" />
+                View all <ChevronRight className="inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Link>
             </div>
-            <div className="grid gap-4">
+            {/* Mobile: horizontal scroll, Desktop: vertical grid */}
+            <div className="flex lg:grid gap-2 sm:gap-4 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
               {relatedVideos.map((relatedVideo) => (
-                <VideoCard key={relatedVideo.id} video={relatedVideo} />
+                <div key={relatedVideo.id} className="w-[45%] sm:w-[200px] lg:w-auto shrink-0 lg:shrink">
+                  <VideoCard video={relatedVideo} />
+                </div>
               ))}
             </div>
           </div>

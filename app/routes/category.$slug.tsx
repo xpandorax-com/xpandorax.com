@@ -125,70 +125,71 @@ export default function CategoryPage() {
   };
 
   return (
-    <div className="container py-6 space-y-6">
+    <div className="container-responsive py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 sm:gap-4">
           {category.thumbnailUrl ? (
             <img
               src={category.thumbnailUrl}
               alt={category.name}
-              className="h-16 w-16 rounded-lg object-cover"
+              className="h-12 w-12 sm:h-16 sm:w-16 rounded-lg object-cover flex-shrink-0"
             />
           ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
-              <FolderOpen className="h-8 w-8 text-muted-foreground" />
+            <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-lg bg-muted flex-shrink-0">
+              <FolderOpen className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
             </div>
           )}
-          <div>
-            <h1 className="text-2xl font-bold">{category.name}</h1>
-            <p className="text-muted-foreground">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold truncate">{category.name}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               {category.videoCount} videos
             </p>
           </div>
         </div>
 
         <Select value={sort} onValueChange={handleSortChange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px] h-11 sm:h-10 touch-target">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="latest">Latest</SelectItem>
-            <SelectItem value="popular">Most Popular</SelectItem>
-            <SelectItem value="oldest">Oldest</SelectItem>
+            <SelectItem value="latest" className="py-3 sm:py-2">Latest</SelectItem>
+            <SelectItem value="popular" className="py-3 sm:py-2">Most Popular</SelectItem>
+            <SelectItem value="oldest" className="py-3 sm:py-2">Oldest</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {category.description && (
-        <p className="text-muted-foreground">{category.description}</p>
+        <p className="text-sm sm:text-base text-muted-foreground">{category.description}</p>
       )}
 
-      {/* Videos Grid */}
+      {/* Videos Grid - Mobile optimized */}
       {categoryVideos.length > 0 ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 stagger-children">
+        <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 stagger-children">
           {categoryVideos.map((video) => (
             <VideoCard key={video.id} video={video} />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12">
-          <FolderOpen className="h-16 w-16 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-semibold">No videos found</h3>
-          <p className="text-muted-foreground">
+        <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+          <FolderOpen className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
+          <h3 className="mt-3 sm:mt-4 text-base sm:text-lg font-semibold">No videos found</h3>
+          <p className="text-sm sm:text-base text-muted-foreground text-center">
             This category doesn&apos;t have any videos yet.
           </p>
         </div>
       )}
 
-      {/* Pagination */}
+      {/* Pagination - Mobile optimized */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex flex-col xs:flex-row items-center justify-center gap-2">
           <Button
             variant="outline"
             size="sm"
             disabled={page <= 1}
             asChild={page > 1}
+            className="w-full xs:w-auto touch-target"
           >
             {page > 1 ? (
               <Link to={`?page=${page - 1}&sort=${sort}`}>
@@ -203,7 +204,7 @@ export default function CategoryPage() {
             )}
           </Button>
 
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground order-first xs:order-none py-2 xs:py-0">
             Page {page} of {totalPages}
           </span>
 
@@ -212,6 +213,7 @@ export default function CategoryPage() {
             size="sm"
             disabled={page >= totalPages}
             asChild={page < totalPages}
+            className="w-full xs:w-auto touch-target"
           >
             {page < totalPages ? (
               <Link to={`?page=${page + 1}&sort=${sort}`}>

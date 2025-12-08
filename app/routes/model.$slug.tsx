@@ -132,20 +132,20 @@ export default function ModelDetailPage() {
   useViewTracker({ type: "actress", id: actress.id });
 
   return (
-    <div className="container py-8">
+    <div className="container py-4 sm:py-8">
       {/* Back Button */}
-      <Button variant="ghost" asChild className="mb-6">
+      <Button variant="ghost" asChild className="mb-4 sm:mb-6 -ml-2 touch-target">
         <a href="/models">
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-1.5 sm:mr-2 h-4 w-4" />
           Back to Models
         </a>
       </Button>
 
       {/* Model Profile */}
-      <div className="mb-8 flex flex-col md:flex-row gap-8">
+      <div className="mb-6 sm:mb-8 flex flex-col items-center md:flex-row md:items-start gap-4 sm:gap-8">
         {/* Image */}
         <div className="shrink-0">
-          <div className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden ring-4 ring-primary/20 mx-auto md:mx-0">
+          <div className="w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 rounded-full overflow-hidden ring-4 ring-primary/20">
             {actress.image ? (
               <img
                 src={actress.image}
@@ -154,7 +154,7 @@ export default function ModelDetailPage() {
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted">
-                <Users className="h-24 w-24 text-muted-foreground" />
+                <Users className="h-16 w-16 sm:h-24 sm:w-24 text-muted-foreground" />
               </div>
             )}
           </div>
@@ -162,16 +162,16 @@ export default function ModelDetailPage() {
 
         {/* Info */}
         <div className="flex-1 text-center md:text-left">
-          <h1 className="text-3xl font-bold">{actress.name}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{actress.name}</h1>
 
-          <div className="mt-4 flex flex-wrap gap-4 justify-center md:justify-start">
-            <Badge variant="secondary" className="text-sm">
-              <Video className="mr-1 h-4 w-4" />
+          <div className="mt-3 sm:mt-4 flex flex-wrap gap-2 sm:gap-4 justify-center md:justify-start">
+            <Badge variant="secondary" className="text-xs sm:text-sm py-1 px-2 sm:px-3">
+              <Video className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {total} Videos
             </Badge>
             {actress.createdAt && (
-              <Badge variant="outline" className="text-sm">
-                <Calendar className="mr-1 h-4 w-4" />
+              <Badge variant="outline" className="text-xs sm:text-sm py-1 px-2 sm:px-3">
+                <Calendar className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Added {formatDate(actress.createdAt)}
               </Badge>
             )}
@@ -179,24 +179,24 @@ export default function ModelDetailPage() {
 
           {actress.bio && (
             <>
-              <Separator className="my-4" />
-              <p className="text-muted-foreground leading-relaxed">{actress.bio}</p>
+              <Separator className="my-3 sm:my-4" />
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{actress.bio}</p>
             </>
           )}
         </div>
       </div>
 
-      <Separator className="mb-8" />
+      <Separator className="mb-4 sm:mb-8" />
 
       {/* Content Tabs - Videos & Gallery */}
       <Tabs defaultValue="videos" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="videos" className="flex items-center gap-2">
-            <Video className="h-4 w-4" />
+        <TabsList className="mb-4 sm:mb-6 w-full sm:w-auto justify-start overflow-x-auto">
+          <TabsTrigger value="videos" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm touch-target">
+            <Video className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Videos ({total})
           </TabsTrigger>
-          <TabsTrigger value="gallery" className="flex items-center gap-2">
-            <ImageIcon className="h-4 w-4" />
+          <TabsTrigger value="gallery" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm touch-target">
+            <ImageIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Pictures ({gallery.length})
           </TabsTrigger>
         </TabsList>
@@ -205,7 +205,7 @@ export default function ModelDetailPage() {
         <TabsContent value="videos">
           {actressVideos.length > 0 ? (
             <>
-              <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {actressVideos.map((video) => (
                   <VideoCard key={video.id} video={video} />
                 ))}
@@ -213,29 +213,31 @@ export default function ModelDetailPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="mt-8 flex justify-center gap-2">
-                  {page > 1 && (
-                    <Button variant="outline" asChild>
-                      <a href={`/model/${actress.slug}?page=${page - 1}`}>
-                        Previous
-                      </a>
-                    </Button>
-                  )}
-                  <span className="flex items-center px-4 text-sm text-muted-foreground">
+                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2">
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    {page > 1 && (
+                      <Button variant="outline" asChild className="flex-1 sm:flex-none touch-target">
+                        <a href={`/model/${actress.slug}?page=${page - 1}`}>
+                          Previous
+                        </a>
+                      </Button>
+                    )}
+                    {page < totalPages && (
+                      <Button variant="outline" asChild className="flex-1 sm:flex-none touch-target">
+                        <a href={`/model/${actress.slug}?page=${page + 1}`}>Next</a>
+                      </Button>
+                    )}
+                  </div>
+                  <span className="text-xs sm:text-sm text-muted-foreground order-first sm:order-none">
                     Page {page} of {totalPages}
                   </span>
-                  {page < totalPages && (
-                    <Button variant="outline" asChild>
-                      <a href={`/model/${actress.slug}?page=${page + 1}`}>Next</a>
-                    </Button>
-                  )}
                 </div>
               )}
             </>
           ) : (
-            <div className="text-center py-12">
-              <Video className="mx-auto h-12 w-12 text-muted-foreground" />
-              <p className="mt-4 text-muted-foreground">
+            <div className="text-center py-8 sm:py-12">
+              <Video className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
+              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground">
                 No videos available yet for {actress.name}.
               </p>
             </div>

@@ -90,31 +90,31 @@ export default function AccountPage() {
   const { user, subscription, isPremium } = useLoaderData<typeof loader>();
 
   return (
-    <div className="container py-8">
-      <div className="mx-auto max-w-2xl space-y-6">
+    <div className="container-responsive py-4 sm:py-8 px-4">
+      <div className="mx-auto max-w-2xl space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Account Settings</h1>
-          <p className="text-muted-foreground">Manage your account and subscription</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Account Settings</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage your account and subscription</p>
         </div>
 
         {/* Profile Card */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="px-4 sm:px-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <User className="h-5 w-5" />
               Profile
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <User className="h-8 w-8 text-primary" />
+          <CardContent className="space-y-4 px-4 sm:px-6">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary/10 flex-shrink-0">
+                <User className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <div>
-                <p className="font-medium">{user.username}</p>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Mail className="h-3 w-3" />
-                  {user.email}
+              <div className="min-w-0">
+                <p className="font-medium text-sm sm:text-base truncate">{user.username}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 truncate">
+                  <Mail className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{user.email}</span>
                 </p>
               </div>
             </div>
@@ -123,28 +123,28 @@ export default function AccountPage() {
 
         {/* Subscription Card */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="px-4 sm:px-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Crown className="h-5 w-5" />
               Subscription
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               Manage your premium subscription
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 px-4 sm:px-6">
             {isPremium ? (
               <>
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">Status</span>
+                  <span className="font-medium text-sm sm:text-base">Status</span>
                   <Badge variant="premium">Premium Active</Badge>
                 </div>
 
                 {subscription && (
                   <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Current period ends</span>
-                      <span className="flex items-center gap-1">
+                    <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-1 xs:gap-0">
+                      <span className="text-sm text-muted-foreground">Current period ends</span>
+                      <span className="flex items-center gap-1 text-sm">
                         <Calendar className="h-4 w-4" />
                         {subscription.currentPeriodEnd
                           ? formatDate(subscription.currentPeriodEnd)
@@ -153,12 +153,12 @@ export default function AccountPage() {
                     </div>
 
                     {subscription.status === "cancelled" && (
-                      <div className="rounded-lg bg-yellow-500/10 p-4 text-sm">
+                      <div className="rounded-lg bg-yellow-500/10 p-3 sm:p-4 text-sm">
                         <p className="flex items-center gap-2 font-medium text-yellow-600">
-                          <AlertTriangle className="h-4 w-4" />
+                          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                           Subscription Cancelled
                         </p>
-                        <p className="mt-1 text-muted-foreground">
+                        <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                           Your premium access will end on{" "}
                           {subscription.currentPeriodEnd
                             ? formatDate(subscription.currentPeriodEnd)
@@ -177,24 +177,24 @@ export default function AccountPage() {
                 {subscription?.status === "active" && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full touch-target">
                         Cancel Subscription
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="max-w-[95vw] sm:max-w-lg mx-auto">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Cancel Subscription?</AlertDialogTitle>
-                        <AlertDialogDescription>
+                        <AlertDialogTitle className="text-lg sm:text-xl">Cancel Subscription?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm">
                           Are you sure you want to cancel your premium subscription?
                           You&apos;ll continue to have access until the end of your
                           current billing period.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
-                        <Form method="post">
+                      <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                        <AlertDialogCancel className="w-full sm:w-auto touch-target">Keep Subscription</AlertDialogCancel>
+                        <Form method="post" className="w-full sm:w-auto">
                           <input type="hidden" name="_action" value="cancel_subscription" />
-                          <AlertDialogAction type="submit" className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          <AlertDialogAction type="submit" className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90 touch-target">
                             Yes, Cancel
                           </AlertDialogAction>
                         </Form>
@@ -204,13 +204,13 @@ export default function AccountPage() {
                 )}
               </>
             ) : (
-              <div className="text-center py-6">
-                <Crown className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 font-semibold">Not a Premium Member</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
+              <div className="text-center py-4 sm:py-6">
+                <Crown className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
+                <h3 className="mt-3 sm:mt-4 font-semibold text-sm sm:text-base">Not a Premium Member</h3>
+                <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-muted-foreground">
                   Upgrade to premium for ad-free browsing and exclusive content.
                 </p>
-                <Button asChild className="mt-4" variant="premium">
+                <Button asChild className="mt-3 sm:mt-4 touch-target" variant="premium">
                   <a href="/premium">
                     <Crown className="mr-2 h-4 w-4" />
                     Upgrade to Premium

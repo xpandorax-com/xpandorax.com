@@ -101,25 +101,25 @@ export default function RegisterPage() {
   const actionData = useActionData<typeof action>();
 
   return (
-    <div className="container flex min-h-[calc(100vh-8rem)] items-center justify-center py-8">
+    <div className="container-responsive flex min-h-[calc(100vh-8rem)] items-center justify-center py-4 sm:py-8 px-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-          <CardDescription>
+        <CardHeader className="space-y-1 px-4 sm:px-6">
+          <CardTitle className="text-xl sm:text-2xl font-bold">Create an account</CardTitle>
+          <CardDescription className="text-sm">
             Enter your details to create your account
           </CardDescription>
         </CardHeader>
         <Form method="post">
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 px-4 sm:px-6">
             {actionData?.error && (
               <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4" />
-                {actionData.error}
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{actionData.error}</span>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm">Email</Label>
               <Input
                 id="email"
                 name="email"
@@ -127,11 +127,12 @@ export default function RegisterPage() {
                 placeholder="you@example.com"
                 required
                 autoComplete="email"
+                className="h-12 sm:h-10 text-base sm:text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username" className="text-sm">Username</Label>
               <Input
                 id="username"
                 name="username"
@@ -139,11 +140,12 @@ export default function RegisterPage() {
                 placeholder="johndoe"
                 required
                 autoComplete="username"
+                className="h-12 sm:h-10 text-base sm:text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm">Password</Label>
               <Input
                 id="password"
                 name="password"
@@ -151,6 +153,7 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 required
                 autoComplete="new-password"
+                className="h-12 sm:h-10 text-base sm:text-sm"
               />
               <p className="text-xs text-muted-foreground">
                 Must be at least 8 characters with uppercase, lowercase, and number
@@ -158,7 +161,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -166,17 +169,18 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 required
                 autoComplete="new-password"
+                className="h-12 sm:h-10 text-base sm:text-sm"
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full">
+          <CardFooter className="flex flex-col gap-4 px-4 sm:px-6">
+            <Button type="submit" className="w-full h-12 sm:h-10 touch-target">
               <UserPlus className="mr-2 h-4 w-4" />
               Create account
             </Button>
             <p className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline">
+              <Link to="/login" className="text-primary hover:underline touch-manipulation">
                 Log in
               </Link>
             </p>

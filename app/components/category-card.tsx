@@ -13,7 +13,7 @@ export function CategoryCard({ category, className }: CategoryCardProps) {
     <Link
       to={`/category/${category.slug}`}
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-lg bg-card transition-colors hover:bg-accent",
+        "group relative flex flex-col overflow-hidden rounded-lg bg-card transition-colors hover:bg-accent touch-manipulation",
         className
       )}
     >
@@ -28,22 +28,22 @@ export function CategoryCard({ category, className }: CategoryCardProps) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
-            <FolderOpen className="h-12 w-12 text-primary/50" />
+            <FolderOpen className="h-8 w-8 sm:h-12 sm:w-12 text-primary/50" />
           </div>
         )}
 
         {/* Overlay with video count */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors group-hover:bg-black/40">
           <div className="text-center">
-            <p className="text-2xl font-bold text-white">{category.videoCount}</p>
-            <p className="text-sm text-white/80">videos</p>
+            <p className="text-xl sm:text-2xl font-bold text-white">{category.videoCount}</p>
+            <p className="text-xs sm:text-sm text-white/80">videos</p>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-3">
-        <h3 className="text-center font-medium group-hover:text-primary">
+      <div className="p-2 sm:p-3">
+        <h3 className="text-center text-xs sm:text-sm font-medium group-hover:text-primary line-clamp-1">
           {category.name}
         </h3>
       </div>

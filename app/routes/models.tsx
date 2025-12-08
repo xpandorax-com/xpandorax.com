@@ -114,21 +114,21 @@ export default function ModelsPage() {
   };
 
   return (
-    <div className="container py-8">
+    <div className="container py-4 sm:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Users className="h-6 w-6" />
+      <div className="mb-4 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <Users className="h-5 w-5 sm:h-6 sm:w-6" />
           Models
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-sm sm:text-base text-muted-foreground mt-0.5 sm:mt-1">
           Browse {data.total.toLocaleString()} models
         </p>
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <form onSubmit={handleSearchSubmit} className="flex-1 flex gap-2">
+      <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:gap-4">
+        <form onSubmit={handleSearchSubmit} className="flex gap-2 flex-1">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -136,14 +136,14 @@ export default function ModelsPage() {
               name="search"
               defaultValue={data.search}
               placeholder="Search models..."
-              className="pl-10"
+              className="pl-10 h-10 touch-target"
             />
           </div>
-          <Button type="submit">Search</Button>
+          <Button type="submit" className="touch-target h-10">Search</Button>
         </form>
 
         <Select value={data.sort} onValueChange={handleSortChange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px] h-10 touch-target">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
@@ -157,14 +157,14 @@ export default function ModelsPage() {
       {/* Results */}
       {data.actresses.length > 0 ? (
         <>
-          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {data.actresses.map((actress) => (
               <a
                 key={actress.id}
                 href={`/model/${actress.slug}`}
-                className="group rounded-lg border bg-card p-4 transition-all hover:bg-accent hover:shadow-md"
+                className="group rounded-lg border bg-card p-2 sm:p-4 transition-all hover:bg-accent hover:shadow-md active:scale-[0.98] touch-target"
               >
-                <div className="aspect-square overflow-hidden rounded-full mb-3 ring-2 ring-transparent group-hover:ring-primary transition-all">
+                <div className="aspect-square overflow-hidden rounded-full mb-2 sm:mb-3 ring-2 ring-transparent group-hover:ring-primary transition-all">
                   {actress.image ? (
                     <img
                       src={actress.image}
@@ -174,14 +174,14 @@ export default function ModelsPage() {
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-muted">
-                      <Users className="h-12 w-12 text-muted-foreground" />
+                      <Users className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
                     </div>
                   )}
                 </div>
-                <h3 className="font-medium text-center truncate group-hover:text-primary transition-colors">
+                <h3 className="font-medium text-center text-xs sm:text-sm truncate group-hover:text-primary transition-colors">
                   {actress.name}
                 </h3>
-                <p className="text-xs text-center text-muted-foreground">
+                <p className="text-2xs sm:text-xs text-center text-muted-foreground">
                   {actress.videoCount || 0} videos
                 </p>
               </a>
@@ -190,50 +190,52 @@ export default function ModelsPage() {
 
           {/* Pagination */}
           {data.totalPages > 1 && (
-            <div className="mt-8 flex justify-center gap-2">
-              {data.page > 1 && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={`/models?${new URLSearchParams({
-                      sort: data.sort,
-                      ...(data.search && { search: data.search }),
-                      page: String(data.page - 1),
-                    })}`}
-                  >
-                    Previous
-                  </a>
-                </Button>
-              )}
-              <span className="flex items-center px-4 text-sm text-muted-foreground">
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2">
+              <div className="flex gap-2 w-full sm:w-auto">
+                {data.page > 1 && (
+                  <Button variant="outline" asChild className="flex-1 sm:flex-none touch-target">
+                    <a
+                      href={`/models?${new URLSearchParams({
+                        sort: data.sort,
+                        ...(data.search && { search: data.search }),
+                        page: String(data.page - 1),
+                      })}`}
+                    >
+                      Previous
+                    </a>
+                  </Button>
+                )}
+                {data.page < data.totalPages && (
+                  <Button variant="outline" asChild className="flex-1 sm:flex-none touch-target">
+                    <a
+                      href={`/models?${new URLSearchParams({
+                        sort: data.sort,
+                        ...(data.search && { search: data.search }),
+                        page: String(data.page + 1),
+                      })}`}
+                    >
+                      Next
+                    </a>
+                  </Button>
+                )}
+              </div>
+              <span className="text-xs sm:text-sm text-muted-foreground order-first sm:order-none">
                 Page {data.page} of {data.totalPages}
               </span>
-              {data.page < data.totalPages && (
-                <Button variant="outline" asChild>
-                  <a
-                    href={`/models?${new URLSearchParams({
-                      sort: data.sort,
-                      ...(data.search && { search: data.search }),
-                      page: String(data.page + 1),
-                    })}`}
-                  >
-                    Next
-                  </a>
-                </Button>
-              )}
             </div>
           )}
         </>
       ) : (
-        <div className="text-center py-16">
-          <Users className="mx-auto h-16 w-16 text-muted-foreground" />
-          <h2 className="mt-4 text-xl font-semibold">No Models Found</h2>
-          <p className="mt-2 text-muted-foreground">
+        <div className="text-center py-12 sm:py-16">
+          <Users className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
+          <h2 className="mt-3 sm:mt-4 text-lg sm:text-xl font-semibold">No Models Found</h2>
+          <p className="mt-1.5 sm:mt-2 text-sm sm:text-base text-muted-foreground">
             {data.search
               ? `No models matching "${data.search}"`
               : "No models available yet."}
           </p>
           {data.search && (
-            <Button asChild variant="outline" className="mt-4">
+            <Button asChild variant="outline" className="mt-4 touch-target">
               <a href="/models">Clear Search</a>
             </Button>
           )}

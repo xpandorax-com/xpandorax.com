@@ -12,7 +12,6 @@ import { getSession } from "~/lib/auth";
 import { Header } from "~/components/header";
 import { Footer } from "~/components/footer";
 import { AgeGateModal } from "~/components/age-gate-modal";
-import { PopUnderAds } from "~/components/ads";
 import type { RootLoaderData } from "~/types";
 
 import "./tailwind.css";
@@ -34,28 +33,8 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const { user } = await getSession(request, context);
   const env = context?.cloudflare?.env;
 
-  // Check premium status (also check expiry date)
-  let isPremium = false;
-  if (user?.isPremium) {
-    if (user.premiumExpiresAt) {
-      isPremium = new Date(user.premiumExpiresAt) > new Date();
-    } else {
-      isPremium = true;
-    }
-  }
-
-  // Only return ad config for non-premium users
-  const adConfig = isPremium
-    ? null
-    : {
-        exoclickZoneId: env?.EXOCLICK_ZONE_ID || "",
-        juicyadsZoneId: env?.JUICYADS_ZONE_ID || "",
-      };
-
   return json<RootLoaderData>({
     user,
-    isPremium,
-    adConfig,
     appName: env?.APP_NAME || "XpandoraX",
     appUrl: env?.APP_URL || "https://xpandorax.com",
   });
@@ -80,17 +59,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { user, isPremium, adConfig, appName } = useLoaderData<typeof loader>();
+  const { user, appName } = useLoaderData<typeof loader>();
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header user={user} isPremium={isPremium} appName={appName} />
+      <Header user={user} appName={appName} />
       <main className="flex-1">
         <Outlet />
       </main>
       <Footer appName={appName} />
       <AgeGateModal />
-      <PopUnderAds adConfig={adConfig} />
     </div>
   );
 }

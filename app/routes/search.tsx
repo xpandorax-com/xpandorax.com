@@ -168,11 +168,11 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="container py-8">
+    <div className="container-responsive py-4 sm:py-8">
       {/* Search Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-4">Search</h1>
-        <Form method="get" className="flex gap-2">
+      <div className="mb-4 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Search</h1>
+        <Form method="get" className="flex flex-col xs:flex-row gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -180,26 +180,30 @@ export default function SearchPage() {
               name="q"
               defaultValue={data.query}
               placeholder="Search videos, models, categories..."
-              className="pl-10"
+              className="pl-10 h-12 xs:h-10 text-base xs:text-sm"
             />
           </div>
           <input type="hidden" name="type" value={data.type} />
-          <Button type="submit">Search</Button>
-          {data.query && (
-            <Button variant="outline" asChild>
-              <a href="/search">
-                <X className="h-4 w-4" />
-              </a>
+          <div className="flex gap-2">
+            <Button type="submit" className="flex-1 xs:flex-initial h-12 xs:h-10 touch-target">
+              Search
             </Button>
-          )}
+            {data.query && (
+              <Button variant="outline" asChild className="h-12 xs:h-10 touch-target">
+                <a href="/search">
+                  <X className="h-4 w-4" />
+                </a>
+              </Button>
+            )}
+          </div>
         </Form>
       </div>
 
       {data.query ? (
         <>
           {/* Results Summary */}
-          <div className="mb-6">
-            <p className="text-muted-foreground">
+          <div className="mb-4 sm:mb-6">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Found{" "}
               <span className="font-medium text-foreground">
                 {data.totalVideos + data.totalActresses + data.totalCategories}
@@ -208,27 +212,27 @@ export default function SearchPage() {
             </p>
           </div>
 
-          {/* Tabs */}
+          {/* Tabs - Mobile optimized */}
           <Tabs value={data.type} onValueChange={handleTypeChange}>
-            <TabsList className="mb-6">
-              <TabsTrigger value="videos" className="gap-2">
+            <TabsList className="mb-4 sm:mb-6 w-full sm:w-auto grid grid-cols-3 sm:inline-flex h-auto p-1">
+              <TabsTrigger value="videos" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-1.5 flex-col xs:flex-row">
                 <Video className="h-4 w-4" />
-                Videos
-                <Badge variant="secondary" className="ml-1">
+                <span className="hidden xs:inline">Videos</span>
+                <Badge variant="secondary" className="ml-0 xs:ml-1 text-xs">
                   {data.totalVideos}
                 </Badge>
               </TabsTrigger>
-              <TabsTrigger value="actresses" className="gap-2">
+              <TabsTrigger value="actresses" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-1.5 flex-col xs:flex-row">
                 <Users className="h-4 w-4" />
-                Models
-                <Badge variant="secondary" className="ml-1">
+                <span className="hidden xs:inline">Models</span>
+                <Badge variant="secondary" className="ml-0 xs:ml-1 text-xs">
                   {data.totalActresses}
                 </Badge>
               </TabsTrigger>
-              <TabsTrigger value="categories" className="gap-2">
+              <TabsTrigger value="categories" className="gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-1.5 flex-col xs:flex-row">
                 <Folder className="h-4 w-4" />
-                Categories
-                <Badge variant="secondary" className="ml-1">
+                <span className="hidden xs:inline">Categories</span>
+                <Badge variant="secondary" className="ml-0 xs:ml-1 text-xs">
                   {data.totalCategories}
                 </Badge>
               </TabsTrigger>
@@ -237,7 +241,7 @@ export default function SearchPage() {
             {/* Videos Results */}
             <TabsContent value="videos">
               {data.videos.length > 0 ? (
-                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {data.videos.map((video) => (
                     <VideoCard
                       key={video.id}
@@ -265,14 +269,14 @@ export default function SearchPage() {
             {/* Actresses Results */}
             <TabsContent value="actresses">
               {data.actresses.length > 0 ? (
-                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
                   {data.actresses.map((actress) => (
                     <a
                       key={actress.id}
                       href={`/model/${actress.slug}`}
-                      className="group rounded-lg border bg-card p-4 transition-colors hover:bg-accent"
+                      className="group rounded-lg border bg-card p-2 sm:p-4 transition-colors hover:bg-accent touch-manipulation"
                     >
-                      <div className="aspect-square overflow-hidden rounded-full mb-3">
+                      <div className="aspect-square overflow-hidden rounded-full mb-2 sm:mb-3">
                         {actress.image ? (
                           <img
                             src={actress.image}
@@ -281,14 +285,14 @@ export default function SearchPage() {
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-muted">
-                            <Users className="h-12 w-12 text-muted-foreground" />
+                            <Users className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
                           </div>
                         )}
                       </div>
-                      <h3 className="font-medium text-center truncate group-hover:text-primary">
+                      <h3 className="font-medium text-center truncate text-xs sm:text-sm group-hover:text-primary">
                         {actress.name}
                       </h3>
-                      <p className="text-xs text-center text-muted-foreground">
+                      <p className="text-[10px] sm:text-xs text-center text-muted-foreground">
                         {actress.videoCount || 0} videos
                       </p>
                     </a>
@@ -306,12 +310,12 @@ export default function SearchPage() {
             {/* Categories Results */}
             <TabsContent value="categories">
               {data.categories.length > 0 ? (
-                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                   {data.categories.map((category) => (
                     <a
                       key={category.id}
                       href={`/category/${category.slug}`}
-                      className="group rounded-lg border bg-card overflow-hidden transition-colors hover:bg-accent"
+                      className="group rounded-lg border bg-card overflow-hidden transition-colors hover:bg-accent touch-manipulation"
                     >
                       <div className="aspect-video">
                         {category.thumbnail ? (
@@ -322,15 +326,15 @@ export default function SearchPage() {
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-muted">
-                            <Folder className="h-12 w-12 text-muted-foreground" />
+                            <Folder className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
                           </div>
                         )}
                       </div>
-                      <div className="p-4">
-                        <h3 className="font-medium truncate group-hover:text-primary">
+                      <div className="p-2 sm:p-4">
+                        <h3 className="font-medium truncate text-xs sm:text-sm group-hover:text-primary">
                           {category.name}
                         </h3>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
                           {category.videoCount || 0} videos
                         </p>
                       </div>
@@ -347,11 +351,11 @@ export default function SearchPage() {
             </TabsContent>
           </Tabs>
 
-          {/* Pagination */}
+          {/* Pagination - Mobile optimized */}
           {data.totalPages > 1 && (
-            <div className="mt-8 flex justify-center gap-2">
+            <div className="mt-6 sm:mt-8 flex flex-col xs:flex-row items-center justify-center gap-2">
               {data.page > 1 && (
-                <Button variant="outline" asChild>
+                <Button variant="outline" asChild className="w-full xs:w-auto touch-target">
                   <a
                     href={`/search?q=${encodeURIComponent(data.query)}&type=${data.type}&page=${data.page - 1}`}
                   >
@@ -359,11 +363,11 @@ export default function SearchPage() {
                   </a>
                 </Button>
               )}
-              <span className="flex items-center px-4 text-sm text-muted-foreground">
+              <span className="flex items-center px-4 text-sm text-muted-foreground order-first xs:order-none">
                 Page {data.page} of {data.totalPages}
               </span>
               {data.page < data.totalPages && (
-                <Button variant="outline" asChild>
+                <Button variant="outline" asChild className="w-full xs:w-auto touch-target">
                   <a
                     href={`/search?q=${encodeURIComponent(data.query)}&type=${data.type}&page=${data.page + 1}`}
                   >
@@ -375,14 +379,14 @@ export default function SearchPage() {
           )}
         </>
       ) : (
-        <div className="text-center py-16">
-          <Search className="mx-auto h-16 w-16 text-muted-foreground" />
-          <h2 className="mt-4 text-xl font-semibold">Start Searching</h2>
-          <p className="mt-2 text-muted-foreground">
+        <div className="text-center py-12 sm:py-16">
+          <Search className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
+          <h2 className="mt-4 text-lg sm:text-xl font-semibold">Start Searching</h2>
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground">
             Enter a search term to find videos, models, and categories.
           </p>
         </div>
-      )}
+      )}}
     </div>
   );
 }
