@@ -386,7 +386,7 @@ export default function SearchPage() {
             Enter a search term to find videos, models, and categories.
           </p>
         </div>
-      )}}
+      )}
     </div>
   );
 }
