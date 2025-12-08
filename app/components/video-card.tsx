@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "@remix-run/react";
 import { useState, useRef, useCallback } from "react";
-import { Play, Clock, Eye, Crown } from "lucide-react";
-import { Badge } from "~/components/ui/badge";
+import { Play, Clock, Eye } from "lucide-react";
 import { formatDuration, formatViews, cn } from "~/lib/utils";
 import { trackView } from "~/lib/view-tracker";
 
@@ -12,8 +11,7 @@ interface VideoCardVideo {
   thumbnail?: string | null;
   previewVideo?: string | null; // URL to preview video (fast-forward version)
   duration?: number | null;
-  views: number;
-  isPremium: boolean;
+  views?: number;
   actress?: {
     name: string;
   } | null;
@@ -145,17 +143,6 @@ export function VideoCard({ video, className }: VideoCardProps) {
             {formatDuration(video.duration)}
           </div>
         )}
-
-        {/* Premium badge */}
-        {video.isPremium && (
-          <Badge
-            variant="premium"
-            className="absolute left-2 top-2 flex items-center gap-1"
-          >
-            <Crown className="h-3 w-3" />
-            Premium
-          </Badge>
-        )}
       </div>
 
       {/* Content */}
@@ -171,10 +158,12 @@ export function VideoCard({ video, className }: VideoCardProps) {
         )}
 
         <div className="mt-auto flex items-center gap-3 pt-2 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Eye className="h-3 w-3" />
-            {formatViews(video.views)}
-          </span>
+          {video.views !== undefined && video.views > 0 && (
+            <span className="flex items-center gap-1">
+              <Eye className="h-3 w-3" />
+              {formatViews(video.views)}
+            </span>
+          )}
         </div>
       </div>
     </div>

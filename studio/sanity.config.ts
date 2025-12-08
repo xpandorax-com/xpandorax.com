@@ -3,6 +3,9 @@ import { structureTool } from 'sanity/structure';
 import { visionTool } from '@sanity/vision';
 import { schemaTypes } from './schemas';
 
+// Preview URL configuration
+const PREVIEW_URL = process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:5173';
+
 export default defineConfig({
   name: 'xpandorax',
   title: 'XpandoraX CMS',
@@ -25,6 +28,14 @@ export default defineConfig({
                   .defaultOrdering([{ field: 'publishedAt', direction: 'desc' }])
               ),
             S.listItem()
+              .title('Pictures')
+              .icon(() => '🖼️')
+              .child(
+                S.documentTypeList('picture')
+                  .title('Pictures')
+                  .defaultOrdering([{ field: 'publishedAt', direction: 'desc' }])
+              ),
+            S.listItem()
               .title('Categories')
               .icon(() => '📁')
               .child(S.documentTypeList('category').title('Categories')),
@@ -32,11 +43,10 @@ export default defineConfig({
               .title('Models')
               .icon(() => '👤')
               .child(S.documentTypeList('actress').title('Models')),
-            S.divider(),
-            ...S.documentTypeListItems().filter(
-              (listItem) =>
-                !['video', 'category', 'actress'].includes(listItem.getId() || '')
-            ),
+            S.listItem()
+              .title('Producers')
+              .icon(() => '🏢')
+              .child(S.documentTypeList('producer').title('Producers')),
           ]),
     }),
     visionTool(),
@@ -44,5 +54,32 @@ export default defineConfig({
 
   schema: {
     types: schemaTypes,
+  },
+  
+  document: {
+    // Enable preview functionality for documents
+    productionUrl: async (prev, context) => {
+      const { document } = context;
+      const type = document._type;
+      const slug = (document.slug as { current?: string })?.current;
+      
+      if (!slug) return prev;
+      
+      // Generate preview URLs based on document type
+      switch (type) {
+        case 'video':
+          return `${PREVIEW_URL}/video/${slug}`;
+        case 'picture':
+          return `${PREVIEW_URL}/pictures/${slug}`;
+        case 'actress':
+          return `${PREVIEW_URL}/model/${slug}`;
+        case 'producer':
+          return `${PREVIEW_URL}/producer/${slug}`;
+        case 'category':
+          return `${PREVIEW_URL}/category/${slug}`;
+        default:
+          return prev;
+      }
+    },
   },
 });

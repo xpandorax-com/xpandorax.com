@@ -1,8 +1,7 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { useLoaderData, Link } from "@remix-run/react";
-import { useState } from "react";
-import { getSession } from "~/lib/auth";
+import { useLoaderData, Link, useFetcher } from "@remix-run/react";
+import { useState, useEffect } from "react";
 import { VideoPlayer, ServerSelector, type VideoServer } from "~/components/video-player";
 import { VideoCard } from "~/components/video-card";
 import { Badge } from "~/components/ui/badge";
@@ -11,14 +10,13 @@ import { Separator } from "~/components/ui/separator";
 import {
   Eye,
   ThumbsUp,
+  ThumbsDown,
   Clock,
   User,
-  Crown,
-  Lock,
   ChevronRight,
 } from "lucide-react";
 import { formatDuration, formatViews, formatDate } from "~/lib/utils";
-import { createSanityClient, getSlug, type SanityVideo, type SanityCategory } from "~/lib/sanity";
+import { createSanityClient, getSlug, type SanityVideo } from "~/lib/sanity";
 import { useViewTracker } from "~/lib/view-tracker";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -43,16 +41,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  const { user } = await getSession(request, context);
   const env = context.cloudflare.env;
-
-  // Check premium status
-  let isPremium = false;
-  if (user?.isPremium) {
-    isPremium = user.premiumExpiresAt
-      ? new Date(user.premiumExpiresAt) > new Date()
-      : true;
-  }
 
   // Create Sanity client
   const sanity = createSanityClient(env);
@@ -66,9 +55,6 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       description,
       "thumbnail": thumbnail.asset->url,
       duration,
-      views,
-      likes,
-      isPremium,
       abyssEmbed,
       servers,
       publishedAt,
@@ -92,9 +78,6 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  // Check if video is premium only and user is not premium
-  const canWatch = !videoRaw.isPremium || isPremium;
-
   // Fetch related videos from Sanity
   const relatedVideosRaw = await sanity.fetch<SanityVideo[]>(
     `*[_type == "video" && isPublished == true && _id != $videoId] | order(publishedAt desc)[0...6] {
@@ -104,8 +87,6 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       "thumbnail": thumbnail.asset->url,
       "previewVideo": previewVideo.asset->url,
       duration,
-      views,
-      isPremium,
       "actress": actress->{
         name
       }
@@ -121,10 +102,6 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     description: videoRaw.description || null,
     thumbnail: videoRaw.thumbnail || null,
     duration: videoRaw.duration || null,
-    views: videoRaw.views || 0,
-    likes: videoRaw.likes || 0,
-    isPremium: videoRaw.isPremium || false,
-    premiumOnly: videoRaw.isPremium || false,
     abyssEmbed: videoRaw.abyssEmbed || "",
     servers: (videoRaw.servers || []).map((s: { name: string; url: string }) => ({
       name: s.name,
@@ -152,26 +129,78 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     thumbnail: v.thumbnail || null,
     previewVideo: v.previewVideo || null,
     duration: v.duration || null,
-    views: v.views || 0,
-    isPremium: v.isPremium || false,
     actress: v.actress ? { name: v.actress.name } : null,
   }));
 
   return json({
     video,
     relatedVideos,
-    canWatch,
-    isPremium,
   });
 }
 
 export default function VideoPage() {
-  const { video, relatedVideos, canWatch, isPremium } =
+  const { video, relatedVideos } =
     useLoaderData<typeof loader>();
 
-  // Note: View tracking is now handled by VideoCard on click
-  // This provides fallback for direct URL access (disabled to avoid double counting)
-  // useViewTracker({ type: "video", id: video.id, enabled: canWatch });
+  // Track view when page loads
+  useViewTracker({ type: "video", id: video.id, enabled: true });
+
+  // Fetcher for like/dislike interactions
+  const interactionFetcher = useFetcher();
+  const statusFetcher = useFetcher();
+
+  // State for interaction status
+  const [userInteraction, setUserInteraction] = useState<"like" | "dislike" | null>(null);
+  const [likes, setLikes] = useState(0);
+  const [dislikes, setDislikes] = useState(0);
+  const [views, setViews] = useState(0);
+
+  // Fetch initial interaction status
+  useEffect(() => {
+    statusFetcher.load(`/api/video-interaction?videoId=${video.id}`);
+  }, [video.id]);
+
+  // Update state when status is fetched
+  useEffect(() => {
+    if (statusFetcher.data) {
+      const data = statusFetcher.data as { userInteraction: "like" | "dislike" | null; likes: number; dislikes: number };
+      setUserInteraction(data.userInteraction);
+      setLikes(data.likes || 0);
+      setDislikes(data.dislikes || 0);
+    }
+  }, [statusFetcher.data]);
+
+  // Handle like/dislike click
+  const handleInteraction = (action: "like" | "dislike") => {
+    // Optimistic update
+    if (userInteraction === action) {
+      // Toggling off
+      setUserInteraction(null);
+      if (action === "like") setLikes((prev) => Math.max(0, prev - 1));
+      else setDislikes((prev) => Math.max(0, prev - 1));
+    } else if (userInteraction) {
+      // Changing from one to another
+      setUserInteraction(action);
+      if (action === "like") {
+        setLikes((prev) => prev + 1);
+        setDislikes((prev) => Math.max(0, prev - 1));
+      } else {
+        setDislikes((prev) => prev + 1);
+        setLikes((prev) => Math.max(0, prev - 1));
+      }
+    } else {
+      // New interaction
+      setUserInteraction(action);
+      if (action === "like") setLikes((prev) => prev + 1);
+      else setDislikes((prev) => prev + 1);
+    }
+
+    // Submit to API
+    interactionFetcher.submit(
+      { videoId: video.id, action },
+      { method: "post", action: "/api/video-interaction" }
+    );
+  };
 
   // Build all available servers (primary + additional)
   const allServers: VideoServer[] = [
@@ -188,46 +217,18 @@ export default function VideoPage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-4">
           {/* Video Player */}
-          {canWatch ? (
-            <VideoPlayer
-              embedUrl={currentEmbedUrl}
-              thumbnailUrl={video.thumbnail}
-              title={video.title}
-            />
-          ) : (
-            <div className="relative aspect-video overflow-hidden rounded-lg bg-muted">
-              {video.thumbnail && (
-                <img
-                  src={video.thumbnail}
-                  alt={video.title}
-                  className="h-full w-full object-cover opacity-30 blur-sm"
-                />
-              )}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/60 p-6 text-center">
-                <Lock className="h-16 w-16 text-primary" />
-                <h3 className="text-xl font-bold">Premium Content</h3>
-                <p className="text-muted-foreground max-w-md">
-                  This video is available exclusively for premium members.
-                  Upgrade your account to watch this and all other premium content.
-                </p>
-                <Button asChild variant="premium" size="lg">
-                  <Link to="/premium">
-                    <Crown className="mr-2 h-4 w-4" />
-                    Upgrade to Premium
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          )}
+          <VideoPlayer
+            embedUrl={currentEmbedUrl}
+            thumbnailUrl={video.thumbnail}
+            title={video.title}
+          />
 
           {/* Server Selector - below video player, above title */}
-          {canWatch && (
-            <ServerSelector
-              servers={allServers}
-              activeIndex={activeServerIndex}
-              onServerChange={setActiveServerIndex}
-            />
-          )}
+          <ServerSelector
+            servers={allServers}
+            activeIndex={activeServerIndex}
+            onServerChange={setActiveServerIndex}
+          />
 
           {/* Video Info */}
           <div className="space-y-4">
@@ -237,7 +238,7 @@ export default function VideoPage() {
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Eye className="h-4 w-4" />
-                    {formatViews(video.views)} views
+                    {formatViews(views)} views
                   </span>
                   {video.duration && (
                     <span className="flex items-center gap-1">
@@ -245,27 +246,39 @@ export default function VideoPage() {
                       {formatDuration(video.duration)}
                     </span>
                   )}
-                  <span className="flex items-center gap-1">
-                    <ThumbsUp className="h-4 w-4" />
-                    {formatViews(video.likes)} likes
-                  </span>
                   {video.publishedAt && (
                     <span>{formatDate(video.publishedAt)}</span>
                   )}
                 </div>
               </div>
-              {video.premiumOnly && (
-                <Badge variant="premium" className="flex items-center gap-1">
-                  <Crown className="h-3 w-3" />
-                  Premium
-                </Badge>
-              )}
+
+              {/* Like/Dislike Buttons */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={userInteraction === "like" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleInteraction("like")}
+                  className="flex items-center gap-2"
+                >
+                  <ThumbsUp className={`h-4 w-4 ${userInteraction === "like" ? "fill-current" : ""}`} />
+                  <span>{formatViews(likes)}</span>
+                </Button>
+                <Button
+                  variant={userInteraction === "dislike" ? "destructive" : "outline"}
+                  size="sm"
+                  onClick={() => handleInteraction("dislike")}
+                  className="flex items-center gap-2"
+                >
+                  <ThumbsDown className={`h-4 w-4 ${userInteraction === "dislike" ? "fill-current" : ""}`} />
+                  <span>{formatViews(dislikes)}</span>
+                </Button>
+              </div>
             </div>
 
             {/* Actress */}
             {video.actress && (
               <Link
-                to={`/actress/${video.actress.slug}`}
+                to={`/model/${video.actress.slug}`}
                 className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent"
               >
                 {video.actress.thumbnailUrl ? (

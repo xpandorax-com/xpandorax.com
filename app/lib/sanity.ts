@@ -62,10 +62,8 @@ export const VIDEOS_QUERY = `*[_type == "video" && isPublished == true] | order(
   slug,
   description,
   "thumbnail": thumbnail.asset->url,
+  "previewVideo": previewVideo.asset->url,
   duration,
-  views,
-  likes,
-  isPremium,
   abyssEmbed,
   publishedAt,
   "actress": actress->{
@@ -87,17 +85,17 @@ export const VIDEO_BY_SLUG_QUERY = `*[_type == "video" && slug.current == $slug]
   slug,
   description,
   "thumbnail": thumbnail.asset->url,
+  "previewVideo": previewVideo.asset->url,
   duration,
-  views,
-  likes,
-  isPremium,
   abyssEmbed,
+  servers,
   publishedAt,
   "actress": actress->{
     _id,
     name,
     slug,
-    "image": image.asset->url
+    "image": image.asset->url,
+    "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
   },
   "categories": categories[]->{
     _id,
@@ -112,9 +110,8 @@ export const FEATURED_VIDEOS_QUERY = `*[_type == "video" && isPublished == true 
   slug,
   description,
   "thumbnail": thumbnail.asset->url,
-  duration,
-  views,
-  isPremium
+  "previewVideo": previewVideo.asset->url,
+  duration
 }`;
 
 export const RECENT_VIDEOS_QUERY = `*[_type == "video" && isPublished == true] | order(publishedAt desc)[0...12] {
@@ -123,21 +120,11 @@ export const RECENT_VIDEOS_QUERY = `*[_type == "video" && isPublished == true] |
   slug,
   description,
   "thumbnail": thumbnail.asset->url,
-  duration,
-  views,
-  isPremium
+  "previewVideo": previewVideo.asset->url,
+  duration
 }`;
 
-export const PREMIUM_VIDEOS_QUERY = `*[_type == "video" && isPublished == true && isPremium == true] | order(publishedAt desc) {
-  _id,
-  title,
-  slug,
-  description,
-  "thumbnail": thumbnail.asset->url,
-  duration,
-  views,
-  isPremium
-}`;
+// Premium videos query removed - premium feature is no longer used
 
 // Categories
 export const CATEGORIES_QUERY = `*[_type == "category"] | order(sortOrder asc) {
@@ -160,9 +147,8 @@ export const CATEGORY_BY_SLUG_QUERY = `*[_type == "category" && slug.current == 
     title,
     slug,
     "thumbnail": thumbnail.asset->url,
-    duration,
-    views,
-    isPremium
+    "previewVideo": previewVideo.asset->url,
+    duration
   }
 }`;
 
@@ -182,14 +168,20 @@ export const MODEL_BY_SLUG_QUERY = `*[_type == "actress" && slug.current == $slu
   slug,
   bio,
   "image": image.asset->url,
+  "gallery": gallery[]{
+    _key,
+    asset,
+    "url": asset->url,
+    caption,
+    alt
+  },
   "videos": *[_type == "video" && actress._ref == ^._id && isPublished == true] | order(publishedAt desc) {
     _id,
     title,
     slug,
     "thumbnail": thumbnail.asset->url,
-    duration,
-    views,
-    isPremium
+    "previewVideo": previewVideo.asset->url,
+    duration
   }
 }`;
 
@@ -203,9 +195,8 @@ export const SEARCH_QUERY = `*[_type == "video" && isPublished == true && (
   slug,
   description,
   "thumbnail": thumbnail.asset->url,
-  duration,
-  views,
-  isPremium
+  "previewVideo": previewVideo.asset->url,
+  duration
 }`;
 
 // Stats
@@ -214,7 +205,8 @@ export const STATS_QUERY = `{
   "publishedVideos": count(*[_type == "video" && isPublished == true]),
   "totalCategories": count(*[_type == "category"]),
   "totalActresses": count(*[_type == "actress"]),
-  "premiumVideos": count(*[_type == "video" && isPremium == true])
+  "totalProducers": count(*[_type == "producer"]),
+  "totalPictures": count(*[_type == "picture" && isPublished == true])
 }`;
 
 // ==================== TYPE DEFINITIONS ====================
@@ -227,10 +219,8 @@ export interface SanityVideo {
   thumbnail?: string;
   previewVideo?: string;
   duration?: number;
-  views: number;
-  likes: number;
-  isPremium: boolean;
   abyssEmbed: string;
+  servers?: { name: string; url: string }[];
   publishedAt?: string;
   actress?: SanityActress;
   producer?: SanityProducer;

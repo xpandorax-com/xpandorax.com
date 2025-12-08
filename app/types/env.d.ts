@@ -12,7 +12,7 @@ declare module "@remix-run/cloudflare" {
 
 interface Env {
   // D1 Database
-  DATABASE: D1Database;
+  DB: D1Database;
 
   // R2 Storage
   MEDIA: R2Bucket;

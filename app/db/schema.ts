@@ -68,13 +68,27 @@ export const videos = sqliteTable("videos", {
   duration: integer("duration"), // in seconds
   views: integer("views").notNull().default(0),
   likes: integer("likes").notNull().default(0),
-  isPremium: integer("is_premium", { mode: "boolean" }).notNull().default(false),
+  dislikes: integer("dislikes").notNull().default(0),
   actressId: text("actress_id").references(() => actresses.id, { onDelete: "set null" }),
   isPublished: integer("is_published", { mode: "boolean" }).notNull().default(false),
   publishedAt: integer("published_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
+
+// Track user interactions (likes/dislikes) to prevent duplicate votes
+export const videoInteractions = sqliteTable(
+  "video_interactions",
+  {
+    id: text("id").primaryKey(),
+    videoId: text("video_id")
+      .notNull()
+      .references(() => videos.id, { onDelete: "cascade" }),
+    visitorId: text("visitor_id").notNull(), // IP hash or session ID for anonymous users
+    interactionType: text("interaction_type", { enum: ["like", "dislike"] }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  }
+);
 
 export const videoCategories = sqliteTable(
   "video_categories",
@@ -148,6 +162,7 @@ export const videosRelations = relations(videos, ({ one, many }) => ({
   }),
   videoCategories: many(videoCategories),
   videoActresses: many(videoActresses),
+  videoInteractions: many(videoInteractions),
 }));
 
 export const actressesRelations = relations(actresses, ({ many }) => ({
@@ -188,6 +203,13 @@ export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
   }),
 }));
 
+export const videoInteractionsRelations = relations(videoInteractions, ({ one }) => ({
+  video: one(videos, {
+    fields: [videoInteractions.videoId],
+    references: [videos.id],
+  }),
+}));
+
 // ==================== TYPE EXPORTS ====================
 
 export type User = typeof users.$inferSelect;
@@ -204,3 +226,5 @@ export type VideoCategory = typeof videoCategories.$inferSelect;
 export type VideoActress = typeof videoActresses.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type NewSubscription = typeof subscriptions.$inferInsert;
+export type VideoInteraction = typeof videoInteractions.$inferSelect;
+export type NewVideoInteraction = typeof videoInteractions.$inferInsert;

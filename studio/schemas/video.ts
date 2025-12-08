@@ -89,24 +89,6 @@ export default {
       description: 'Video duration in seconds',
     },
     {
-      name: 'views',
-      title: 'Views',
-      type: 'number',
-      initialValue: 0,
-    },
-    {
-      name: 'likes',
-      title: 'Likes',
-      type: 'number',
-      initialValue: 0,
-    },
-    {
-      name: 'isPremium',
-      title: 'Premium Only',
-      type: 'boolean',
-      initialValue: false,
-    },
-    {
       name: 'isFeatured',
       title: 'Featured Video',
       type: 'boolean',
@@ -148,12 +130,12 @@ export default {
     select: {
       title: 'title',
       media: 'thumbnail',
-      isPremium: 'isPremium',
+      isFeatured: 'isFeatured',
     },
     prepare(selection) {
-      const { title, media, isPremium } = selection;
+      const { title, media, isFeatured } = selection;
       return {
-        title: `${isPremium ? '👑 ' : ''}${title}`,
+        title: `${isFeatured ? '⭐ ' : ''}${title}`,
         media,
       };
     },
@@ -165,9 +147,9 @@ export default {
       by: [{ field: 'publishedAt', direction: 'desc' }],
     },
     {
-      title: 'Views, High to Low',
-      name: 'viewsDesc',
-      by: [{ field: 'views', direction: 'desc' }],
+      title: 'Title A-Z',
+      name: 'titleAsc',
+      by: [{ field: 'title', direction: 'asc' }],
     },
   ],
 };

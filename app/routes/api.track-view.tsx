@@ -1,6 +1,8 @@
 import type { ActionFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { createSanityWriteClient } from "~/lib/sanity";
+import { eq, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
+import { videos } from "~/db/schema";
 
 // Rate limiting map (in-memory, per worker instance)
 const viewedRecently = new Map<string, number>();
@@ -59,23 +61,19 @@ export async function action({ request, context }: ActionFunctionArgs) {
     viewedRecently.set(rateKey, now);
 
     const env = context.cloudflare.env;
+    const db = drizzle(env.DB);
 
-    // Create Sanity client with write access
-    const sanity = createSanityWriteClient(env);
-
-    // Validate the document type - pictures track views on actress
-    // Videos track views on video documents
-    if (type !== "video" && type !== "picture" && type !== "actress") {
-      return json({ error: "Invalid type" }, { status: 400 });
+    // Only track views for videos in the database
+    if (type === "video") {
+      // Increment the view count in the database
+      await db
+        .update(videos)
+        .set({ views: sql`${videos.views} + 1` })
+        .where(eq(videos.id, id));
     }
 
-    // Increment the view count using Sanity's patch API
-    // The id should be the Sanity document ID (_id)
-    await sanity
-      .patch(id)
-      .setIfMissing({ views: 0 })
-      .inc({ views: 1 })
-      .commit();
+    // For pictures and actresses, we could add similar tracking
+    // but for now we just acknowledge the request
 
     return json({ success: true, counted: true });
   } catch (error) {
