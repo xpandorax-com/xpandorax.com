@@ -42,59 +42,76 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const email = formData.get("email") as string;
-  const username = formData.get("username") as string;
-  const password = formData.get("password") as string;
-  const confirmPassword = formData.get("confirmPassword") as string;
+  try {
+    const formData = await request.formData();
+    const email = formData.get("email") as string;
+    const username = formData.get("username") as string;
+    const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
 
-  // Validate input
-  const result = registerSchema.safeParse({
-    email,
-    username,
-    password,
-    confirmPassword,
-  });
-  if (!result.success) {
+    // Validate input
+    const result = registerSchema.safeParse({
+      email,
+      username,
+      password,
+      confirmPassword,
+    });
+    if (!result.success) {
+      return json(
+        { error: result.error.errors[0].message },
+        { status: 400 }
+      );
+    }
+
+    // Check if database is available
+    if (!context.cloudflare?.env?.DB) {
+      console.error("Database not available");
+      return json(
+        { error: "Service temporarily unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
+
+    const db = createDatabase(context.cloudflare.env.DB);
+
+    // Check if email already exists
+    const existingEmail = await getUserByEmail(db, email);
+    if (existingEmail) {
+      return json(
+        { error: "An account with this email already exists" },
+        { status: 400 }
+      );
+    }
+
+    // Check if username already exists
+    const existingUsername = await getUserByUsername(db, username);
+    if (existingUsername) {
+      return json(
+        { error: "This username is already taken" },
+        { status: 400 }
+      );
+    }
+
+    // Create user
+    const user = await createUser(db, { email, username, password });
+
+    // Create session
+    const lucia = createLucia(db);
+    const session = await lucia.createSession(user.id, {});
+    const sessionCookie = createSessionCookie(lucia, session.id);
+
+    return redirect("/", {
+      headers: {
+        "Set-Cookie": sessionCookie,
+      },
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
     return json(
-      { error: result.error.errors[0].message },
-      { status: 400 }
+      { error: "An unexpected error occurred. Please try again." },
+      { status: 500 }
     );
   }
-
-  const db = createDatabase(context.cloudflare.env.DB);
-
-  // Check if email already exists
-  const existingEmail = await getUserByEmail(db, email);
-  if (existingEmail) {
-    return json(
-      { error: "An account with this email already exists" },
-      { status: 400 }
-    );
-  }
-
-  // Check if username already exists
-  const existingUsername = await getUserByUsername(db, username);
-  if (existingUsername) {
-    return json(
-      { error: "This username is already taken" },
-      { status: 400 }
-    );
-  }
-
-  // Create user
-  const user = await createUser(db, { email, username, password });
-
-  // Create session
-  const lucia = createLucia(db);
-  const session = await lucia.createSession(user.id, {});
-  const sessionCookie = createSessionCookie(lucia, session.id);
-
-  return redirect("/", {
-    headers: {
-      "Set-Cookie": sessionCookie,
-    },
-  });
 }
 
 export default function RegisterPage() {

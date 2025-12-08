@@ -2,7 +2,7 @@ import type { ActionFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { eq, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { videos, videoInteractions } from "~/db/schema";
+import { videoInteractions } from "~/db/schema";
 
 // Helper function to generate a visitor ID from IP using Web Crypto API
 async function generateVisitorId(ip: string, userAgent: string): Promise<string> {
@@ -13,6 +13,24 @@ async function generateVisitorId(ip: string, userAgent: string): Promise<string>
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   return hashHex.substring(0, 32);
+}
+
+// Helper to get like/dislike counts for a video from interactions
+async function getVideoCounts(db: ReturnType<typeof drizzle>, videoId: string) {
+  const likes = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(videoInteractions)
+    .where(and(eq(videoInteractions.videoId, videoId), eq(videoInteractions.interactionType, "like")));
+  
+  const dislikes = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(videoInteractions)
+    .where(and(eq(videoInteractions.videoId, videoId), eq(videoInteractions.interactionType, "dislike")));
+
+  return {
+    likes: Number(likes[0]?.count || 0),
+    dislikes: Number(dislikes[0]?.count || 0),
+  };
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
@@ -70,25 +88,14 @@ export async function action({ request, context }: ActionFunctionArgs) {
               eq(videoInteractions.visitorId, visitorId)
             )
           );
-
-        // Decrement the appropriate counter
-        if (previousInteraction === "like") {
-          await db
-            .update(videos)
-            .set({ likes: sql`${videos.likes} - 1` })
-            .where(eq(videos.id, videoId));
-        } else if (previousInteraction === "dislike") {
-          await db
-            .update(videos)
-            .set({ dislikes: sql`${videos.dislikes} - 1` })
-            .where(eq(videos.id, videoId));
-        }
       }
 
+      const counts = await getVideoCounts(db, videoId);
       return json({
         success: true,
         action: "removed",
         previousInteraction: previousInteraction || null,
+        ...counts,
       });
     }
 
@@ -108,30 +115,13 @@ export async function action({ request, context }: ActionFunctionArgs) {
           )
         );
 
-      // Swap the counters
-      if (previousInteraction === "like" && action === "dislike") {
-        await db
-          .update(videos)
-          .set({ 
-            likes: sql`${videos.likes} - 1`,
-            dislikes: sql`${videos.dislikes} + 1`,
-          })
-          .where(eq(videos.id, videoId));
-      } else if (previousInteraction === "dislike" && action === "like") {
-        await db
-          .update(videos)
-          .set({ 
-            likes: sql`${videos.likes} + 1`,
-            dislikes: sql`${videos.dislikes} - 1`,
-          })
-          .where(eq(videos.id, videoId));
-      }
-
+      const counts = await getVideoCounts(db, videoId);
       return json({
         success: true,
         action: action,
         changed: true,
         previousInteraction,
+        ...counts,
       });
     }
 
@@ -147,23 +137,12 @@ export async function action({ request, context }: ActionFunctionArgs) {
           )
         );
 
-      // Decrement the counter
-      if (action === "like") {
-        await db
-          .update(videos)
-          .set({ likes: sql`${videos.likes} - 1` })
-          .where(eq(videos.id, videoId));
-      } else {
-        await db
-          .update(videos)
-          .set({ dislikes: sql`${videos.dislikes} - 1` })
-          .where(eq(videos.id, videoId));
-      }
-
+      const counts = await getVideoCounts(db, videoId);
       return json({
         success: true,
         action: "removed",
         toggled: true,
+        ...counts,
       });
     }
 
@@ -177,23 +156,12 @@ export async function action({ request, context }: ActionFunctionArgs) {
       createdAt: new Date(),
     });
 
-    // Increment the appropriate counter
-    if (action === "like") {
-      await db
-        .update(videos)
-        .set({ likes: sql`${videos.likes} + 1` })
-        .where(eq(videos.id, videoId));
-    } else {
-      await db
-        .update(videos)
-        .set({ dislikes: sql`${videos.dislikes} + 1` })
-        .where(eq(videos.id, videoId));
-    }
-
+    const counts = await getVideoCounts(db, videoId);
     return json({
       success: true,
       action,
       isNew: true,
+      ...counts,
     });
   } catch (error) {
     console.error("Error processing video interaction:", error);
@@ -233,17 +201,12 @@ export async function loader({ request, context }: ActionFunctionArgs) {
       )
       .limit(1);
 
-    // Get current counts
-    const video = await db
-      .select({ likes: videos.likes, dislikes: videos.dislikes })
-      .from(videos)
-      .where(eq(videos.id, videoId))
-      .limit(1);
+    // Get current counts from interactions table
+    const counts = await getVideoCounts(db, videoId);
 
     return json({
       userInteraction: existingInteraction[0]?.interactionType || null,
-      likes: video[0]?.likes || 0,
-      dislikes: video[0]?.dislikes || 0,
+      ...counts,
     });
   } catch (error) {
     console.error("Error fetching interaction status:", error);

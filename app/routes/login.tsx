@@ -44,50 +44,67 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  try {
+    const formData = await request.formData();
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-  // Validate input
-  const result = loginSchema.safeParse({ email, password });
-  if (!result.success) {
+    // Validate input
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      return json(
+        { error: result.error.errors[0].message },
+        { status: 400 }
+      );
+    }
+
+    // Check if database is available
+    if (!context.cloudflare?.env?.DB) {
+      console.error("Database not available");
+      return json(
+        { error: "Service temporarily unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
+
+    const db = createDatabase(context.cloudflare.env.DB);
+
+    // Find user by email
+    const user = await getUserByEmail(db, email);
+    if (!user) {
+      return json(
+        { error: "Invalid email or password" },
+        { status: 400 }
+      );
+    }
+
+    // Verify password
+    const validPassword = await verifyPassword(user.hashedPassword, password);
+    if (!validPassword) {
+      return json(
+        { error: "Invalid email or password" },
+        { status: 400 }
+      );
+    }
+
+    // Create session
+    const lucia = createLucia(db);
+    const session = await lucia.createSession(user.id, {});
+    const sessionCookie = createSessionCookie(lucia, session.id);
+
+    // Redirect to home
+    return redirect("/", {
+      headers: {
+        "Set-Cookie": sessionCookie,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
     return json(
-      { error: result.error.errors[0].message },
-      { status: 400 }
+      { error: "An unexpected error occurred. Please try again." },
+      { status: 500 }
     );
   }
-
-  const db = createDatabase(context.cloudflare.env.DB);
-
-  // Find user by email
-  const user = await getUserByEmail(db, email);
-  if (!user) {
-    return json(
-      { error: "Invalid email or password" },
-      { status: 400 }
-    );
-  }
-
-  // Verify password
-  const validPassword = await verifyPassword(user.hashedPassword, password);
-  if (!validPassword) {
-    return json(
-      { error: "Invalid email or password" },
-      { status: 400 }
-    );
-  }
-
-  // Create session
-  const lucia = createLucia(db);
-  const session = await lucia.createSession(user.id, {});
-  const sessionCookie = createSessionCookie(lucia, session.id);
-
-  // Redirect to home
-  return redirect("/", {
-    headers: {
-      "Set-Cookie": sessionCookie,
-    },
-  });
 }
 
 export default function LoginPage() {
