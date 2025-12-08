@@ -54,6 +54,32 @@ export default {
         { name: 'onlyfans', title: 'OnlyFans', type: 'url' },
       ],
     },
+    {
+      name: 'gallery',
+      title: 'Picture Gallery',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: {
+            hotspot: true,
+          },
+          fields: [
+            {
+              name: 'caption',
+              title: 'Caption',
+              type: 'string',
+            },
+            {
+              name: 'alt',
+              title: 'Alt Text',
+              type: 'string',
+            },
+          ],
+        },
+      ],
+      description: 'Add photos of the model for the picture gallery',
+    },
   ],
   preview: {
     select: {

@@ -23,6 +23,11 @@ interface Env {
   // App config
   SITE_URL: string;
 
+  // Sanity CMS
+  SANITY_PROJECT_ID?: string;
+  SANITY_DATASET?: string;
+  SANITY_API_TOKEN?: string;
+
   // Secrets
   SESSION_SECRET: string;
   LEMON_SQUEEZY_API_KEY: string;

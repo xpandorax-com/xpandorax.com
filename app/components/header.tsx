@@ -10,6 +10,7 @@ import {
   Settings,
   Menu,
   Video,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -34,6 +35,7 @@ export function Header({ user, isPremium, appName }: HeaderProps) {
   const navItems = [
     { href: "/", label: "Home", icon: Home },
     { href: "/videos", label: "Videos", icon: Video },
+    { href: "/pictures", label: "Pictures", icon: ImageIcon },
     { href: "/categories", label: "Categories", icon: Grid3X3 },
     { href: "/models", label: "Models", icon: Users },
   ];

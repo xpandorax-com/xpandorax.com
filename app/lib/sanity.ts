@@ -238,6 +238,18 @@ export interface SanityActress {
   image?: string;
   videoCount?: number;
   videos?: SanityVideo[];
+  gallery?: SanityGalleryImage[];
+}
+
+export interface SanityGalleryImage {
+  _key: string;
+  asset: {
+    _ref: string;
+    url?: string;
+  };
+  caption?: string;
+  alt?: string;
+  url?: string;
 }
 
 // Helper to get slug string from Sanity slug object

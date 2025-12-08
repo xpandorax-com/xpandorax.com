@@ -2,12 +2,14 @@ import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import { VideoCard } from "~/components/video-card";
+import { PictureGallery } from "~/components/picture-gallery";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
-import { Users, Video, Calendar, ArrowLeft } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Users, Video, Calendar, ArrowLeft, Image as ImageIcon } from "lucide-react";
 import { formatDate } from "~/lib/utils";
-import { createSanityClient, getSlug, type SanityActress, type SanityVideo } from "~/lib/sanity";
+import { createSanityClient, getSlug, type SanityActress, type SanityVideo, type SanityGalleryImage } from "~/lib/sanity";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data?.actress) {
@@ -47,6 +49,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     videos: SanityVideo[];
     videoCount: number;
     createdAt?: string;
+    gallery?: SanityGalleryImage[];
   }) | null>(
     `*[_type == "actress" && slug.current == $slug][0] {
       _id,
@@ -64,6 +67,12 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
         duration,
         views,
         isPremium
+      },
+      "gallery": gallery[] {
+        _key,
+        "url": asset->url,
+        caption,
+        alt
       }
     }`,
     { slug, offset, end: offset + limit }
@@ -96,9 +105,16 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     isPremium: v.isPremium || false,
   }));
 
+  const gallery = (actressRaw.gallery || []).map((img) => ({
+    url: img.url || "",
+    caption: img.caption || undefined,
+    alt: img.alt || undefined,
+  })).filter(img => img.url);
+
   return json({
     actress,
     videos: actressVideos,
+    gallery,
     total,
     page,
     totalPages,
@@ -107,7 +123,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
 
 export default function ModelDetailPage() {
   const data = useLoaderData<typeof loader>();
-  const { actress, videos: actressVideos, total, page, totalPages } = data;
+  const { actress, videos: actressVideos, gallery, total, page, totalPages } = data;
 
   return (
     <div className="container py-8">
@@ -166,51 +182,65 @@ export default function ModelDetailPage() {
 
       <Separator className="mb-8" />
 
-      {/* Videos Section */}
-      <div>
-        <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-          <Video className="h-5 w-5" />
-          Videos featuring {actress.name}
-        </h2>
+      {/* Content Tabs - Videos & Gallery */}
+      <Tabs defaultValue="videos" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="videos" className="flex items-center gap-2">
+            <Video className="h-4 w-4" />
+            Videos ({total})
+          </TabsTrigger>
+          <TabsTrigger value="gallery" className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" />
+            Pictures ({gallery.length})
+          </TabsTrigger>
+        </TabsList>
 
-        {actressVideos.length > 0 ? (
-          <>
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {actressVideos.map((video) => (
-                <VideoCard key={video.id} video={video} />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-8 flex justify-center gap-2">
-                {page > 1 && (
-                  <Button variant="outline" asChild>
-                    <a href={`/model/${actress.slug}?page=${page - 1}`}>
-                      Previous
-                    </a>
-                  </Button>
-                )}
-                <span className="flex items-center px-4 text-sm text-muted-foreground">
-                  Page {page} of {totalPages}
-                </span>
-                {page < totalPages && (
-                  <Button variant="outline" asChild>
-                    <a href={`/model/${actress.slug}?page=${page + 1}`}>Next</a>
-                  </Button>
-                )}
+        {/* Videos Tab */}
+        <TabsContent value="videos">
+          {actressVideos.length > 0 ? (
+            <>
+              <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                {actressVideos.map((video) => (
+                  <VideoCard key={video.id} video={video} />
+                ))}
               </div>
-            )}
-          </>
-        ) : (
-          <div className="text-center py-12">
-            <Video className="mx-auto h-12 w-12 text-muted-foreground" />
-            <p className="mt-4 text-muted-foreground">
-              No videos available yet for {actress.name}.
-            </p>
-          </div>
-        )}
-      </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex justify-center gap-2">
+                  {page > 1 && (
+                    <Button variant="outline" asChild>
+                      <a href={`/model/${actress.slug}?page=${page - 1}`}>
+                        Previous
+                      </a>
+                    </Button>
+                  )}
+                  <span className="flex items-center px-4 text-sm text-muted-foreground">
+                    Page {page} of {totalPages}
+                  </span>
+                  {page < totalPages && (
+                    <Button variant="outline" asChild>
+                      <a href={`/model/${actress.slug}?page=${page + 1}`}>Next</a>
+                    </Button>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <Video className="mx-auto h-12 w-12 text-muted-foreground" />
+              <p className="mt-4 text-muted-foreground">
+                No videos available yet for {actress.name}.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Gallery Tab */}
+        <TabsContent value="gallery">
+          <PictureGallery images={gallery} modelName={actress.name} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
