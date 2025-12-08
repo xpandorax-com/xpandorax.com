@@ -253,6 +253,31 @@ export interface SanityGalleryImage {
   url?: string;
 }
 
+export interface SanityProducer {
+  _id: string;
+  name: string;
+  slug: { current: string } | string;
+  description?: string;
+  logo?: string;
+  website?: string;
+  founded?: number;
+  country?: string;
+  videoCount?: number;
+  videos?: SanityVideo[];
+}
+
+export interface SanityPicture {
+  _id: string;
+  title: string;
+  slug: { current: string } | string;
+  image?: string;
+  actress?: SanityActress;
+  producer?: SanityProducer;
+  categories?: SanityCategory[];
+  isPublished: boolean;
+  publishedAt?: string;
+}
+
 // Helper to get slug string from Sanity slug object
 export function getSlug(slug: { current: string } | string): string {
   return typeof slug === "string" ? slug : slug.current;

@@ -2,5 +2,7 @@
 import video from './video';
 import category from './category';
 import actress from './actress';
+import producer from './producer';
+import picture from './picture';
 
-export const schemaTypes = [video, category, actress];
+export const schemaTypes = [video, category, actress, producer, picture];

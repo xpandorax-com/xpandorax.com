@@ -11,6 +11,7 @@ import {
   Menu,
   Video,
   Image as ImageIcon,
+  Building2,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -38,6 +39,7 @@ export function Header({ user, isPremium, appName }: HeaderProps) {
     { href: "/pictures", label: "Pictures", icon: ImageIcon },
     { href: "/categories", label: "Categories", icon: Grid3X3 },
     { href: "/models", label: "Models", icon: Users },
+    { href: "/producers", label: "Producers", icon: Building2 },
   ];
 
   return (

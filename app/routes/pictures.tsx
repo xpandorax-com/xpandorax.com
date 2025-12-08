@@ -37,35 +37,80 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 
   const sanity = createSanityClient(context.cloudflare.env);
 
-  // Fetch all models with their galleries
-  const modelsWithGalleries = await sanity.fetch<Array<{
-    _id: string;
-    name: string;
-    slug: { current: string } | string;
-    image?: string;
-    gallery?: Array<{
-      _key: string;
-      url?: string;
-      caption?: string;
-      alt?: string;
-    }>;
-  }>>(
-    `*[_type == "actress" && defined(gallery) && count(gallery) > 0] {
-      _id,
-      name,
-      slug,
-      "image": image.asset->url,
-      "gallery": gallery[] {
-        _key,
-        "url": asset->url,
-        caption,
-        alt
-      }
-    }`
-  );
+  // Fetch pictures from the dedicated Pictures schema
+  const [picturesFromSchema, modelsWithGalleries] = await Promise.all([
+    sanity.fetch<Array<{
+      _id: string;
+      title: string;
+      slug: { current: string } | string;
+      image?: string;
+      actress?: {
+        _id: string;
+        name: string;
+        slug: { current: string } | string;
+        image?: string;
+      };
+    }>>(
+      `*[_type == "picture" && isPublished == true] | order(publishedAt desc) {
+        _id,
+        title,
+        slug,
+        "image": image.asset->url,
+        "actress": actress->{
+          _id,
+          name,
+          slug,
+          "image": image.asset->url
+        }
+      }`
+    ),
+    // Also fetch model gallery images as fallback
+    sanity.fetch<Array<{
+      _id: string;
+      name: string;
+      slug: { current: string } | string;
+      image?: string;
+      gallery?: Array<{
+        _key: string;
+        url?: string;
+        caption?: string;
+        alt?: string;
+      }>;
+    }>>(
+      `*[_type == "actress" && defined(gallery) && count(gallery) > 0] {
+        _id,
+        name,
+        slug,
+        "image": image.asset->url,
+        "gallery": gallery[] {
+          _key,
+          "url": asset->url,
+          caption,
+          alt
+        }
+      }`
+    ),
+  ]);
 
-  // Flatten all images with model info
+  // Combine all images
   const allImages: GalleryImageWithModel[] = [];
+
+  // Add pictures from Pictures schema first
+  picturesFromSchema.forEach((pic) => {
+    if (pic.image) {
+      allImages.push({
+        url: pic.image,
+        caption: pic.title,
+        alt: pic.title,
+        modelName: pic.actress?.name || "Unknown",
+        modelSlug: pic.actress ? getSlug(pic.actress.slug) : "",
+        modelImage: pic.actress?.image,
+        modelId: pic.actress?._id || pic._id,
+      });
+    }
+  });
+
+  // Add model gallery images
   modelsWithGalleries.forEach((model) => {
     if (model.gallery) {
       model.gallery.forEach((img) => {

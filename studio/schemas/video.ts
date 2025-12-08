@@ -117,6 +117,13 @@ export default {
       to: [{ type: 'actress' }],
     },
     {
+      name: 'producer',
+      title: 'Producer',
+      type: 'reference',
+      to: [{ type: 'producer' }],
+      description: 'The producer/studio that released this video',
+    },
+    {
       name: 'categories',
       title: 'Categories',
       type: 'array',

@@ -60,6 +60,14 @@ export function Footer({ appName }: FooterProps) {
               </li>
               <li>
                 <Link
+                  to="/producers"
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  Producers
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/premium"
                   className="text-muted-foreground hover:text-primary"
                 >
