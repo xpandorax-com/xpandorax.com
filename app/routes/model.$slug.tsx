@@ -65,6 +65,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
         title,
         slug,
         "thumbnail": thumbnail.asset->url,
+        "previewVideo": previewVideo.asset->url,
         duration,
         views,
         isPremium
@@ -101,6 +102,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     slug: getSlug(v.slug),
     title: v.title,
     thumbnail: v.thumbnail || null,
+    previewVideo: v.previewVideo || null,
     duration: v.duration || null,
     views: v.views || 0,
     isPremium: v.isPremium || false,

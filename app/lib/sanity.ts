@@ -29,6 +29,21 @@ export function createSanityClient(env: SanityEnv) {
   });
 }
 
+// Sanity client for write operations (mutations)
+// Uses useCdn: false which is required for writes
+export function createSanityWriteClient(env: SanityEnv) {
+  const projectId = env.SANITY_PROJECT_ID || "your-project-id";
+  const dataset = env.SANITY_DATASET || "production";
+  
+  return createClient({
+    projectId,
+    dataset,
+    apiVersion: "2024-01-01",
+    useCdn: false, // Must be false for write operations
+    token: env.SANITY_API_TOKEN, // Required for write operations
+  });
+}
+
 // Image URL builder
 export function createImageBuilder(client: ReturnType<typeof createSanityClient>) {
   return imageUrlBuilder(client);
@@ -210,6 +225,7 @@ export interface SanityVideo {
   slug: { current: string } | string;
   description?: string;
   thumbnail?: string;
+  previewVideo?: string;
   duration?: number;
   views: number;
   likes: number;
@@ -217,6 +233,7 @@ export interface SanityVideo {
   abyssEmbed: string;
   publishedAt?: string;
   actress?: SanityActress;
+  producer?: SanityProducer;
   categories?: SanityCategory[];
 }
 

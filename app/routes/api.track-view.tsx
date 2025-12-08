@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { createSanityClient } from "~/lib/sanity";
+import { createSanityWriteClient } from "~/lib/sanity";
 
 // Rate limiting map (in-memory, per worker instance)
 const viewedRecently = new Map<string, number>();
@@ -61,7 +61,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     const env = context.cloudflare.env;
 
     // Create Sanity client with write access
-    const sanity = createSanityClient(env);
+    const sanity = createSanityWriteClient(env);
 
     // Validate the document type - pictures track views on actress
     // Videos track views on video documents

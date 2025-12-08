@@ -102,6 +102,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       title,
       slug,
       "thumbnail": thumbnail.asset->url,
+      "previewVideo": previewVideo.asset->url,
       duration,
       views,
       isPremium,
@@ -149,6 +150,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     slug: getSlug(v.slug),
     title: v.title,
     thumbnail: v.thumbnail || null,
+    previewVideo: v.previewVideo || null,
     duration: v.duration || null,
     views: v.views || 0,
     isPremium: v.isPremium || false,
@@ -167,8 +169,9 @@ export default function VideoPage() {
   const { video, relatedVideos, canWatch, isPremium } =
     useLoaderData<typeof loader>();
 
-  // Track video view when page loads
-  useViewTracker({ type: "video", id: video.id, enabled: canWatch });
+  // Note: View tracking is now handled by VideoCard on click
+  // This provides fallback for direct URL access (disabled to avoid double counting)
+  // useViewTracker({ type: "video", id: video.id, enabled: canWatch });
 
   // Build all available servers (primary + additional)
   const allServers: VideoServer[] = [
