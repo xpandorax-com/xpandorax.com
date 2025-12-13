@@ -13,6 +13,8 @@ import {
   Image as ImageIcon,
   Building2,
   X,
+  History,
+  Bookmark,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -31,6 +33,7 @@ import {
   SheetClose,
 } from "~/components/ui/sheet";
 import { cn } from "~/lib/utils";
+import { ThemeToggle } from "~/components/theme-toggle";
 import type { User as UserType } from "lucia";
 
 interface HeaderProps {
@@ -188,6 +191,9 @@ export function Header({ user, appName }: HeaderProps) {
             <span className="hidden sm:inline">Search</span>
           </Link>
 
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
           {/* User Menu */}
           {user ? (
             <DropdownMenu>
@@ -201,6 +207,19 @@ export function Header({ user, appName }: HeaderProps) {
                   <p className="text-sm font-medium">{user.username}</p>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/history" className="cursor-pointer">
+                    <History className="mr-2 h-4 w-4" />
+                    Watch History
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/bookmarks" className="cursor-pointer">
+                    <Bookmark className="mr-2 h-4 w-4" />
+                    Bookmarks
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link to="/account" className="cursor-pointer">

@@ -1,17 +1,11 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { useLoaderData, useSearchParams } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import { VideoCard } from "~/components/video-card";
+import { VideoFilters, getDurationFilter } from "~/components/video-filters";
 import { Button } from "~/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import { Video, SlidersHorizontal } from "lucide-react";
-import { createSanityClient, getSlug, type SanityVideo } from "~/lib/sanity";
+import { Video } from "lucide-react";
+import { createSanityClient, getSlug, type SanityVideo, type SanityCategory } from "~/lib/sanity";
 
 export const meta: MetaFunction = () => {
   return [
@@ -24,6 +18,8 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
   const sort = url.searchParams.get("sort") || "newest";
+  const duration = url.searchParams.get("duration");
+  const category = url.searchParams.get("category");
   const limit = 36;
   const offset = (page - 1) * limit;
 
@@ -46,10 +42,26 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       break;
   }
 
-  // Fetch videos with pagination
-  const [videosRaw, totalCount] = await Promise.all([
+  // Build duration filter
+  const durationFilter = getDurationFilter(duration);
+  let durationCondition = "";
+  if (durationFilter.min !== undefined && durationFilter.max !== undefined) {
+    durationCondition = `&& duration >= ${durationFilter.min} && duration < ${durationFilter.max}`;
+  } else if (durationFilter.min !== undefined) {
+    durationCondition = `&& duration >= ${durationFilter.min}`;
+  } else if (durationFilter.max !== undefined) {
+    durationCondition = `&& duration < ${durationFilter.max}`;
+  }
+
+  // Build category filter
+  const categoryCondition = category 
+    ? `&& count(categories[slug.current == "${category}"]) > 0`
+    : "";
+
+  // Fetch videos, count, and categories in parallel
+  const [videosRaw, totalCount, categoriesRaw] = await Promise.all([
     sanity.fetch<SanityVideo[]>(
-      `*[_type == "video" && isPublished == true] | order(${orderBy}) [$offset...$end] {
+      `*[_type == "video" && isPublished == true ${durationCondition} ${categoryCondition}] | order(${orderBy}) [$offset...$end] {
         _id,
         title,
         slug,
@@ -61,7 +73,12 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       }`,
       { offset, end: offset + limit }
     ),
-    sanity.fetch<number>(`count(*[_type == "video" && isPublished == true])`),
+    sanity.fetch<number>(
+      `count(*[_type == "video" && isPublished == true ${durationCondition} ${categoryCondition}])`
+    ),
+    sanity.fetch<SanityCategory[]>(
+      `*[_type == "category"] | order(name asc) { _id, name, slug }`
+    ),
   ]);
 
   const videoList = videosRaw.map((v) => ({
@@ -75,56 +92,58 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     isPremium: v.isPremium || false,
   }));
 
+  const categories = categoriesRaw.map((c) => ({
+    id: c._id,
+    name: c.name,
+    slug: getSlug(c.slug),
+  }));
+
   const totalPages = Math.ceil(totalCount / limit);
 
   return json({
     videos: videoList,
+    categories,
     total: totalCount,
     page,
     totalPages,
     sort,
+    duration,
+    category,
   });
 }
 
 export default function VideosPage() {
   const data = useLoaderData<typeof loader>();
-  const [searchParams, setSearchParams] = useSearchParams();
 
-  const handleSortChange = (value: string) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("sort", value);
-    params.delete("page");
-    setSearchParams(params);
+  // Build pagination URL
+  const buildPageUrl = (pageNum: number) => {
+    const params = new URLSearchParams();
+    params.set("sort", data.sort);
+    params.set("page", String(pageNum));
+    if (data.duration) params.set("duration", data.duration);
+    if (data.category) params.set("category", data.category);
+    return `/videos?${params.toString()}`;
   };
 
   return (
     <div className="container py-4 sm:py-8">
       {/* Header */}
-      <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <Video className="h-5 w-5 sm:h-6 sm:w-6" />
-            All Videos
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-0.5 sm:mt-1">
-            Browse {data.total.toLocaleString()} videos
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-muted-foreground hidden sm:block" />
-          <Select value={data.sort} onValueChange={handleSortChange}>
-            <SelectTrigger className="w-full sm:w-[180px] h-10 touch-target">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="popular">Most Views</SelectItem>
-              <SelectItem value="title">Title (A-Z)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2 mb-4">
+          <Video className="h-5 w-5 sm:h-6 sm:w-6" />
+          All Videos
+        </h1>
+        
+        {/* Advanced Filters */}
+        <VideoFilters
+          categories={data.categories}
+          currentFilters={{
+            sort: data.sort,
+            duration: data.duration || undefined,
+            category: data.category || undefined,
+          }}
+          totalResults={data.total}
+        />
       </div>
 
       {/* Video Grid */}
@@ -141,7 +160,6 @@ export default function VideosPage() {
                   thumbnail: video.thumbnail,
                   duration: video.duration,
                   views: video.views,
-                  isPremium: video.isPremium,
                 }}
               />
             ))}
@@ -153,24 +171,14 @@ export default function VideosPage() {
               <div className="flex gap-2 w-full sm:w-auto">
                 {data.page > 1 && (
                   <Button variant="outline" asChild className="flex-1 sm:flex-none touch-target">
-                    <a
-                      href={`/videos?${new URLSearchParams({
-                        sort: data.sort,
-                        page: String(data.page - 1),
-                      })}`}
-                    >
+                    <a href={buildPageUrl(data.page - 1)}>
                       Previous
                     </a>
                   </Button>
                 )}
                 {data.page < data.totalPages && (
                   <Button variant="outline" asChild className="flex-1 sm:flex-none touch-target">
-                    <a
-                      href={`/videos?${new URLSearchParams({
-                        sort: data.sort,
-                        page: String(data.page + 1),
-                      })}`}
-                    >
+                    <a href={buildPageUrl(data.page + 1)}>
                       Next
                     </a>
                   </Button>
@@ -185,9 +193,9 @@ export default function VideosPage() {
       ) : (
         <div className="text-center py-12 sm:py-16">
           <Video className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
-          <h2 className="mt-3 sm:mt-4 text-lg sm:text-xl font-semibold">No Videos Yet</h2>
+          <h2 className="mt-3 sm:mt-4 text-lg sm:text-xl font-semibold">No Videos Found</h2>
           <p className="mt-1.5 sm:mt-2 text-sm sm:text-base text-muted-foreground">
-            Check back later for new content.
+            Try adjusting your filters or check back later.
           </p>
         </div>
       )}

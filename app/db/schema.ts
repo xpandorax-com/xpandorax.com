@@ -92,12 +92,43 @@ export const contentViews = sqliteTable("content_views", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// ==================== WATCH HISTORY TABLE ====================
+// Tracks user watch history for videos
+
+export const watchHistory = sqliteTable("watch_history", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  videoId: text("video_id").notNull(), // Sanity video _id
+  watchedAt: integer("watched_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  watchDuration: integer("watch_duration").notNull().default(0), // seconds watched
+  completed: integer("completed", { mode: "boolean" }).notNull().default(false),
+  lastPosition: integer("last_position").notNull().default(0), // resume position
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// ==================== BOOKMARKS TABLE ====================
+// User saved/favorited videos
+
+export const bookmarks = sqliteTable("bookmarks", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  videoId: text("video_id").notNull(), // Sanity video _id
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
 // ==================== RELATIONS ====================
 
 export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   subscriptions: many(subscriptions),
   comments: many(comments),
+  watchHistory: many(watchHistory),
+  bookmarks: many(bookmarks),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -129,6 +160,20 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
   }),
 }));
 
+export const watchHistoryRelations = relations(watchHistory, ({ one }) => ({
+  user: one(users, {
+    fields: [watchHistory.userId],
+    references: [users.id],
+  }),
+}));
+
+export const bookmarksRelations = relations(bookmarks, ({ one }) => ({
+  user: one(users, {
+    fields: [bookmarks.userId],
+    references: [users.id],
+  }),
+}));
+
 // ==================== TYPE EXPORTS ====================
 
 export type User = typeof users.$inferSelect;
@@ -143,3 +188,7 @@ export type Comment = typeof comments.$inferSelect;
 export type NewComment = typeof comments.$inferInsert;
 export type ContentView = typeof contentViews.$inferSelect;
 export type NewContentView = typeof contentViews.$inferInsert;
+export type WatchHistory = typeof watchHistory.$inferSelect;
+export type NewWatchHistory = typeof watchHistory.$inferInsert;
+export type Bookmark = typeof bookmarks.$inferSelect;
+export type NewBookmark = typeof bookmarks.$inferInsert;

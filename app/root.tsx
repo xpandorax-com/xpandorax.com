@@ -8,10 +8,13 @@ import {
 } from "@remix-run/react";
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
+import { useEffect } from "react";
 import { getSession } from "~/lib/auth";
 import { Header } from "~/components/header";
 import { Footer } from "~/components/footer";
 import { AgeGateModal } from "~/components/age-gate-modal";
+import { WebsiteSchema, OrganizationSchema } from "~/components/seo-schema";
+import { initWebVitals } from "~/lib/web-vitals";
 import type { RootLoaderData } from "~/types";
 
 import "./tailwind.css";
@@ -46,6 +49,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#7c3aed" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
         <Meta />
         <Links />
       </head>
@@ -59,10 +65,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { user, appName } = useLoaderData<typeof loader>();
+  const { user, appName, appUrl } = useLoaderData<typeof loader>();
+
+  // Initialize Web Vitals monitoring
+  useEffect(() => {
+    initWebVitals();
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col">
+      <WebsiteSchema name={appName} url={appUrl} description="Premium Video Directory Platform" />
+      <OrganizationSchema name={appName} url={appUrl} />
       <Header user={user} appName={appName} />
       <main className="flex-1">
         <Outlet />

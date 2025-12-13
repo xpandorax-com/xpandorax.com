@@ -1,11 +1,13 @@
 {
   "name": "XpandoraX",
   "short_name": "XpandoraX",
-  "description": "Premium adult content platform",
+  "description": "Premium Video Directory Platform",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#ef4444",
+  "background_color": "#030712",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "scope": "/",
   "icons": [
     {
       "src": "/favicon.ico",
@@ -15,12 +17,16 @@
     {
       "src": "/icon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "maskable any"
     },
     {
       "src": "/icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "maskable any"
     }
-  ]
+  ],
+  "categories": ["entertainment"],
+  "prefer_related_applications": false
 }
