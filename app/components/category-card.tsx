@@ -1,7 +1,7 @@
 import { Link } from "@remix-run/react";
 import { FolderOpen } from "lucide-react";
 import { cn } from "~/lib/utils";
-import type { Category } from "~/db/schema";
+import type { Category } from "~/types";
 
 interface CategoryCardProps {
   category: Category;

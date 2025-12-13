@@ -48,7 +48,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const [videoResults, totalVideos] = await Promise.all([
     type === "videos"
       ? sanity.fetch<SanityVideo[]>(
-          `*[_type == "video" && isPublished == true && (title match $query + "*" || description match $query + "*")] | order(publishedAt desc) [$offset...$end] {
+          `*[_type == "video" && isPublished == true && (title match "${query}*" || description match "${query}*")] | order(publishedAt desc) [${offset}...${offset + limit}] {
             _id,
             title,
             slug,
@@ -57,54 +57,54 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
             duration,
             views,
             isPremium
-          }`,
-          { query, offset, end: offset + limit }
+          }`
         )
       : Promise.resolve([]),
-    sanity.fetch<number>(
-      `count(*[_type == "video" && isPublished == true && (title match $query + "*" || description match $query + "*")])`,
-      { query }
-    ),
+    type === "videos"
+      ? sanity.fetch<number>(
+          `count(*[_type == "video" && isPublished == true && (title match "${query}*" || description match "${query}*")])`
+        )
+      : Promise.resolve(0),
   ]);
 
   // Search actresses/models
   const [actressResults, totalActresses] = await Promise.all([
     type === "actresses"
       ? sanity.fetch<(SanityActress & { videoCount: number })[]>(
-          `*[_type == "actress" && (name match $query + "*" || bio match $query + "*")] | order(name asc) [$offset...$end] {
+          `*[_type == "actress" && (name match "${query}*" || bio match "${query}*")] | order(name asc) [${offset}...${offset + limit}] {
             _id,
             name,
             slug,
             "image": image.asset->url,
             "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
-          }`,
-          { query, offset, end: offset + limit }
+          }`
         )
       : Promise.resolve([]),
-    sanity.fetch<number>(
-      `count(*[_type == "actress" && (name match $query + "*" || bio match $query + "*")])`,
-      { query }
-    ),
+    type === "actresses"
+      ? sanity.fetch<number>(
+          `count(*[_type == "actress" && (name match "${query}*" || bio match "${query}*")])`
+        )
+      : Promise.resolve(0),
   ]);
 
   // Search categories
   const [categoryResults, totalCategories] = await Promise.all([
     type === "categories"
       ? sanity.fetch<(SanityCategory & { videoCount: number })[]>(
-          `*[_type == "category" && (name match $query + "*" || description match $query + "*")] | order(name asc) [$offset...$end] {
+          `*[_type == "category" && (name match "${query}*" || description match "${query}*")] | order(name asc) [${offset}...${offset + limit}] {
             _id,
             name,
             slug,
             "thumbnail": thumbnail.asset->url,
             "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true])
-          }`,
-          { query, offset, end: offset + limit }
+          }`
         )
       : Promise.resolve([]),
-    sanity.fetch<number>(
-      `count(*[_type == "category" && (name match $query + "*" || description match $query + "*")])`,
-      { query }
-    ),
+    type === "categories"
+      ? sanity.fetch<number>(
+          `count(*[_type == "category" && (name match "${query}*" || description match "${query}*")])`
+        )
+      : Promise.resolve(0),
   ]);
 
   // Transform data

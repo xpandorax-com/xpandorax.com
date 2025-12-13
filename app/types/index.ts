@@ -1,5 +1,46 @@
 import type { User, Session } from "lucia";
-import type { Video, Category, Actress } from "~/db/schema";
+
+// Sanity CMS types (content is managed by Sanity, not D1)
+export interface Video {
+  _id: string;
+  title: string;
+  slug: string;
+  description: string;
+  duration: number;
+  thumbnail: string;
+  videoUrl: string;
+  isPremium: boolean;
+  views: number;
+  actress?: Actress | null;
+  categories: Category[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  thumbnail?: string;
+}
+
+export interface Actress {
+  _id: string;
+  name: string;
+  slug: string;
+  bio?: string;
+  avatar?: string;
+  birthDate?: string;
+}
+
+// Ad configuration type
+export interface AdConfig {
+  enabled: boolean;
+  provider: 'google-adsense' | 'custom';
+  adUnitId?: string;
+  positions: ('header' | 'sidebar' | 'footer' | 'in-content')[];
+}
 
 // Loader data types
 export interface RootLoaderData {

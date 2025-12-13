@@ -9,6 +9,7 @@ interface VideoCardVideo {
   thumbnail?: string | null;
   duration?: number | null;
   views?: number;
+  isPremium?: boolean;
   actress?: {
     name: string;
   } | null;
