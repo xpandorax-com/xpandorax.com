@@ -24,36 +24,87 @@ const ALLOWED_TYPES = [
 // Max file size (10MB)
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
+// CORS headers to allow Sanity Studio uploads
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Max-Age": "86400",
+};
+
+// Helper function to add CORS headers to JSON response
+function jsonWithCors(data: unknown, init?: ResponseInit) {
+  return json(data, {
+    ...init,
+    headers: {
+      ...CORS_HEADERS,
+      ...(init?.headers || {}),
+    },
+  });
+}
+
+// Handle OPTIONS preflight requests
+export async function loader({ request }: LoaderFunctionArgs) {
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: CORS_HEADERS,
+    });
+  }
+
+  return jsonWithCors({
+    message: "Picture Upload API",
+    instructions: {
+      method: "POST",
+      contentType: "multipart/form-data",
+      field: "file",
+      allowedTypes: ALLOWED_TYPES,
+      maxSize: `${MAX_FILE_SIZE / 1024 / 1024}MB`,
+    },
+    example: {
+      curl: `curl -X POST -F "file=@/path/to/image.jpg" ${new URL(request.url).origin}/api/upload-picture`,
+    },
+  });
+}
+
 export async function action({ request, context }: ActionFunctionArgs) {
+  // Handle OPTIONS preflight requests
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: CORS_HEADERS,
+    });
+  }
+
   // Only allow POST requests
   if (request.method !== "POST") {
-    return json({ error: "Method not allowed" }, { status: 405 });
+    return jsonWithCors({ error: "Method not allowed" }, { status: 405 });
   }
 
   try {
     const contentType = request.headers.get("content-type") || "";
     
     if (!contentType.includes("multipart/form-data")) {
-      return json({ error: "Content-Type must be multipart/form-data" }, { status: 400 });
+      return jsonWithCors({ error: "Content-Type must be multipart/form-data" }, { status: 400 });
     }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return json({ error: "No file provided" }, { status: 400 });
+      return jsonWithCors({ error: "No file provided" }, { status: 400 });
     }
 
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return json({ 
+      return jsonWithCors({ 
         error: `Invalid file type: ${file.type}. Allowed types: ${ALLOWED_TYPES.join(", ")}` 
       }, { status: 400 });
     }
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      return json({ 
+      return jsonWithCors({ 
         error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` 
       }, { status: 400 });
     }
@@ -84,7 +135,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     
     if (!bucket) {
       console.error("R2 bucket binding (MEDIA) not found");
-      return json({ error: "Storage not configured" }, { status: 500 });
+      return jsonWithCors({ error: "Storage not configured" }, { status: 500 });
     }
 
     // Convert file to ArrayBuffer
@@ -102,7 +153,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     // Get public URL
     const publicUrl = getR2PublicUrl(key);
 
-    return json({
+    return jsonWithCors({
       success: true,
       url: publicUrl,
       key: key,
@@ -113,26 +164,9 @@ export async function action({ request, context }: ActionFunctionArgs) {
 
   } catch (error) {
     console.error("Error uploading picture to R2:", error);
-    return json({ 
+    return jsonWithCors({ 
       error: "Failed to upload picture",
       details: error instanceof Error ? error.message : "Unknown error"
     }, { status: 500 });
   }
-}
-
-// GET endpoint to check upload status or get upload instructions
-export async function loader({ request }: LoaderFunctionArgs) {
-  return json({
-    message: "Picture Upload API",
-    instructions: {
-      method: "POST",
-      contentType: "multipart/form-data",
-      field: "file",
-      allowedTypes: ALLOWED_TYPES,
-      maxSize: `${MAX_FILE_SIZE / 1024 / 1024}MB`,
-    },
-    example: {
-      curl: `curl -X POST -F "file=@/path/to/image.jpg" ${new URL(request.url).origin}/api/upload-picture`,
-    },
-  });
 }
