@@ -6,6 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 # Don't bundle the remix build, it's already built
 [build]
 watch_dir = "app"
+pages_build_output_dir = "./build/client"
 
 # Rules for modules
 [[rules]]
