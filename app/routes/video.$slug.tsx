@@ -108,7 +108,6 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       title,
       slug,
       "thumbnail": thumbnail.asset->url,
-      "previewVideo": previewVideo.asset->url,
       duration,
       "actress": actress->{
         name
