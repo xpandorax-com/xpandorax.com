@@ -175,7 +175,7 @@ export function R2ImageInput(props: R2ImageInputProps) {
             {isUploading ? (
               <>
                 <Spinner muted />
-                <Text muted>Uploading to R2...</Text>
+                <Text muted>Uploading to Backblaze B2...</Text>
               </>
             ) : (
               <>
@@ -199,7 +199,7 @@ export function R2ImageInput(props: R2ImageInputProps) {
                   />
                 </label>
                 <Text size={1} muted>
-                  Images will be stored in Cloudflare R2
+                  Images stored in Backblaze B2 + Cloudflare CDN
                 </Text>
               </>
             )}

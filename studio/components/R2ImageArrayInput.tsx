@@ -227,7 +227,7 @@ export function R2ImageArrayInput(props: R2ImageArrayInputProps) {
           {isUploading ? (
             <>
               <Spinner muted />
-              <Text muted>Uploading to R2... {uploadProgress}%</Text>
+              <Text muted>Uploading to Backblaze B2... {uploadProgress}%</Text>
             </>
           ) : (
             <>
@@ -256,7 +256,7 @@ export function R2ImageArrayInput(props: R2ImageArrayInputProps) {
                 />
               </label>
               <Text size={0} muted>
-                Full images stored in Cloudflare R2 • First image = thumbnail
+                Full images stored in Backblaze B2 + CDN • First image = thumbnail
               </Text>
             </>
           )}

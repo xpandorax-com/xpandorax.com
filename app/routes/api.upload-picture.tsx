@@ -1,13 +1,14 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { uploadToR2, getR2PublicUrl } from "~/lib/r2-storage.server";
+import { getB2Config, uploadImageToB2 } from "~/lib/b2-storage.server";
 
 /**
- * API endpoint for uploading pictures to R2 storage
+ * API endpoint for uploading pictures to Backblaze B2 storage
+ * Served via Cloudflare CDN for fast global delivery
  * 
  * POST /api/upload-picture
  * - Accepts multipart/form-data with 'file' field
- * - Returns the R2 public URL for the uploaded image
+ * - Returns the CDN public URL for the uploaded image
  * 
  * Files are stored in: pictures/{year}/{month}/{filename}
  */
@@ -109,10 +110,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
       }, { status: 400 });
     }
 
-    // Generate unique filename with organized path
+    // Generate unique filename
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
     const timestamp = now.getTime();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     
@@ -127,47 +126,45 @@ export async function action({ request, context }: ActionFunctionArgs) {
       .substring(0, 50) // Limit length
       .toLowerCase();
     
-    // Create organized path: pictures/2024/12/filename-timestamp-random.ext
-    const key = `pictures/${year}/${month}/${sanitizedName}-${timestamp}-${randomSuffix}.${extension}`;
+    // Create filename: filename-timestamp-random.ext (path is added by uploadImageToB2)
+    const filename = `${sanitizedName}-${timestamp}-${randomSuffix}.${extension}`;
 
-    // Get R2 bucket binding - try multiple access patterns
+    // Get B2 configuration from environment
     const env = (context as any).cloudflare?.env || (context as any).env || context;
-    const bucket = env.MEDIA as R2Bucket;
     
-    if (!bucket) {
-      console.error("R2 bucket binding (MEDIA) not found. Available keys:", Object.keys(env || {}));
+    // Check for required B2 credentials
+    if (!env.B2_KEY_ID || !env.B2_APPLICATION_KEY) {
+      console.error("B2 credentials not found. Available keys:", Object.keys(env || {}));
       return jsonWithCors({ 
         error: "Storage not configured",
         debug: { availableKeys: Object.keys(env || {}) }
       }, { status: 500 });
     }
 
+    // Get B2 configuration
+    const b2Config = getB2Config(env);
+
     // Convert file to ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
 
-    // Upload to R2
-    await uploadToR2(bucket, key, arrayBuffer, {
+    // Upload to Backblaze B2
+    const result = await uploadImageToB2(b2Config, filename, arrayBuffer, {
       contentType: file.type,
-      metadata: {
-        originalName: originalName,
-        uploadedAt: now.toISOString(),
-      },
+      originalFilename: originalName,
+      folder: 'pictures',
     });
-
-    // Get public URL
-    const publicUrl = getR2PublicUrl(key);
 
     return jsonWithCors({
       success: true,
-      url: publicUrl,
-      key: key,
+      url: result.url,
+      key: result.key,
       filename: originalName,
       size: file.size,
       contentType: file.type,
     });
 
   } catch (error) {
-    console.error("Error uploading picture to R2:", error);
+    console.error("Error uploading picture to B2:", error);
     return jsonWithCors({ 
       error: "Failed to upload picture",
       details: error instanceof Error ? error.message : "Unknown error"

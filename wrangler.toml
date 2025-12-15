@@ -9,20 +9,20 @@ binding = "DB"
 database_name = "xpandorax-com"
 database_id = "1e1e0001-2d13-4c0e-b5c6-83f26ab8732e"
 
-# R2 Storage for media files
-[[r2_buckets]]
-binding = "MEDIA"
-bucket_name = "xpandorax-com"
-
 # Environment variables
 [vars]
 APP_URL = "https://xpandorax.com"
 APP_NAME = "XpandoraX"
+# Backblaze B2 configuration (credentials should be set as secrets)
+B2_BUCKET_NAME = "xpandorax-com"
+B2_REGION = "us-east-005"
+B2_ENDPOINT = "s3.us-east-005.backblazeb2.com"
+CDN_URL = "https://cdn.xpandorax.com"
 
 # Production environment
 [env.production]
-vars = { APP_URL = "https://xpandorax.com", APP_NAME = "XpandoraX" }
+vars = { APP_URL = "https://xpandorax.com", APP_NAME = "XpandoraX", B2_BUCKET_NAME = "xpandorax-com", B2_REGION = "us-east-005", B2_ENDPOINT = "s3.us-east-005.backblazeb2.com", CDN_URL = "https://cdn.xpandorax.com" }
 
 # Preview environment  
 [env.preview]
-vars = { APP_URL = "https://preview.xpandorax.com", APP_NAME = "XpandoraX Preview" }
+vars = { APP_URL = "https://preview.xpandorax.com", APP_NAME = "XpandoraX Preview", B2_BUCKET_NAME = "xpandorax-com", B2_REGION = "us-east-005", B2_ENDPOINT = "s3.us-east-005.backblazeb2.com", CDN_URL = "https://cdn.xpandorax.com" }

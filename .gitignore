@@ -47,6 +47,16 @@ yarn-error.log*
 # Drizzle
 drizzle/meta/
 
+# Cloudflare & Helper Scripts - NEVER COMMIT!
+cloudflare-helper.py
+cloudflare-helper.ps1
+cloudflare-helper.sh
+cloudflare-api.js
+cloudflare-cli.js
+test-token-format.py
+test-cf-api.js
+ZONE_ID.txt
+
 # Test
 coverage/
 

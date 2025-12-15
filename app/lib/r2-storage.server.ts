@@ -1,13 +1,17 @@
 /**
  * Cloudflare R2 Storage Utilities
  * 
+ * @deprecated This file is deprecated. Use b2-storage.server.ts instead.
+ * We have migrated to Backblaze B2 + Cloudflare CDN for storage.
+ * This file is kept for backward compatibility during migration.
+ * 
  * Uses the native R2 Bucket Binding (MEDIA) in Workers runtime.
  * No AWS SDK needed - uses Cloudflare's native API.
  * 
  * For Workers: Always use the binding method (env.MEDIA or context.cloudflare.env.MEDIA)
  */
 
-// CDN URL for public access
+// CDN URL for public access - now using Backblaze B2 + Cloudflare CDN
 export const R2_PUBLIC_URL = "https://cdn.xpandorax.com";
 
 /**

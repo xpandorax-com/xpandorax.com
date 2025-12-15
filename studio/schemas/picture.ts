@@ -34,7 +34,7 @@ export default {
     },
     {
       name: 'images',
-      title: 'Full Images (R2)',
+      title: 'Full Images (B2)',
       type: 'array',
       of: [
         {
@@ -70,7 +70,7 @@ export default {
           },
         },
       ],
-      description: 'Full-size images uploaded to Cloudflare R2',
+      description: 'Full-size images uploaded to Backblaze B2 + Cloudflare CDN',
       components: {
         input: R2ImageArrayInput,
       },

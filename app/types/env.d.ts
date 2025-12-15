@@ -14,9 +14,6 @@ interface Env {
   // D1 Database
   DB: D1Database;
 
-  // R2 Storage (bound via wrangler.toml - NO API KEYS NEEDED AT RUNTIME)
-  MEDIA: R2Bucket;
-
   // KV Cache
   CACHE: KVNamespace;
 
@@ -25,7 +22,18 @@ interface Env {
   APP_URL?: string;
   APP_NAME?: string;
 
-  // Cloudflare R2 S3-compatible API (only for external/server-side uploads)
+  // Backblaze B2 Storage (S3-compatible API)
+  // Used for both images and premium video hosting with Cloudflare CDN delivery
+  B2_KEY_ID: string;
+  B2_APPLICATION_KEY: string;
+  B2_BUCKET_NAME: string;
+  B2_BUCKET_ID: string;
+  B2_REGION: string; // e.g., 'us-west-004'
+  B2_ENDPOINT: string; // e.g., 's3.us-west-004.backblazeb2.com'
+  CDN_URL: string; // Cloudflare CDN URL, e.g., 'https://cdn.xpandorax.com'
+
+  // Legacy R2 support (deprecated - migrating to B2)
+  MEDIA?: R2Bucket;
   R2_ACCOUNT_ID?: string;
   R2_BUCKET_NAME?: string;
   R2_ACCESS_KEY_ID?: string;
