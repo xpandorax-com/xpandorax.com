@@ -2,7 +2,7 @@ import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link, useFetcher, useRouteLoaderData } from "@remix-run/react";
 import { useState, useEffect, useCallback } from "react";
-import { VideoPlayer, ServerSelector, type VideoServer, type DownloadLink } from "~/components/video-player";
+import { VideoPlayer, PlyrVideoPlayer, ServerSelector, type VideoServer, type DownloadLink } from "~/components/video-player";
 import { VideoCard } from "~/components/video-card";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -16,6 +16,8 @@ import {
   User,
   ChevronRight,
   Download,
+  Crown,
+  Image as ImageIcon,
 } from "lucide-react";
 import { formatDuration, formatViews, formatDate, cn } from "~/lib/utils";
 import { createSanityClient, getSlug, type SanityVideo } from "~/lib/sanity";
@@ -62,6 +64,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       "thumbnail": thumbnail.asset->url,
       duration,
       abyssEmbed,
+      mainServerUrl,
       servers,
       downloadLinks,
       publishedAt,
@@ -116,6 +119,27 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     { videoId: videoRaw._id }
   );
 
+  // Fetch related pictures from Sanity (based on same actress or categories)
+  const categoryIds = videoRaw.categories?.map(c => c._id) || [];
+  const actressId = videoRaw.actress?._id;
+  
+  const relatedPicturesRaw = await sanity.fetch<any[]>(
+    `*[_type == "picture" && isPublished == true && (
+      actress._ref == $actressId || 
+      count((categories[]._ref)[@ in $categoryIds]) > 0
+    )] | order(publishedAt desc)[0...4] {
+      _id,
+      title,
+      slug,
+      "thumbnail": thumbnail.asset->url,
+      "imageCount": count(images),
+      "actress": actress->{
+        name
+      }
+    }`,
+    { actressId: actressId || "", categoryIds }
+  );
+
   // Transform data
   const video = {
     id: videoRaw._id,
@@ -126,6 +150,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     duration: videoRaw.duration || null,
     views: viewCount,
     abyssEmbed: videoRaw.abyssEmbed || "",
+    mainServerUrl: videoRaw.mainServerUrl || null,
     servers: (videoRaw.servers || []).map((s: { name: string; url: string }) => ({
       name: s.name,
       url: s.url,
@@ -159,17 +184,28 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     actress: v.actress ? { name: v.actress.name } : null,
   }));
 
+  const relatedPictures = relatedPicturesRaw.map((p) => ({
+    id: p._id,
+    slug: getSlug(p.slug),
+    title: p.title,
+    thumbnail: p.thumbnail || null,
+    imageCount: p.imageCount || 0,
+    actress: p.actress ? { name: p.actress.name } : null,
+  }));
+
   return json({
     video,
     relatedVideos,
+    relatedPictures,
   });
 }
 
 export default function VideoPage() {
-  const { video, relatedVideos } =
+  const { video, relatedVideos, relatedPictures } =
     useLoaderData<typeof loader>();
   const rootData = useRouteLoaderData<RootLoaderData>("root");
   const currentUserId = rootData?.user?.id;
+  const isPremium = rootData?.user?.isPremium || false;
 
   // Track view when page loads
   useViewTracker({ type: "video", id: video.id, enabled: true });
@@ -242,8 +278,21 @@ export default function VideoPage() {
     ...video.servers,
   ];
   
-  const [activeServerIndex, setActiveServerIndex] = useState(0);
-  const currentEmbedUrl = allServers[activeServerIndex]?.url || video.abyssEmbed;
+  // -1 means Main Server (No Ads), 0+ means regular servers
+  const [activeServerIndex, setActiveServerIndex] = useState(isPremium && video.mainServerUrl ? -1 : 0);
+  
+  // Get the current embed URL based on selected server
+  const getCurrentEmbedUrl = () => {
+    if (activeServerIndex === -1 && video.mainServerUrl) {
+      return video.mainServerUrl;
+    }
+    return allServers[activeServerIndex]?.url || video.abyssEmbed;
+  };
+  
+  const currentEmbedUrl = getCurrentEmbedUrl();
+  
+  // Determine if we should use Plyr for Main Server (direct video) or iframe
+  const isDirectVideo = activeServerIndex === -1 && video.mainServerUrl;
 
   // Handle server error - auto switch to next server
   const handleServerError = useCallback((failedIndex: number) => {
@@ -258,22 +307,48 @@ export default function VideoPage() {
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-3 sm:space-y-4">
-          {/* Video Player */}
-          <VideoPlayer
-            embedUrl={currentEmbedUrl}
-            thumbnailUrl={video.thumbnail}
-            title={video.title}
-            servers={allServers}
-            currentServerIndex={activeServerIndex}
-            onServerError={handleServerError}
-          />
+          {/* Video Player - Use Plyr for Main Server (Premium), iframe for others */}
+          {isDirectVideo && video.mainServerUrl ? (
+            <PlyrVideoPlayer
+              videoUrl={video.mainServerUrl}
+              thumbnailUrl={video.thumbnail}
+              title={video.title}
+            />
+          ) : (
+            <VideoPlayer
+              embedUrl={currentEmbedUrl}
+              thumbnailUrl={video.thumbnail}
+              title={video.title}
+              servers={allServers}
+              currentServerIndex={activeServerIndex >= 0 ? activeServerIndex : 0}
+              onServerError={handleServerError}
+            />
+          )}
 
           {/* Server Selector - below video player, above title */}
           <ServerSelector
             servers={allServers}
             activeIndex={activeServerIndex}
             onServerChange={setActiveServerIndex}
+            isPremium={isPremium}
+            mainServerUrl={video.mainServerUrl}
           />
+          
+          {/* Premium Upsell for non-premium users */}
+          {!isPremium && video.mainServerUrl && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+              <Crown className="h-5 w-5 text-amber-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-amber-500">Upgrade to Premium</p>
+                <p className="text-xs text-muted-foreground">Get ad-free streaming on the Main Server</p>
+              </div>
+              <Link to="/premium">
+                <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">
+                  Upgrade
+                </Button>
+              </Link>
+            </div>
+          )}
 
           {/* Download Links */}
           {video.downloadLinks.length > 0 && (
@@ -377,8 +452,9 @@ export default function VideoPage() {
           </div>
         </div>
 
-        {/* Sidebar - Related Videos */}
+        {/* Sidebar - Related Videos & Pictures */}
         <div className="space-y-4 sm:space-y-6">
+          {/* Related Videos */}
           <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-sm sm:text-base">Related Videos</h3>
@@ -399,6 +475,64 @@ export default function VideoPage() {
               ))}
             </div>
           </div>
+
+          {/* Related Pictures */}
+          {relatedPictures.length > 0 && (
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm sm:text-base flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                  Related Pictures
+                </h3>
+                <Link
+                  to="/pictures"
+                  className="text-xs sm:text-sm text-muted-foreground hover:text-primary touch-target"
+                >
+                  View all <ChevronRight className="inline h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                </Link>
+              </div>
+              {/* Mobile: horizontal scroll, Desktop: grid */}
+              <div className="flex lg:grid lg:grid-cols-2 gap-2 sm:gap-3 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
+                {relatedPictures.map((picture) => (
+                  <Link
+                    key={picture.id}
+                    to={`/pictures/${picture.slug}`}
+                    className="group w-[45%] sm:w-[150px] lg:w-full shrink-0 lg:shrink"
+                  >
+                    <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-muted">
+                      {picture.thumbnail ? (
+                        <img
+                          src={picture.thumbnail}
+                          alt={picture.title}
+                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-muted">
+                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      {/* Image count badge */}
+                      <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] sm:text-xs font-medium text-white">
+                        <ImageIcon className="h-3 w-3" />
+                        {picture.imageCount}
+                      </div>
+                    </div>
+                    <div className="mt-1.5 space-y-0.5">
+                      <p className="text-xs sm:text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                        {picture.title}
+                      </p>
+                      {picture.actress && (
+                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                          {picture.actress.name}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

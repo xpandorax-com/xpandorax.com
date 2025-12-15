@@ -222,6 +222,7 @@ export interface SanityVideo {
   views?: number;
   isPremium?: boolean;
   abyssEmbed: string;
+  mainServerUrl?: string;
   servers?: { name: string; url: string }[];
   downloadLinks?: { name: string; url: string }[];
   publishedAt?: string;

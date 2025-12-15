@@ -51,6 +51,12 @@ export default {
       validation: (Rule) => Rule.required(),
     },
     {
+      name: 'mainServerUrl',
+      title: 'Main Server URL (No Ads - Premium)',
+      type: 'url',
+      description: 'Premium ad-free video URL from Backblaze B2 + Cloudflare CDN (e.g., https://cdn.xpandorax.com/videos/video-name.mp4). Only available to premium subscribers.',
+    },
+    {
       name: 'servers',
       title: 'Additional Servers',
       type: 'array',

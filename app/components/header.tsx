@@ -162,19 +162,17 @@ export function Header({ user, appName }: HeaderProps) {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex md:flex-1 md:items-center md:gap-4 lg:gap-6">
           {navItems.map((item) => {
-            const Icon = item.icon;
             const isActive = location.pathname === item.href;
             return (
               <Link
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
+                  "text-sm font-medium transition-colors hover:text-primary",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                <Icon className="h-4 w-4" />
-                <span className="hidden lg:inline">{item.label}</span>
+                {item.label}
               </Link>
             );
           })}
