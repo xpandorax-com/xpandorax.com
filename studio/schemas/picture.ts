@@ -1,4 +1,4 @@
-import { R2ImageArrayInput } from '../components/R2ImageArrayInput';
+import { B2ImageArrayInput } from '../components/B2ImageArrayInput';
 
 // Picture schema for XpandoraX - Standalone pictures not tied to models
 export default {
@@ -34,7 +34,7 @@ export default {
     },
     {
       name: 'images',
-      title: 'Full Images (B2)',
+      title: 'Full Images (B2 + CDN)',
       type: 'array',
       of: [
         {
@@ -44,6 +44,7 @@ export default {
               name: 'url',
               title: 'Image URL',
               type: 'url',
+              description: 'CDN URL from Backblaze B2 (https://cdn.xpandorax.com/...)',
             },
             {
               name: 'caption',
@@ -70,9 +71,9 @@ export default {
           },
         },
       ],
-      description: 'Full-size images uploaded to Backblaze B2 + Cloudflare CDN',
+      description: 'Full-size images uploaded to Backblaze B2 and served via Cloudflare CDN for global edge caching',
       components: {
-        input: R2ImageArrayInput,
+        input: B2ImageArrayInput,
       },
     },
     {

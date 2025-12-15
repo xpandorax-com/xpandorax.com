@@ -52,9 +52,9 @@ export default {
     },
     {
       name: 'mainServerUrl',
-      title: 'Main Server URL (No Ads - Premium)',
+      title: 'Main Server URL (Premium - B2 + CDN)',
       type: 'url',
-      description: 'Premium ad-free video URL from Backblaze B2 + Cloudflare CDN (e.g., https://cdn.xpandorax.com/videos/video-name.mp4). Only available to premium subscribers.',
+      description: 'Premium ad-free video from Backblaze B2 + Cloudflare CDN. Format: https://cdn.xpandorax.com/videos/filename.mp4. Only available to premium subscribers. No ads, globally cached.',
     },
     {
       name: 'servers',

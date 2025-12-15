@@ -3,9 +3,22 @@ import { structureTool } from 'sanity/structure';
 import { visionTool } from '@sanity/vision';
 import { schemaTypes } from './schemas';
 
-// Preview URL configuration
+// Configuration
 const PREVIEW_URL = process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:5173';
+const CDN_URL = process.env.SANITY_STUDIO_CDN_URL || 'https://cdn.xpandorax.com';
+const UPLOAD_API_URL = process.env.SANITY_STUDIO_UPLOAD_API_URL || 'https://xpandorax.com/api/upload-picture';
 
+/**
+ * Sanity Studio Configuration for XpandoraX
+ * 
+ * Media Storage:
+ * - Thumbnails: Sanity CDN (fast thumbnail delivery)
+ * - Full Images: Backblaze B2 + Cloudflare CDN (xpandorax-com bucket)
+ * - Videos: Backblaze B2 + Cloudflare CDN for premium subscribers
+ * 
+ * CDN: https://cdn.xpandorax.com (Cloudflare proxied)
+ * Upload Endpoint: ${UPLOAD_API_URL}
+ */
 export default defineConfig({
   name: 'xpandorax',
   title: 'XpandoraX CMS',
