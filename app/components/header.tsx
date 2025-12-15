@@ -1,18 +1,11 @@
 import { Link, useLocation } from "@remix-run/react";
 import { useState } from "react";
 import {
-  Home,
-  Grid3X3,
-  Users,
   Search,
   User,
   LogOut,
   Settings,
   Menu,
-  Video,
-  Image as ImageIcon,
-  Building2,
-  X,
   History,
   Bookmark,
 } from "lucide-react";
@@ -46,12 +39,12 @@ export function Header({ user, appName }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/videos", label: "Videos", icon: Video },
-    { href: "/pictures", label: "Pictures", icon: ImageIcon },
-    { href: "/categories", label: "Categories", icon: Grid3X3 },
-    { href: "/models", label: "Models", icon: Users },
-    { href: "/producers", label: "Producers", icon: Building2 },
+    { href: "/", label: "Home" },
+    { href: "/videos", label: "Videos" },
+    { href: "/pictures", label: "Pictures" },
+    { href: "/categories", label: "Categories" },
+    { href: "/models", label: "Models" },
+    { href: "/producers", label: "Producers" },
   ];
 
   return (
@@ -75,21 +68,19 @@ export function Header({ user, appName }: HeaderProps) {
             </SheetHeader>
             <nav className="flex flex-col p-4">
               {navItems.map((item) => {
-                const Icon = item.icon;
                 const isActive = location.pathname === item.href;
                 return (
                   <SheetClose asChild key={item.href}>
                     <Link
                       to={item.href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target",
+                        "flex items-center px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target",
                         isActive
                           ? "bg-primary/10 text-primary"
                           : "text-muted-foreground hover:bg-accent hover:text-foreground"
                       )}
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <Icon className="h-5 w-5" />
                       {item.label}
                     </Link>
                   </SheetClose>

@@ -276,9 +276,7 @@ export function ServerSelector({
               : "bg-muted/50 text-muted-foreground/50 cursor-not-allowed border border-dashed border-muted-foreground/30"
           )}
         >
-          <span className="flex items-center gap-1.5">
-            {isPremium ? "🌟" : "🔒"} Main Server (No Ads)
-          </span>
+          Main Server (No Ads)
         </button>
         
         {/* Regular servers */}

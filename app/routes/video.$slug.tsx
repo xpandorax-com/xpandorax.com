@@ -16,8 +16,6 @@ import {
   User,
   ChevronRight,
   Download,
-  Crown,
-  Image as ImageIcon,
 } from "lucide-react";
 import { formatDuration, formatViews, formatDate, cn } from "~/lib/utils";
 import { createSanityClient, getSlug, type SanityVideo } from "~/lib/sanity";
@@ -337,7 +335,6 @@ export default function VideoPage() {
           {/* Premium Upsell for non-premium users */}
           {!isPremium && video.mainServerUrl && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-              <Crown className="h-5 w-5 text-amber-500 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-amber-500">Upgrade to Premium</p>
                 <p className="text-xs text-muted-foreground">Get ad-free streaming on the Main Server</p>
@@ -480,8 +477,7 @@ export default function VideoPage() {
           {relatedPictures.length > 0 && (
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm sm:text-base flex items-center gap-2">
-                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                <h3 className="font-semibold text-sm sm:text-base">
                   Related Pictures
                 </h3>
                 <Link
@@ -509,12 +505,11 @@ export default function VideoPage() {
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-muted">
-                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">No image</span>
                         </div>
                       )}
                       {/* Image count badge */}
                       <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] sm:text-xs font-medium text-white">
-                        <ImageIcon className="h-3 w-3" />
                         {picture.imageCount}
                       </div>
                     </div>
