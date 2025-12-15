@@ -35,22 +35,6 @@ export default {
       },
     },
     {
-      name: 'previewVideo',
-      title: 'Preview Video',
-      type: 'file',
-      description: 'Short preview video (10-30 seconds, fast-forward style). Will play when user clicks the video card.',
-      options: {
-        accept: 'video/*',
-      },
-    },
-    {
-      name: 'abyssEmbed',
-      title: 'Primary Embed URL',
-      type: 'url',
-      description: 'Main video embed URL (e.g., https://short.icu/abc123)',
-      validation: (Rule) => Rule.required(),
-    },
-    {
       name: 'mainServerUrl',
       title: 'Main Server URL (Premium - B2 + CDN)',
       type: 'url',
