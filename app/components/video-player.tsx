@@ -250,8 +250,10 @@ export function ServerSelector({
   isPremium = false,
   mainServerUrl,
 }: ServerSelectorProps) {
-  // Build the full server list including Main Server for premium users
-  const hasMainServer = !!mainServerUrl;
+  // Check if Main Server URL is available
+  const hasMainServerUrl = !!mainServerUrl;
+  // Determine if Main Server is usable (premium + has URL)
+  const canUseMainServer = isPremium && hasMainServerUrl;
   
   return (
     <div className={cn("flex flex-col sm:flex-row sm:items-center gap-2", className)}>
@@ -260,26 +262,24 @@ export function ServerSelector({
         Servers:
       </span>
       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide">
-        {/* Main Server (No Ads) - Premium only */}
-        {hasMainServer && (
-          <button
-            onClick={() => isPremium && onServerChange(-1)}
-            disabled={!isPremium}
-            title={!isPremium ? "Premium subscription required for ad-free streaming" : "Ad-free streaming"}
-            className={cn(
-              "rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap touch-target min-h-[36px] sm:min-h-[auto] relative",
-              activeIndex === -1 && isPremium
-                ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white"
-                : isPremium
-                ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/50"
-                : "bg-muted/50 text-muted-foreground/50 cursor-not-allowed border border-dashed border-muted-foreground/30"
-            )}
-          >
-            <span className="flex items-center gap-1.5">
-              {isPremium ? "🌟" : "🔒"} Main Server (No Ads)
-            </span>
-          </button>
-        )}
+        {/* Main Server (No Ads) - Always show, locked for non-premium */}
+        <button
+          onClick={() => canUseMainServer && onServerChange(-1)}
+          disabled={!canUseMainServer}
+          title={!isPremium ? "Premium subscription required for ad-free streaming" : !hasMainServerUrl ? "Ad-free video not available for this content" : "Ad-free streaming"}
+          className={cn(
+            "rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap touch-target min-h-[36px] sm:min-h-[auto] relative",
+            activeIndex === -1 && canUseMainServer
+              ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white"
+              : canUseMainServer
+              ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/50"
+              : "bg-muted/50 text-muted-foreground/50 cursor-not-allowed border border-dashed border-muted-foreground/30"
+          )}
+        >
+          <span className="flex items-center gap-1.5">
+            {isPremium ? "🌟" : "🔒"} Main Server (No Ads)
+          </span>
+        </button>
         
         {/* Regular servers */}
         {servers.map((server, index) => (
