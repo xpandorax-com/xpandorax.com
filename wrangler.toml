@@ -1,60 +1,28 @@
 name = "xpandorax-com"
-main = "./worker.ts"
+pages_build_output_dir = "./build/client"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
-
-# Don't bundle the remix build, it's already built
-[build]
-watch_dir = "app"
-pages_build_output_dir = "./build/client"
-
-# Rules for modules
-[[rules]]
-type = "ESModule"
-globs = ["**/*.js"]
-
-# Serve static assets from the client build
-[assets]
-directory = "./build/client"
 
 # D1 Database binding
 [[d1_databases]]
 binding = "DB"
 database_name = "xpandorax-com"
 database_id = "1e1e0001-2d13-4c0e-b5c6-83f26ab8732e"
-migrations_dir = "drizzle"
 
 # R2 Storage for media files
 [[r2_buckets]]
 binding = "MEDIA"
 bucket_name = "xpandorax-com"
 
-# KV namespace for caching (optional) - UNCOMMENT and replace ID after creating:
-# wrangler kv:namespace create CACHE
-# [[kv_namespaces]]
-# binding = "CACHE"
-# id = "YOUR_KV_NAMESPACE_ID"
-
-# Environment variables (set these in Cloudflare dashboard for production)
+# Environment variables
 [vars]
-APP_URL = "http://localhost:8788"
+APP_URL = "https://xpandorax.com"
 APP_NAME = "XpandoraX"
 
 # Production environment
 [env.production]
 vars = { APP_URL = "https://xpandorax.com", APP_NAME = "XpandoraX" }
 
-# Preview environment
+# Preview environment  
 [env.preview]
 vars = { APP_URL = "https://preview.xpandorax.com", APP_NAME = "XpandoraX Preview" }
-
-# Secrets (set via wrangler secret put <NAME>):
-# - LEMON_SQUEEZY_API_KEY
-# - LEMON_SQUEEZY_WEBHOOK_SECRET
-# - LEMON_SQUEEZY_STORE_ID
-# - LEMON_SQUEEZY_VARIANT_ID
-# - EXOCLICK_ZONE_ID
-# - JUICYADS_SPOT_ID
-# - SANITY_PROJECT_ID (from sanity.io dashboard)
-# - SANITY_DATASET (usually "production")
-# - SANITY_API_TOKEN (optional, for write access)

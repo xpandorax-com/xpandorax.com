@@ -130,12 +130,16 @@ export async function action({ request, context }: ActionFunctionArgs) {
     // Create organized path: pictures/2024/12/filename-timestamp-random.ext
     const key = `pictures/${year}/${month}/${sanitizedName}-${timestamp}-${randomSuffix}.${extension}`;
 
-    // Get R2 bucket binding
-    const bucket = context.cloudflare.env.MEDIA as R2Bucket;
+    // Get R2 bucket binding - try multiple access patterns
+    const env = (context as any).cloudflare?.env || (context as any).env || context;
+    const bucket = env.MEDIA as R2Bucket;
     
     if (!bucket) {
-      console.error("R2 bucket binding (MEDIA) not found");
-      return jsonWithCors({ error: "Storage not configured" }, { status: 500 });
+      console.error("R2 bucket binding (MEDIA) not found. Available keys:", Object.keys(env || {}));
+      return jsonWithCors({ 
+        error: "Storage not configured",
+        debug: { availableKeys: Object.keys(env || {}) }
+      }, { status: 500 });
     }
 
     // Convert file to ArrayBuffer
