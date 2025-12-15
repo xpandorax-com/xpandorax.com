@@ -2,7 +2,6 @@ import { createRequestHandler, type ServerBuild, type AppLoadContext } from "@re
 
 export interface Env {
   DB: D1Database;
-  STORAGE: R2Bucket;
   CACHE: KVNamespace;
   SESSION_SECRET: string;
   LEMON_SQUEEZY_API_KEY: string;

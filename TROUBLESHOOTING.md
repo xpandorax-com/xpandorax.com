@@ -243,7 +243,7 @@ If 400: Token is invalid → create new one
 3. **Check CNAME Pointing:**
    - Verify CNAME points to correct B2 endpoint:
      - `xpandorax-com.s3.us-east-005.backblazeb2.com`
-   - Not to R2 or other storage
+   - Must be to Backblaze B2, not other storage
 
 4. **Check File Actually Exists:**
    - Go to Backblaze dashboard

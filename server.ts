@@ -11,7 +11,6 @@ const requestHandler = createRequestHandler(build);
 
 export interface Env {
   DATABASE: D1Database;
-  MEDIA: R2Bucket;
   CACHE: KVNamespace;
   SESSION_SECRET: string;
   LEMON_SQUEEZY_API_KEY: string;
