@@ -3,8 +3,9 @@ pages_build_output_dir = "./build/client"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Cloudflare Pages doesn't use wrangler deploy - it automatically deploys the pages_build_output_dir
-# So we don't specify a build command here - it will use the default npm run build from package.json
+# Cloudflare Pages configuration
+# Pages automatically deploys the pages_build_output_dir after npm run build completes
+# No deploy command needed - Pages handles deployment automatically
 
 # D1 Database binding
 [[d1_databases]]
