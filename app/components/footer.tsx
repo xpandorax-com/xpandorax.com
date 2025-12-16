@@ -9,10 +9,10 @@ export function Footer({ appName }: FooterProps) {
 
   return (
     <footer className="border-t bg-background safe-area-bottom">
-      <div className="container py-6 sm:py-8">
-        <div className="grid gap-6 sm:gap-8 grid-cols-2 sm:grid-cols-2 md:grid-cols-4">
+      <div className="container py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+        <div className="grid gap-8 grid-cols-2 md:grid-cols-4 lg:gap-12">
           {/* Brand */}
-          <div className="col-span-2 sm:col-span-2 md:col-span-1 space-y-3 sm:space-y-4">
+          <div className="col-span-2 md:col-span-1 space-y-3 sm:space-y-4">
             <Link to="/" className="inline-block text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               {appName}
             </Link>
@@ -109,7 +109,7 @@ export function Footer({ appName }: FooterProps) {
           </div>
 
           {/* Support */}
-          <div className="col-span-2 sm:col-span-1">
+          <div>
             <h3 className="mb-3 sm:mb-4 text-xs sm:text-sm font-semibold">Support</h3>
             <ul className="space-y-2 text-xs sm:text-sm">
               <li>
