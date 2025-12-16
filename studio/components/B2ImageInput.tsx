@@ -5,7 +5,11 @@ import { UploadIcon, TrashIcon, ImageIcon } from '@sanity/icons';
 
 // Backblaze B2 + Cloudflare CDN configuration
 const UPLOAD_API_URL = process.env.SANITY_STUDIO_UPLOAD_API_URL || 'https://xpandorax.com/api/upload-picture';
-const CDN_URL = process.env.SANITY_STUDIO_CDN_URL || 'https://cdn.xpandorax.com';
+
+interface UploadResponse {
+  url?: string;
+  error?: string;
+}
 
 interface B2ImageInputProps {
   value?: string;
@@ -59,11 +63,11 @@ export function B2ImageInput(props: B2ImageInputProps) {
       });
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+        const data = await response.json().catch(() => ({ error: `HTTP ${response.status}` })) as UploadResponse;
         throw new Error(data.error || `Upload failed with status ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as UploadResponse;
       
       if (data.url) {
         // Store CDN URL

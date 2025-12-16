@@ -35,7 +35,7 @@ export function CategoryCard({ category, className }: CategoryCardProps) {
         {/* Overlay with video count */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors group-hover:bg-black/40">
           <div className="text-center">
-            <p className="text-xl sm:text-2xl font-bold text-white">{category.videoCount}</p>
+            <p className="text-xl sm:text-2xl font-bold text-white">{category.videoCount ?? 0}</p>
             <p className="text-xs sm:text-sm text-white/80">videos</p>
           </div>
         </div>

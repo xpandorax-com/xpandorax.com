@@ -73,7 +73,7 @@ interface AdContainerProps {
  * Ad container that shows ads only for non-premium users
  */
 export function AdContainer({ adConfig, position }: AdContainerProps) {
-  if (!adConfig) {
+  if (!adConfig || !adConfig.exoclickZoneId) {
     return null;
   }
 
@@ -97,7 +97,7 @@ export function AdContainer({ adConfig, position }: AdContainerProps) {
  * Pop-under ads wrapper - only renders for non-premium users
  */
 export function PopUnderAds({ adConfig }: { adConfig: AdConfig | null }) {
-  if (!adConfig) {
+  if (!adConfig || !adConfig.juicyadsZoneId) {
     return null;
   }
 

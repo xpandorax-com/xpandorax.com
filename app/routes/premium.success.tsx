@@ -1,7 +1,7 @@
 import type { MetaFunction } from "@remix-run/cloudflare";
 import { Link } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
-import { CheckCircle, Crown, Home } from "lucide-react";
+import { CheckCircle, Crown } from "lucide-react";
 
 export const meta: MetaFunction = () => {
   return [

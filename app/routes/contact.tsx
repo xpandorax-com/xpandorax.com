@@ -5,7 +5,6 @@ import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Separator } from "~/components/ui/separator";
 import {
   Card,
   CardContent,
@@ -58,6 +57,10 @@ export default function ContactPage() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
+  // Type guard to check if actionData has errors
+  const hasErrors = actionData && 'errors' in actionData;
+  const errors = hasErrors ? actionData.errors : null;
+
   return (
     <div className="container-responsive max-w-6xl py-4 sm:py-8 px-4">
       <div className="text-center mb-6 sm:mb-8">
@@ -104,8 +107,8 @@ export default function ContactPage() {
                         required
                         className="h-12 sm:h-10 text-base sm:text-sm"
                       />
-                      {actionData?.errors?.name && (
-                        <p className="text-sm text-destructive">{actionData.errors.name[0]}</p>
+                      {errors?.name && (
+                        <p className="text-sm text-destructive">{errors.name[0]}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -118,8 +121,8 @@ export default function ContactPage() {
                         required
                         className="h-12 sm:h-10 text-base sm:text-sm"
                       />
-                      {actionData?.errors?.email && (
-                        <p className="text-sm text-destructive">{actionData.errors.email[0]}</p>
+                      {errors?.email && (
+                        <p className="text-sm text-destructive">{errors.email[0]}</p>
                       )}
                     </div>
                   </div>
@@ -133,8 +136,8 @@ export default function ContactPage() {
                       required
                       className="h-12 sm:h-10 text-base sm:text-sm"
                     />
-                    {actionData?.errors?.subject && (
-                      <p className="text-sm text-destructive">{actionData.errors.subject[0]}</p>
+                    {errors?.subject && (
+                      <p className="text-sm text-destructive">{errors.subject[0]}</p>
                     )}
                   </div>
 
@@ -148,8 +151,8 @@ export default function ContactPage() {
                       required
                       className="flex min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-3 sm:py-2 text-base sm:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     />
-                    {actionData?.errors?.message && (
-                      <p className="text-sm text-destructive">{actionData.errors.message[0]}</p>
+                    {errors?.message && (
+                      <p className="text-sm text-destructive">{errors.message[0]}</p>
                     )}
                   </div>
 

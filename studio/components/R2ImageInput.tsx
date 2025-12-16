@@ -6,6 +6,11 @@ import { UploadIcon, TrashIcon, ImageIcon } from '@sanity/icons';
 // R2 upload endpoint - update this to your production URL
 const UPLOAD_API_URL = process.env.SANITY_STUDIO_UPLOAD_API_URL || 'https://xpandorax.com/api/upload-picture';
 
+interface UploadResponse {
+  url?: string;
+  error?: string;
+}
+
 interface R2ImageInputProps {
   value?: string;
   onChange: (patch: any) => void;
@@ -49,11 +54,11 @@ export function R2ImageInput(props: R2ImageInputProps) {
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await response.json() as UploadResponse;
         throw new Error(data.error || 'Upload failed');
       }
 
-      const data = await response.json();
+      const data = await response.json() as UploadResponse;
       
       if (data.url) {
         onChange(set(data.url));

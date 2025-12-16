@@ -1,11 +1,16 @@
 import React, { useState, useCallback } from 'react';
-import { set, unset, insert, setIfMissing } from 'sanity';
+import { unset, insert, setIfMissing } from 'sanity';
 import { Stack, Card, Button, Text, Flex, Box, Spinner, Grid } from '@sanity/ui';
 import { UploadIcon, TrashIcon, ImageIcon, AddIcon } from '@sanity/icons';
 import { nanoid } from 'nanoid';
 
 // R2 upload endpoint - update this to your production URL
 const UPLOAD_API_URL = process.env.SANITY_STUDIO_UPLOAD_API_URL || 'https://xpandorax.com/api/upload-picture';
+
+interface UploadResponse {
+  url?: string;
+  error?: string;
+}
 
 interface ImageItem {
   _key: string;
@@ -70,11 +75,11 @@ export function R2ImageArrayInput(props: R2ImageArrayInputProps) {
         });
 
         if (!response.ok) {
-          const data = await response.json();
+          const data = await response.json() as UploadResponse;
           throw new Error(data.error || `Upload failed for ${file.name}`);
         }
 
-        const data = await response.json();
+        const data = await response.json() as UploadResponse;
         
         if (data.url) {
           newImages.push({

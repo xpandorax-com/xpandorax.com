@@ -10,8 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Users, Search, Grid, List } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { Users, Search } from "lucide-react";
 import { createSanityClient, getSlug, type SanityActress } from "~/lib/sanity";
 
 export const meta: MetaFunction = () => {

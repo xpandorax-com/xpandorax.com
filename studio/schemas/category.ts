@@ -1,16 +1,18 @@
 // Category schema for XpandoraX
-export default {
+import { defineType, defineField } from 'sanity';
+
+export default defineType({
   name: 'category',
   title: 'Categories',
   type: 'document',
   fields: [
-    {
+    defineField({
       name: 'name',
       title: 'Name',
       type: 'string',
       validation: (Rule) => Rule.required(),
-    },
-    {
+    }),
+    defineField({
       name: 'slug',
       title: 'Slug',
       type: 'slug',
@@ -19,28 +21,28 @@ export default {
         maxLength: 96,
       },
       validation: (Rule) => Rule.required(),
-    },
-    {
+    }),
+    defineField({
       name: 'description',
       title: 'Description',
       type: 'text',
       rows: 3,
-    },
-    {
+    }),
+    defineField({
       name: 'thumbnail',
       title: 'Thumbnail',
       type: 'image',
       options: {
         hotspot: true,
       },
-    },
-    {
+    }),
+    defineField({
       name: 'sortOrder',
       title: 'Sort Order',
       type: 'number',
       initialValue: 0,
       description: 'Lower numbers appear first',
-    },
+    }),
   ],
   preview: {
     select: {
@@ -60,4 +62,4 @@ export default {
       by: [{ field: 'name', direction: 'asc' }],
     },
   ],
-};
+});

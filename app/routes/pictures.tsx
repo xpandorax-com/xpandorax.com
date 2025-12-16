@@ -6,7 +6,6 @@ import { Button } from "~/components/ui/button";
 import { 
   Image as ImageIcon, 
   ChevronUp, 
-  ChevronDown, 
   Users, 
   Settings2,
   ArrowUp,

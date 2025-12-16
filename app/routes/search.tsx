@@ -6,9 +6,7 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Badge } from "~/components/ui/badge";
-import { Separator } from "~/components/ui/separator";
 import { Search, Video, Users, Folder, X } from "lucide-react";
-import { cn } from "~/lib/utils";
 import { createSanityClient, getSlug, type SanityVideo, type SanityActress, type SanityCategory } from "~/lib/sanity";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {

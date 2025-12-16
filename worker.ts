@@ -11,6 +11,13 @@ export interface Env {
   EXOCLICK_ZONE_ID: string;
   JUICYADS_ZONE_ID: string;
   SITE_URL: string;
+  B2_KEY_ID: string;
+  B2_APPLICATION_KEY: string;
+  B2_BUCKET_NAME: string;
+  B2_BUCKET_ID: string;
+  B2_REGION: string;
+  B2_ENDPOINT: string;
+  CDN_URL: string;
 }
 
 // Dynamically import the build to avoid bundling issues
@@ -39,6 +46,7 @@ export default {
         cloudflare: {
           env,
           ctx,
+          caches,
         },
       };
 

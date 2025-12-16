@@ -1,16 +1,18 @@
 // Video schema for XpandoraX
-export default {
+import { defineType, defineField } from 'sanity';
+
+export default defineType({
   name: 'video',
   title: 'Videos',
   type: 'document',
   fields: [
-    {
+    defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
       validation: (Rule) => Rule.required(),
-    },
-    {
+    }),
+    defineField({
       name: 'slug',
       title: 'Slug',
       type: 'slug',
@@ -19,28 +21,28 @@ export default {
         maxLength: 96,
       },
       validation: (Rule) => Rule.required(),
-    },
-    {
+    }),
+    defineField({
       name: 'description',
       title: 'Description',
       type: 'text',
       rows: 4,
-    },
-    {
+    }),
+    defineField({
       name: 'thumbnail',
       title: 'Thumbnail',
       type: 'image',
       options: {
         hotspot: true,
       },
-    },
-    {
+    }),
+    defineField({
       name: 'mainServerUrl',
       title: 'Main Server URL (Premium - B2 + CDN)',
       type: 'url',
       description: 'Premium ad-free video from Backblaze B2 + Cloudflare CDN. Format: https://cdn.xpandorax.com/videos/filename.mp4. Only available to premium subscribers. No ads, globally cached.',
-    },
-    {
+    }),
+    defineField({
       name: 'servers',
       title: 'Additional Servers',
       type: 'array',
@@ -71,8 +73,8 @@ export default {
           },
         },
       ],
-    },
-    {
+    }),
+    defineField({
       name: 'downloadLinks',
       title: 'Download Links',
       type: 'array',
@@ -103,63 +105,56 @@ export default {
           },
         },
       ],
-    },
-    {
+    }),
+    defineField({
       name: 'duration',
       title: 'Duration (seconds)',
       type: 'number',
       description: 'Video duration in seconds',
-    },
-    {
+    }),
+    defineField({
       name: 'isFeatured',
       title: 'Featured Video',
       type: 'boolean',
       initialValue: false,
-    },
-    {
+    }),
+    defineField({
       name: 'isPublished',
       title: 'Published',
       type: 'boolean',
       initialValue: true,
       description: 'Toggle ON to show this video on the website',
-    },
-    {
+    }),
+    defineField({
       name: 'actress',
       title: 'Main Model',
       type: 'reference',
       to: [{ type: 'actress' }],
-    },
-    {
+    }),
+    defineField({
       name: 'producer',
       title: 'Producer',
       type: 'reference',
       to: [{ type: 'producer' }],
       description: 'The producer/studio that released this video',
-    },
-    {
+    }),
+    defineField({
       name: 'categories',
       title: 'Categories',
       type: 'array',
       of: [{ type: 'reference', to: [{ type: 'category' }] }],
-    },
-    {
+    }),
+    defineField({
       name: 'publishedAt',
       title: 'Published At',
       type: 'datetime',
-    },
+    }),
   ],
   preview: {
     select: {
       title: 'title',
       media: 'thumbnail',
       isFeatured: 'isFeatured',
-    },
-    prepare(selection) {
-      const { title, media, isFeatured } = selection;
-      return {
-        title: `${isFeatured ? '⭐ ' : ''}${title}`,
-        media,
-      };
     },
   },
   orderings: [
@@ -174,4 +169,4 @@ export default {
       by: [{ field: 'title', direction: 'asc' }],
     },
   ],
-};
+});

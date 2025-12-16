@@ -1,18 +1,20 @@
+import React from 'react';
 import { B2ImageArrayInput } from '../components/B2ImageArrayInput';
+import { defineType, defineField, type ArrayOfObjectsInputProps } from 'sanity';
 
 // Picture schema for XpandoraX - Standalone pictures not tied to models
-export default {
+export default defineType({
   name: 'picture',
   title: 'Pictures',
   type: 'document',
   fields: [
-    {
+    defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
       validation: (Rule) => Rule.required(),
-    },
-    {
+    }),
+    defineField({
       name: 'slug',
       title: 'Slug',
       type: 'slug',
@@ -21,8 +23,8 @@ export default {
         maxLength: 96,
       },
       validation: (Rule) => Rule.required(),
-    },
-    {
+    }),
+    defineField({
       name: 'thumbnail',
       title: 'Thumbnail',
       type: 'image',
@@ -31,8 +33,8 @@ export default {
       },
       description: 'Small preview image (stored in Sanity CDN for fast loading)',
       validation: (Rule) => Rule.required(),
-    },
-    {
+    }),
+    defineField({
       name: 'images',
       title: 'Full Images (B2 + CDN)',
       type: 'array',
@@ -62,52 +64,46 @@ export default {
               url: 'url',
               caption: 'caption',
             },
-            prepare({ url, caption }) {
-              return {
-                title: caption || 'Image',
-                subtitle: url ? url.split('/').pop() : 'No URL',
-              };
-            },
           },
         },
       ],
       description: 'Full-size images uploaded to Backblaze B2 and served via Cloudflare CDN for global edge caching',
       components: {
-        input: B2ImageArrayInput,
+        input: B2ImageArrayInput as unknown as React.ComponentType<ArrayOfObjectsInputProps>,
       },
-    },
-    {
+    }),
+    defineField({
       name: 'actress',
       title: 'Model',
       type: 'reference',
       to: [{ type: 'actress' }],
       description: 'The model featured in this picture',
-    },
-    {
+    }),
+    defineField({
       name: 'producer',
       title: 'Producer',
       type: 'reference',
       to: [{ type: 'producer' }],
       description: 'The producer/studio that released this picture',
-    },
-    {
+    }),
+    defineField({
       name: 'categories',
       title: 'Categories',
       type: 'array',
       of: [{ type: 'reference', to: [{ type: 'category' }] }],
-    },
-    {
+    }),
+    defineField({
       name: 'isPublished',
       title: 'Published',
       type: 'boolean',
       initialValue: true,
       description: 'Toggle ON to show this picture on the website',
-    },
-    {
+    }),
+    defineField({
       name: 'publishedAt',
       title: 'Published At',
       type: 'datetime',
-    },
+    }),
   ],
   preview: {
     select: {
@@ -115,15 +111,6 @@ export default {
       media: 'thumbnail',
       images: 'images',
       actressName: 'actress.name',
-    },
-    prepare(selection) {
-      const { title, media, images, actressName } = selection;
-      const imageCount = images?.length || 0;
-      return {
-        title,
-        subtitle: `${imageCount} image${imageCount !== 1 ? 's' : ''}${actressName ? ` • Model: ${actressName}` : ''}`,
-        media,
-      };
     },
   },
   orderings: [
@@ -138,4 +125,4 @@ export default {
       by: [{ field: 'title', direction: 'asc' }],
     },
   ],
-};
+});

@@ -143,7 +143,15 @@ export async function getSubscription(
     throw new Error("Failed to get subscription");
   }
 
-  const data = await response.json();
+  const data = await response.json() as {
+    data: {
+      attributes: {
+        status: string;
+        renews_at: string | null;
+        ends_at: string | null;
+      };
+    };
+  };
   return {
     status: data.data.attributes.status,
     renewsAt: data.data.attributes.renews_at,

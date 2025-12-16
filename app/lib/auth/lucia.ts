@@ -25,6 +25,8 @@ export function createLucia(db: Database) {
         role: attributes.role,
         mustChangePassword: attributes.mustChangePassword,
         lastLoginAt: attributes.lastLoginAt,
+        lemonSqueezyCustomerId: attributes.lemonSqueezyCustomerId,
+        lemonSqueezySubscriptionId: attributes.lemonSqueezySubscriptionId,
       };
     },
   });
@@ -46,6 +48,8 @@ interface DatabaseUserAttributes {
   role: "user" | "admin";
   mustChangePassword: boolean;
   lastLoginAt: Date | null;
+  lemonSqueezyCustomerId: string | null;
+  lemonSqueezySubscriptionId: string | null;
 }
 
 export type Auth = ReturnType<typeof createLucia>;

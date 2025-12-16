@@ -262,7 +262,7 @@ export function B2ImageArrayInput(props: B2ImageArrayInputProps) {
                 <ImageIcon style={{ fontSize: '2em', opacity: 0.6 }} />
                 <AddIcon style={{ fontSize: '1.2em', opacity: 0.6 }} />
               </Flex>
-              <Stack space={1} align="center" style={{ textAlign: 'center' }}>
+              <Stack space={1} style={{ textAlign: 'center' }}>
                 <Text align="center" weight="semibold">
                   Drag & drop images here
                 </Text>

@@ -5,8 +5,9 @@ import { schemaTypes } from './schemas';
 
 // Configuration
 const PREVIEW_URL = process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:5173';
-const CDN_URL = process.env.SANITY_STUDIO_CDN_URL || 'https://cdn.xpandorax.com';
-const UPLOAD_API_URL = process.env.SANITY_STUDIO_UPLOAD_API_URL || 'https://xpandorax.com/api/upload-picture';
+// Environment variables available for reference
+// CDN_URL: process.env.SANITY_STUDIO_CDN_URL || 'https://cdn.xpandorax.com'
+// UPLOAD_API_URL: process.env.SANITY_STUDIO_UPLOAD_API_URL || 'https://xpandorax.com/api/upload-picture'
 
 /**
  * Sanity Studio Configuration for XpandoraX

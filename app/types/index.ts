@@ -1,4 +1,5 @@
-import type { User, Session } from "lucia";
+import type { User } from "lucia";
+export type { User };
 
 // Sanity CMS types (content is managed by Sanity, not D1)
 export interface Video {
@@ -22,7 +23,8 @@ export interface Category {
   name: string;
   slug: string;
   description?: string;
-  thumbnail?: string;
+  thumbnail?: string | null;
+  videoCount?: number;
 }
 
 export interface Actress {
@@ -37,8 +39,10 @@ export interface Actress {
 // Ad configuration type
 export interface AdConfig {
   enabled: boolean;
-  provider: 'google-adsense' | 'custom';
+  provider: 'google-adsense' | 'custom' | 'exoclick' | 'juicyads';
   adUnitId?: string;
+  exoclickZoneId?: string;
+  juicyadsZoneId?: string;
   positions: ('header' | 'sidebar' | 'footer' | 'in-content')[];
 }
 

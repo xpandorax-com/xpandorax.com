@@ -41,7 +41,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 };
 
-export async function loader({ params, request, context }: LoaderFunctionArgs) {
+export async function loader({ params, context }: LoaderFunctionArgs) {
   const { slug } = params;
   if (!slug) {
     throw new Response("Not Found", { status: 404 });

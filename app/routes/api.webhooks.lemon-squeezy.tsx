@@ -95,7 +95,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
         await db
           .update(subscriptions)
           .set({
-            status: attributes.status,
+            status: attributes.status as "active" | "cancelled" | "expired" | "paused" | "past_due" | "unpaid" | "on_trial",
             currentPeriodEnd: attributes.renews_at
               ? new Date(attributes.renews_at)
               : null,

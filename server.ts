@@ -1,8 +1,8 @@
 import type { AppLoadContext } from "@remix-run/cloudflare";
 import { createRequestHandler, logDevReady } from "@remix-run/cloudflare";
+// Build types vary between environments - this import is generated at build time
 import * as build from "@remix-run/dev/server-build";
 
-// @ts-expect-error - dev mode check
 if (process.env.NODE_ENV === "development") {
   logDevReady(build);
 }
@@ -10,7 +10,7 @@ if (process.env.NODE_ENV === "development") {
 const requestHandler = createRequestHandler(build);
 
 export interface Env {
-  DATABASE: D1Database;
+  DB: D1Database;
   CACHE: KVNamespace;
   SESSION_SECRET: string;
   LEMON_SQUEEZY_API_KEY: string;
@@ -20,6 +20,13 @@ export interface Env {
   EXOCLICK_ZONE_ID: string;
   JUICYADS_ZONE_ID: string;
   SITE_URL: string;
+  B2_KEY_ID: string;
+  B2_APPLICATION_KEY: string;
+  B2_BUCKET_NAME: string;
+  B2_BUCKET_ID: string;
+  B2_REGION: string;
+  B2_ENDPOINT: string;
+  CDN_URL: string;
 }
 
 export default {
@@ -33,6 +40,7 @@ export default {
         cloudflare: {
           env,
           ctx,
+          caches,
         },
       };
 

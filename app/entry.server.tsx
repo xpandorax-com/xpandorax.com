@@ -1,6 +1,7 @@
 import type { EntryContext, AppLoadContext } from "@remix-run/cloudflare";
 import { RemixServer } from "@remix-run/react";
 import { isbot } from "isbot";
+// @ts-expect-error - react-dom/server.browser types not available in all environments
 import { renderToReadableStream } from "react-dom/server.browser";
 
 export default async function handleRequest(

@@ -72,11 +72,18 @@ export default function App() {
     initWebVitals();
   }, []);
 
+  // Transform serialized user back to proper type for Header
+  const headerUser = user ? {
+    ...user,
+    premiumExpiresAt: user.premiumExpiresAt ? new Date(user.premiumExpiresAt) : null,
+    lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt) : null,
+  } : null;
+
   return (
     <div className="flex min-h-screen flex-col">
       <WebsiteSchema name={appName} url={appUrl} description="Premium Video Directory Platform" />
       <OrganizationSchema name={appName} url={appUrl} />
-      <Header user={user} appName={appName} />
+      <Header user={headerUser} appName={appName} />
       <main className="flex-1">
         <Outlet />
       </main>

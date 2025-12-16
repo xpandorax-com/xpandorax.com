@@ -25,13 +25,8 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const { user } = await getSession(request, context);
   const env = context.cloudflare.env;
 
-  // Check premium status
-  let isPremium = false;
-  if (user?.isPremium) {
-    isPremium = user.premiumExpiresAt
-      ? new Date(user.premiumExpiresAt) > new Date()
-      : true;
-  }
+  // Check premium status (available for future features - remove if not needed)
+  void (user?.isPremium && (user.premiumExpiresAt ? new Date(user.premiumExpiresAt) > new Date() : true));
 
   // Create Sanity client
   const sanity = createSanityClient(env);
@@ -107,6 +102,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   }));
 
   const allCategories = categoriesRaw.map((c) => ({
+    _id: c._id,
     id: c._id,
     slug: getSlug(c.slug),
     name: c.name,

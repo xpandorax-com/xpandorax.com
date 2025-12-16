@@ -49,7 +49,7 @@ export async function requireAuth(
 ): Promise<{ session: Session; user: User; lucia: Auth; db: Database }> {
   const { session, user, lucia, db } = await getSession(request, context);
 
-  if (!session || !user) {
+  if (!session || !user || !lucia || !db) {
     throw new Response("Unauthorized", { status: 401 });
   }
 

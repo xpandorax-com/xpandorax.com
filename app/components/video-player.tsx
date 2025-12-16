@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Play, Loader2, Server, ExternalLink, AlertTriangle, Maximize2, Crown } from "lucide-react";
 import { cn } from "~/lib/utils";
 
@@ -98,6 +98,7 @@ export function VideoPlayer({
     setHasStarted(false);
     setHasError(false);
     setAutoSwitchAttempted(false);
+    return undefined;
   }, [embedUrl]);
 
   // Set a timeout to detect if iframe fails to load (X-Frame-Options block)
@@ -116,6 +117,7 @@ export function VideoPlayer({
       }, 10000);
       return () => clearTimeout(timeout);
     }
+    return undefined;
   }, [hasStarted, isLoading, autoSwitchAttempted, servers.length, currentServerIndex, onServerError]);
 
   return (
@@ -314,7 +316,7 @@ interface PlyrVideoPlayerProps {
 export function PlyrVideoPlayer({
   videoUrl,
   thumbnailUrl,
-  title,
+  title: _title,
   className,
   onPlay,
 }: PlyrVideoPlayerProps) {

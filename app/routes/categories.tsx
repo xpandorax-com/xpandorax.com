@@ -32,6 +32,7 @@ export async function loader({ context }: LoaderFunctionArgs) {
   );
 
   const allCategories = categoriesRaw.map((c) => ({
+    _id: c._id,
     id: c._id,
     slug: getSlug(c.slug),
     name: c.name,

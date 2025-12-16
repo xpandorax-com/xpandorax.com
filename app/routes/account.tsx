@@ -1,8 +1,7 @@
 import type { MetaFunction, LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/cloudflare";
-import { json, redirect } from "@remix-run/cloudflare";
+import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Form } from "@remix-run/react";
 import { eq } from "drizzle-orm";
-import { createDatabase } from "~/db";
 import { subscriptions } from "~/db/schema";
 import { requireAuth } from "~/lib/auth";
 import { cancelSubscription } from "~/lib/lemon-squeezy.server";
@@ -64,7 +63,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
-  const { user, db } = await requireAuth(request, context);
+  const { user } = await requireAuth(request, context);
   const env = context.cloudflare.env;
   const formData = await request.formData();
   const action = formData.get("_action");
