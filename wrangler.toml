@@ -4,3 +4,6 @@ compatibility_date = "2024-12-01"
 
 # Local development only - for running `wrangler pages dev`
 # Cloudflare Pages ignores this and uses its own settings
+[build]
+command = "npm run build"
+cwd = "./"
