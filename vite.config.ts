@@ -22,9 +22,7 @@ export default defineConfig({
         v3_throwAbortReason: true,
         v3_lazyRouteDiscovery: true,
       },
-      buildEnd: async () => {
-        // Post-build: ensure the server bundle is compatible
-      },
+      serverBuildFile: "index.js",
     }),
     tsconfigPaths(),
   ],
@@ -43,5 +41,10 @@ export default defineConfig({
   },
   build: {
     minify: true,
+    rollupOptions: {
+      output: {
+        entryFileNames: "[name].js",
+      },
+    },
   },
 });
