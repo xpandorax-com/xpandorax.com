@@ -47,4 +47,11 @@ jobs:
           projectName: xpandorax
           directory: build/client
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          wranglerVersion: "3"
+          wranglerVersion: "4"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: build/
+          retention-days: 7
