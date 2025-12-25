@@ -33,14 +33,24 @@ export const links: LinksFunction = () => [
 ];
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
-  const { user } = await getSession(request, context);
-  const env = context?.cloudflare?.env;
+  try {
+    const { user } = await getSession(request, context);
+    const env = context?.cloudflare?.env;
 
-  return json<RootLoaderData>({
-    user,
-    appName: env?.APP_NAME || "XpandoraX",
-    appUrl: env?.APP_URL || "https://xpandorax.com",
-  });
+    return json<RootLoaderData>({
+      user,
+      appName: env?.APP_NAME || "XpandoraX",
+      appUrl: env?.APP_URL || "https://xpandorax.com",
+    });
+  } catch (error) {
+    console.error("Root loader error:", error);
+    // Return a safe default even if auth fails
+    return json<RootLoaderData>({
+      user: null,
+      appName: "XpandoraX",
+      appUrl: "https://xpandorax.com",
+    });
+  }
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {

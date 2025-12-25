@@ -22,22 +22,23 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
-  const { user } = await getSession(request, context);
-  const env = context.cloudflare.env;
+  try {
+    const { user } = await getSession(request, context);
+    const env = context.cloudflare.env;
 
-  // Check premium status (available for future features - remove if not needed)
-  void (user?.isPremium && (user.premiumExpiresAt ? new Date(user.premiumExpiresAt) > new Date() : true));
+    // Check premium status (available for future features - remove if not needed)
+    void (user?.isPremium && (user.premiumExpiresAt ? new Date(user.premiumExpiresAt) > new Date() : true));
 
-  // Create Sanity client
-  const sanity = createSanityClient(env);
+    // Create Sanity client
+    const sanity = createSanityClient(env);
 
-  // Fetch latest videos from Sanity
-  const latestVideosRaw = await sanity.fetch<SanityVideo[]>(
-    `*[_type == "video" && isPublished == true] | order(publishedAt desc)[0...8] {
-      _id,
-      title,
-      slug,
-      "thumbnail": thumbnail.asset->url,
+    // Fetch latest videos from Sanity
+    const latestVideosRaw = await sanity.fetch<SanityVideo[]>(
+      `*[_type == "video" && isPublished == true] | order(publishedAt desc)[0...8] {
+        _id,
+        title,
+        slug,
+        "thumbnail": thumbnail.asset->url,
       "previewVideo": previewVideo.asset->url,
       duration,
       views,
@@ -115,6 +116,16 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     trendingVideos,
     categories: allCategories,
   });
+  } catch (error) {
+    console.error("Index loader error:", error);
+    // Return empty data instead of crashing
+    return json({
+      latestVideos: [],
+      trendingVideos: [],
+      categories: [],
+      error: "Failed to load content. Please try again later.",
+    });
+  }
 }
 
 export default function Index() {
