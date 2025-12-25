@@ -10,14 +10,17 @@ interface PageContext {
 
 export const onRequest = createPagesFunctionHandler({
   build,
-  getLoadContext: (context: PageContext) => ({
-    cloudflare: {
-      env: context.env,
-      ctx: {
-        waitUntil: (promise: Promise<unknown>) => context.waitUntil(promise),
-        passThroughOnException: () => context.passThroughOnException(),
+  getLoadContext: (context: PageContext) => {
+    const env = context.env as Record<string, string>;
+    return {
+      cloudflare: {
+        env,
+        ctx: {
+          waitUntil: (promise: Promise<unknown>) => context.waitUntil(promise),
+          passThroughOnException: () => context.passThroughOnException(),
+        },
+        caches,
       },
-      caches,
-    },
-  }),
-});
+    };
+  },
+} as any);

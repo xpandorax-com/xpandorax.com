@@ -55,6 +55,8 @@ cloudflare-api.js
 cloudflare-cli.js
 test-token-format.py
 test-cf-api.js
+test-cloudflare-complete.ps1
+test-cloudflare-full.js
 ZONE_ID.txt
 
 # Test

@@ -16,7 +16,7 @@
   ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022", "WebWorker"],
-    "types": ["@cloudflare/workers-types", "@cloudflare/pages-types", "vite/client"],
+    "types": ["@cloudflare/workers-types", "vite/client"],
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
