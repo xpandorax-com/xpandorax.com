@@ -41,6 +41,7 @@ export default defineConfig({
   },
   build: {
     minify: true,
+    manifest: true,
     rollupOptions: {
       output: {
         entryFileNames: "[name].js",
