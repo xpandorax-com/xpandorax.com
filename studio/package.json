@@ -9,6 +9,8 @@
     "deploy": "sanity deploy"
   },
   "dependencies": {
+    "@sanity/icons": "^3.5.3",
+    "@sanity/ui": "^2.10.12",
     "@sanity/vision": "^3.67.1",
     "nanoid": "^5.1.6",
     "react": "^18.2.0",
