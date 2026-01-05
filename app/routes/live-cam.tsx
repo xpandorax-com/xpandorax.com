@@ -34,7 +34,7 @@ export default function LiveCam() {
       <div className="flex-1 container pb-4 sm:pb-6">
         <div className="relative w-full h-full min-h-[400px] sm:min-h-[500px] md:min-h-[600px] lg:min-h-[700px] bg-black rounded-lg overflow-hidden">
           <iframe
-            src="https://cbxyz.com/in/?tour=SHBY&campaign=HGMnE&track=embed&room=xpandorax_com"
+            src="https://cbxyz.com/in/?tour=nvfS&campaign=HGMnE&track=embed"
             className="absolute inset-0 w-full h-full"
             style={{ border: 'none' }}
             allowFullScreen
