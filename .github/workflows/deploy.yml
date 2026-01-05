@@ -44,7 +44,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: xpandorax
+          projectName: xpandorax-com
           directory: build/client
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: "4"
