@@ -12,7 +12,8 @@
     "node_modules",
     "collections",
     "payload.config.ts",
-    "build"
+    "build",
+    "studio"
   ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022", "WebWorker"],
