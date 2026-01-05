@@ -47,97 +47,110 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
 
   const env = context.cloudflare.env;
 
-  // Create Sanity client
-  const sanity = createSanityClient(env);
+  try {
+    // Create Sanity client
+    const sanity = createSanityClient(env);
 
-  // Build order by based on sort (note: popular sort will be handled after fetching views)
-  const orderBy = sort === "oldest"
-    ? "publishedAt asc"
-    : "publishedAt desc";
+    // Build order by based on sort (note: popular sort will be handled after fetching views)
+    const orderBy = sort === "oldest"
+      ? "publishedAt asc"
+      : "publishedAt desc";
 
-  // Fetch category with videos from Sanity
-  const categoryRaw = await sanity.fetch<(SanityCategory & { videos: SanityVideo[] }) | null>(
-    `*[_type == "category" && slug.current == $slug][0] {
-      _id,
-      name,
-      slug,
-      description,
-      "thumbnail": thumbnail.asset->url,
-      "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true]),
-      "videos": *[_type == "video" && references(^._id) && isPublished == true] | order(${orderBy}) [$offset...$end] {
+    // Fetch category with videos from Sanity
+    const categoryRaw = await sanity.fetch<(SanityCategory & { videos: SanityVideo[] }) | null>(
+      `*[_type == "category" && slug.current == $slug][0] {
         _id,
-        title,
+        name,
         slug,
+        description,
         "thumbnail": thumbnail.asset->url,
-        "previewVideo": previewVideo.asset->url,
-        duration,
-        isPremium
-      }
-    }`,
-    { slug, offset, end: offset + pageSize }
-  );
+        "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true]),
+        "videos": *[_type == "video" && references(^._id) && isPublished == true] | order(${orderBy}) [$offset...$end] {
+          _id,
+          title,
+          slug,
+          "thumbnail": thumbnail.asset->url,
+          "previewVideo": previewVideo.asset->url,
+          duration,
+          isPremium
+        }
+      }`,
+      { slug, offset, end: offset + pageSize }
+    );
 
-  if (!categoryRaw) {
-    throw new Response("Not Found", { status: 404 });
-  }
+    if (!categoryRaw) {
+      throw new Response("Not Found", { status: 404 });
+    }
 
-  const totalPages = Math.ceil((categoryRaw.videoCount || 0) / pageSize);
+    const totalPages = Math.ceil((categoryRaw.videoCount || 0) / pageSize);
 
-  // Fetch view counts from D1 for all videos
-  const db = drizzle(env.DB);
-  const videoIds = (categoryRaw.videos || []).map(v => v._id);
-  
-  let viewsMap: Record<string, number> = {};
-  if (videoIds.length > 0) {
-    const viewsResult = await db
-      .select({ contentId: contentViews.contentId, views: contentViews.views })
-      .from(contentViews)
-      .where(
-        and(
-          inArray(contentViews.contentId, videoIds),
-          eq(contentViews.contentType, "video")
-        )
-      );
+    // Fetch view counts from D1 for all videos (with error handling)
+    let viewsMap: Record<string, number> = {};
+    const videoIds = (categoryRaw.videos || []).map(v => v._id);
     
-    viewsMap = viewsResult.reduce((acc, row) => {
-      acc[row.contentId] = row.views;
-      return acc;
-    }, {} as Record<string, number>);
+    if (videoIds.length > 0 && env.DB) {
+      try {
+        const db = drizzle(env.DB);
+        const viewsResult = await db
+          .select({ contentId: contentViews.contentId, views: contentViews.views })
+          .from(contentViews)
+          .where(
+            and(
+              inArray(contentViews.contentId, videoIds),
+              eq(contentViews.contentType, "video")
+            )
+          );
+        
+        viewsMap = viewsResult.reduce((acc, row) => {
+          acc[row.contentId] = row.views;
+          return acc;
+        }, {} as Record<string, number>);
+      } catch (dbError) {
+        console.error("D1 database error:", dbError);
+        // Continue with empty viewsMap
+      }
+    }
+
+    // Transform data
+    const category = {
+      id: categoryRaw._id,
+      slug: getSlug(categoryRaw.slug),
+      name: categoryRaw.name,
+      description: categoryRaw.description || null,
+      thumbnailUrl: categoryRaw.thumbnail || null,
+      videoCount: categoryRaw.videoCount || 0,
+    };
+
+    let categoryVideos = (categoryRaw.videos || []).map((v) => ({
+      id: v._id,
+      slug: getSlug(v.slug),
+      title: v.title,
+      thumbnail: v.thumbnail || null,
+      previewVideo: v.previewVideo || null,
+      duration: v.duration || null,
+      views: viewsMap[v._id] || 0,
+      isPremium: (v as { isPremium?: boolean }).isPremium || false,
+    }));
+
+    // Sort by views if popular sort is selected
+    if (sort === "popular") {
+      categoryVideos = categoryVideos.sort((a, b) => b.views - a.views);
+    }
+
+    return json({
+      category,
+      videos: categoryVideos,
+      page,
+      totalPages,
+      sort,
+    });
+  } catch (error) {
+    console.error("Category loader error:", error);
+    if (error instanceof Response) {
+      throw error;
+    }
+    throw new Response("Something went wrong", { status: 500 });
   }
-
-  // Transform data
-  const category = {
-    id: categoryRaw._id,
-    slug: getSlug(categoryRaw.slug),
-    name: categoryRaw.name,
-    description: categoryRaw.description || null,
-    thumbnailUrl: categoryRaw.thumbnail || null,
-    videoCount: categoryRaw.videoCount || 0,
-  };
-
-  let categoryVideos = (categoryRaw.videos || []).map((v) => ({
-    id: v._id,
-    slug: getSlug(v.slug),
-    title: v.title,
-    thumbnail: v.thumbnail || null,
-    previewVideo: v.previewVideo || null,
-    duration: v.duration || null,
-    views: viewsMap[v._id] || 0,
-    isPremium: (v as { isPremium?: boolean }).isPremium || false,
-  }));
-
-  // Sort by views if popular sort is selected
-  if (sort === "popular") {
-    categoryVideos = categoryVideos.sort((a, b) => b.views - a.views);
-  }
-
-  return json({
-    category,
-    videos: categoryVideos,
-    page,
-    totalPages,
-    sort,
-  });
 }
 
 export default function CategoryPage() {

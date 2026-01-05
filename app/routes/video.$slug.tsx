@@ -49,152 +49,164 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
 
   const env = context.cloudflare.env;
 
-  // Create Sanity client
-  const sanity = createSanityClient(env);
+  try {
+    // Create Sanity client
+    const sanity = createSanityClient(env);
 
-  // Fetch video from Sanity
-  const videoRaw = await sanity.fetch<SanityVideo | null>(
-    `*[_type == "video" && slug.current == $slug][0] {
-      _id,
-      title,
-      slug,
-      description,
-      "thumbnail": thumbnail.asset->url,
-      duration,
-      abyssEmbed,
-      mainServerUrl,
-      servers,
-      downloadLinks,
-      publishedAt,
-      "actress": actress->{
+    // Fetch video from Sanity
+    const videoRaw = await sanity.fetch<SanityVideo | null>(
+      `*[_type == "video" && slug.current == $slug][0] {
         _id,
-        name,
+        title,
         slug,
-        "image": image.asset->url,
-        "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
-      },
-      "categories": categories[]->{
+        description,
+        "thumbnail": thumbnail.asset->url,
+        duration,
+        abyssEmbed,
+        mainServerUrl,
+        servers,
+        downloadLinks,
+        publishedAt,
+        "actress": actress->{
+          _id,
+          name,
+          slug,
+          "image": image.asset->url,
+          "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
+        },
+        "categories": categories[]->{
+          _id,
+          name,
+          slug
+        }
+      }`,
+      { slug }
+    );
+
+    if (!videoRaw) {
+      throw new Response("Not Found", { status: 404 });
+    }
+
+    // Fetch view count from D1 database (with error handling)
+    let viewCount = 0;
+    try {
+      if (env.DB) {
+        const db = drizzle(env.DB);
+        const viewResult = await db
+          .select({ views: contentViews.views })
+          .from(contentViews)
+          .where(
+            and(
+              eq(contentViews.contentId, videoRaw._id),
+              eq(contentViews.contentType, "video")
+            )
+          )
+          .limit(1);
+        viewCount = viewResult[0]?.views || 0;
+      }
+    } catch (dbError) {
+      console.error("D1 database error:", dbError);
+      // Continue with viewCount = 0
+    }
+
+    // Fetch related videos from Sanity
+    const relatedVideosRaw = await sanity.fetch<SanityVideo[]>(
+      `*[_type == "video" && isPublished == true && _id != $videoId] | order(publishedAt desc)[0...6] {
         _id,
-        name,
-        slug
-      }
-    }`,
-    { slug }
-  );
+        title,
+        slug,
+        "thumbnail": thumbnail.asset->url,
+        duration,
+        "actress": actress->{
+          name
+        }
+      }`,
+      { videoId: videoRaw._id }
+    );
 
-  if (!videoRaw) {
-    throw new Response("Not Found", { status: 404 });
+    // Fetch related pictures from Sanity (based on same actress or categories)
+    const categoryIds = videoRaw.categories?.map(c => c._id) || [];
+    const actressId = videoRaw.actress?._id;
+    
+    const relatedPicturesRaw = await sanity.fetch<any[]>(
+      `*[_type == "picture" && isPublished == true && (
+        actress._ref == $actressId || 
+        count((categories[]._ref)[@ in $categoryIds]) > 0
+      )] | order(publishedAt desc)[0...4] {
+        _id,
+        title,
+        slug,
+        "thumbnail": thumbnail.asset->url,
+        "imageCount": count(images),
+        "actress": actress->{
+          name
+        }
+      }`,
+      { actressId: actressId || "", categoryIds }
+    );
+
+    // Transform data
+    const video = {
+      id: videoRaw._id,
+      slug: getSlug(videoRaw.slug),
+      title: videoRaw.title,
+      description: videoRaw.description || null,
+      thumbnail: videoRaw.thumbnail || null,
+      duration: videoRaw.duration || null,
+      views: viewCount,
+      abyssEmbed: videoRaw.abyssEmbed || "",
+      mainServerUrl: videoRaw.mainServerUrl || null,
+      servers: (videoRaw.servers || []).map((s: { name: string; url: string }) => ({
+        name: s.name,
+        url: s.url,
+      })) as VideoServer[],
+      downloadLinks: (videoRaw.downloadLinks || []).map((d: { name: string; url: string }) => ({
+        name: d.name,
+        url: d.url,
+      })) as DownloadLink[],
+      publishedAt: videoRaw.publishedAt || null,
+      actress: videoRaw.actress ? {
+        id: videoRaw.actress._id,
+        name: videoRaw.actress.name,
+        slug: getSlug(videoRaw.actress.slug),
+        thumbnailUrl: videoRaw.actress.image || null,
+        videoCount: videoRaw.actress.videoCount || 0,
+      } : null,
+      categories: (videoRaw.categories || []).map((c) => ({
+        id: c._id,
+        name: c.name,
+        slug: getSlug(c.slug),
+      })),
+    };
+
+    const relatedVideos = relatedVideosRaw.map((v) => ({
+      id: v._id,
+      slug: getSlug(v.slug),
+      title: v.title,
+      thumbnail: v.thumbnail || null,
+      previewVideo: v.previewVideo || null,
+      duration: v.duration || null,
+      actress: v.actress ? { name: v.actress.name } : null,
+    }));
+
+    const relatedPictures = relatedPicturesRaw.map((p) => ({
+      id: p._id,
+      slug: getSlug(p.slug),
+      title: p.title,
+      thumbnail: p.thumbnail || null,
+      imageCount: p.imageCount || 0,
+      actress: p.actress ? { name: p.actress.name } : null,
+    }));
+
+    return json({
+      video,
+      relatedVideos,
+      relatedPictures,
+    });
+  } catch (error) {
+    console.error("Video loader error:", error);
+    throw new Response("Something went wrong", { status: 500 });
   }
-
-  // Fetch view count from D1 database
-  const db = drizzle(env.DB);
-  const viewResult = await db
-    .select({ views: contentViews.views })
-    .from(contentViews)
-    .where(
-      and(
-        eq(contentViews.contentId, videoRaw._id),
-        eq(contentViews.contentType, "video")
-      )
-    )
-    .limit(1);
-  
-  const viewCount = viewResult[0]?.views || 0;
-
-  // Fetch related videos from Sanity
-  const relatedVideosRaw = await sanity.fetch<SanityVideo[]>(
-    `*[_type == "video" && isPublished == true && _id != $videoId] | order(publishedAt desc)[0...6] {
-      _id,
-      title,
-      slug,
-      "thumbnail": thumbnail.asset->url,
-      duration,
-      "actress": actress->{
-        name
-      }
-    }`,
-    { videoId: videoRaw._id }
-  );
-
-  // Fetch related pictures from Sanity (based on same actress or categories)
-  const categoryIds = videoRaw.categories?.map(c => c._id) || [];
-  const actressId = videoRaw.actress?._id;
-  
-  const relatedPicturesRaw = await sanity.fetch<any[]>(
-    `*[_type == "picture" && isPublished == true && (
-      actress._ref == $actressId || 
-      count((categories[]._ref)[@ in $categoryIds]) > 0
-    )] | order(publishedAt desc)[0...4] {
-      _id,
-      title,
-      slug,
-      "thumbnail": thumbnail.asset->url,
-      "imageCount": count(images),
-      "actress": actress->{
-        name
-      }
-    }`,
-    { actressId: actressId || "", categoryIds }
-  );
-
-  // Transform data
-  const video = {
-    id: videoRaw._id,
-    slug: getSlug(videoRaw.slug),
-    title: videoRaw.title,
-    description: videoRaw.description || null,
-    thumbnail: videoRaw.thumbnail || null,
-    duration: videoRaw.duration || null,
-    views: viewCount,
-    abyssEmbed: videoRaw.abyssEmbed || "",
-    mainServerUrl: videoRaw.mainServerUrl || null,
-    servers: (videoRaw.servers || []).map((s: { name: string; url: string }) => ({
-      name: s.name,
-      url: s.url,
-    })) as VideoServer[],
-    downloadLinks: (videoRaw.downloadLinks || []).map((d: { name: string; url: string }) => ({
-      name: d.name,
-      url: d.url,
-    })) as DownloadLink[],
-    publishedAt: videoRaw.publishedAt || null,
-    actress: videoRaw.actress ? {
-      id: videoRaw.actress._id,
-      name: videoRaw.actress.name,
-      slug: getSlug(videoRaw.actress.slug),
-      thumbnailUrl: videoRaw.actress.image || null,
-      videoCount: videoRaw.actress.videoCount || 0,
-    } : null,
-    categories: (videoRaw.categories || []).map((c) => ({
-      id: c._id,
-      name: c.name,
-      slug: getSlug(c.slug),
-    })),
-  };
-
-  const relatedVideos = relatedVideosRaw.map((v) => ({
-    id: v._id,
-    slug: getSlug(v.slug),
-    title: v.title,
-    thumbnail: v.thumbnail || null,
-    previewVideo: v.previewVideo || null,
-    duration: v.duration || null,
-    actress: v.actress ? { name: v.actress.name } : null,
-  }));
-
-  const relatedPictures = relatedPicturesRaw.map((p) => ({
-    id: p._id,
-    slug: getSlug(p.slug),
-    title: p.title,
-    thumbnail: p.thumbnail || null,
-    imageCount: p.imageCount || 0,
-    actress: p.actress ? { name: p.actress.name } : null,
-  }));
-
-  return json({
-    video,
-    relatedVideos,
-    relatedPictures,
-  });
 }
 
 export default function VideoPage() {

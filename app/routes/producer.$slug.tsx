@@ -39,77 +39,85 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
   const limit = 24;
   const offset = (page - 1) * limit;
 
-  const sanity = createSanityClient(context.cloudflare.env);
+  try {
+    const sanity = createSanityClient(context.cloudflare.env);
 
-  // Fetch producer with videos from Sanity
-  const producerRaw = await sanity.fetch<(SanityProducer & { 
-    videos: SanityVideo[];
-    videoCount: number;
-    createdAt?: string;
-  }) | null>(
-    `*[_type == "producer" && slug.current == $slug][0] {
-      _id,
-      name,
-      slug,
-      description,
-      "logo": logo.asset->url,
-      website,
-      founded,
-      country,
-      "_createdAt": _createdAt,
-      "videoCount": count(*[_type == "video" && producer._ref == ^._id && isPublished == true]),
-      "videos": *[_type == "video" && producer._ref == ^._id && isPublished == true] | order(publishedAt desc) [$offset...$end] {
+    // Fetch producer with videos from Sanity
+    const producerRaw = await sanity.fetch<(SanityProducer & { 
+      videos: SanityVideo[];
+      videoCount: number;
+      createdAt?: string;
+    }) | null>(
+      `*[_type == "producer" && slug.current == $slug][0] {
         _id,
-        title,
+        name,
         slug,
-        "thumbnail": thumbnail.asset->url,
-        "previewVideo": previewVideo.asset->url,
-        duration,
-        views,
-        isPremium
-      }
-    }`,
-    { slug, offset, end: offset + limit }
-  );
+        description,
+        "logo": logo.asset->url,
+        website,
+        founded,
+        country,
+        "_createdAt": _createdAt,
+        "videoCount": count(*[_type == "video" && producer._ref == ^._id && isPublished == true]),
+        "videos": *[_type == "video" && producer._ref == ^._id && isPublished == true] | order(publishedAt desc) [$offset...$end] {
+          _id,
+          title,
+          slug,
+          "thumbnail": thumbnail.asset->url,
+          "previewVideo": previewVideo.asset->url,
+          duration,
+          views,
+          isPremium
+        }
+      }`,
+      { slug, offset, end: offset + limit }
+    );
 
-  if (!producerRaw) {
-    throw new Response("Not Found", { status: 404 });
+    if (!producerRaw) {
+      throw new Response("Not Found", { status: 404 });
+    }
+
+    const total = producerRaw.videoCount || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    // Transform data
+    const producer = {
+      id: producerRaw._id,
+      slug: getSlug(producerRaw.slug),
+      name: producerRaw.name,
+      description: producerRaw.description || null,
+      logo: producerRaw.logo || null,
+      website: producerRaw.website || null,
+      founded: producerRaw.founded || null,
+      country: producerRaw.country || null,
+      createdAt: producerRaw.createdAt || null,
+    };
+
+    const producerVideos = (producerRaw.videos || []).map((v) => ({
+      id: v._id,
+      slug: getSlug(v.slug),
+      title: v.title,
+      thumbnail: v.thumbnail || null,
+      previewVideo: v.previewVideo || null,
+      duration: v.duration || null,
+      views: v.views || 0,
+      isPremium: v.isPremium || false,
+    }));
+
+    return json({
+      producer,
+      videos: producerVideos,
+      total,
+      page,
+      totalPages,
+    });
+  } catch (error) {
+    console.error("Producer loader error:", error);
+    if (error instanceof Response) {
+      throw error;
+    }
+    throw new Response("Something went wrong", { status: 500 });
   }
-
-  const total = producerRaw.videoCount || 0;
-  const totalPages = Math.ceil(total / limit);
-
-  // Transform data
-  const producer = {
-    id: producerRaw._id,
-    slug: getSlug(producerRaw.slug),
-    name: producerRaw.name,
-    description: producerRaw.description || null,
-    logo: producerRaw.logo || null,
-    website: producerRaw.website || null,
-    founded: producerRaw.founded || null,
-    country: producerRaw.country || null,
-    createdAt: producerRaw.createdAt || null,
-  };
-
-  const producerVideos = (producerRaw.videos || []).map((v) => ({
-    id: v._id,
-    slug: getSlug(v.slug),
-    title: v.title,
-    thumbnail: v.thumbnail || null,
-    previewVideo: v.previewVideo || null,
-    duration: v.duration || null,
-    views: v.views || 0,
-    isPremium: v.isPremium || false,
-  }));
-
-  return json({
-    producer,
-    videos: producerVideos,
-    total,
-    page,
-    totalPages,
-  });
 }
 
 export default function ProducerDetailPage() {
