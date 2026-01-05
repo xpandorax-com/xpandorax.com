@@ -9,7 +9,7 @@
     "build": "remix vite:build",
     "dev": "remix vite:dev",
     "start": "wrangler pages dev ./build/client",
-    "deploy": "wrangler pages deploy ./build/client --project-name=xpandorax-com",
+    "deploy": "wrangler pages deploy ./build/client --project-name=xpandorax",
     "typecheck": "tsc",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "db:generate": "drizzle-kit generate",

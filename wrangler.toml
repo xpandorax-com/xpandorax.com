@@ -1,4 +1,4 @@
-name = "xpandorax-com"
+name = "xpandorax"
 pages_build_output_dir = "./build/client"
 compatibility_date = "2024-12-01"
 
