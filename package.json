@@ -1,7 +1,7 @@
 {
   "name": "xpandorax",
   "version": "4.0.0",
-  "description": "Premium video directory platform - Remix v2 + Cloudflare + Payload CMS v3",
+  "description": "Premium video directory platform - Remix v2 + Cloudflare + Sanity CMS",
   "private": true,
   "sideEffects": false,
   "type": "module",

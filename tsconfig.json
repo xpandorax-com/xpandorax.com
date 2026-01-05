@@ -10,8 +10,6 @@
   ],
   "exclude": [
     "node_modules",
-    "collections",
-    "payload.config.ts",
     "build",
     "studio"
   ],

@@ -25,7 +25,7 @@ A modern video directory platform built with Remix v2, Cloudflare Workers, and T
 │   │   └── auth/        # Lucia authentication
 │   ├── routes/          # Remix routes
 │   └── types/           # TypeScript types
-├── collections/          # Payload CMS collections
+├── studio/              # Sanity Studio
 ├── drizzle/             # Database migrations
 ├── functions/           # Cloudflare Pages functions
 └── public/              # Static assets
@@ -112,7 +112,7 @@ Or push to `main` branch for automatic deployment via GitHub Actions.
 - User account management
 
 ### For Admins
-- Payload CMS admin panel at `/admin`
+- Sanity Studio for content management
 - Manage videos, categories, and models
 - View subscription analytics
 
