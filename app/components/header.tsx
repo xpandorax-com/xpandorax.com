@@ -8,6 +8,7 @@ import {
   Menu,
   History,
   Bookmark,
+  Video,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -25,6 +26,12 @@ import {
   SheetTrigger,
   SheetClose,
 } from "~/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 import { cn } from "~/lib/utils";
 import { ThemeToggle } from "~/components/theme-toggle";
 import type { User as UserType } from "lucia";
@@ -37,6 +44,7 @@ interface HeaderProps {
 export function Header({ user, appName }: HeaderProps) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [liveCamOpen, setLiveCamOpen] = useState(false);
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -86,6 +94,20 @@ export function Header({ user, appName }: HeaderProps) {
                   </SheetClose>
                 );
               })}
+              
+              {/* Mobile Live Cam Button */}
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setLiveCamOpen(true);
+                }}
+                className="flex items-center gap-2 px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <Video className="h-5 w-5 text-red-500 animate-pulse" />
+                <span className="bg-gradient-to-r from-pink-500 to-red-500 bg-clip-text text-transparent font-semibold">
+                  Live Cam
+                </span>
+              </button>
               
               {/* Mobile User Section */}
               <div className="mt-4 pt-4 border-t">
@@ -167,6 +189,16 @@ export function Header({ user, appName }: HeaderProps) {
               </Link>
             );
           })}
+          {/* Live Cam Button - Desktop */}
+          <button
+            onClick={() => setLiveCamOpen(true)}
+            className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground flex items-center gap-1"
+          >
+            <Video className="h-4 w-4 text-red-500 animate-pulse" />
+            <span className="bg-gradient-to-r from-pink-500 to-red-500 bg-clip-text text-transparent font-semibold">
+              Live Cam
+            </span>
+          </button>
         </nav>
 
         {/* Right Side Actions */}
@@ -248,6 +280,29 @@ export function Header({ user, appName }: HeaderProps) {
           )}
         </div>
       </div>
+
+      {/* Live Cam Dialog (shared for mobile and desktop) */}
+      <Dialog open={liveCamOpen} onOpenChange={setLiveCamOpen}>
+        <DialogContent className="max-w-[95vw] w-full sm:max-w-[900px] p-2 sm:p-4">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Video className="h-5 w-5 text-red-500" />
+              <span className="bg-gradient-to-r from-pink-500 to-red-500 bg-clip-text text-transparent">
+                Live Cam
+              </span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full aspect-video sm:aspect-[850/528]">
+            <iframe
+              src="https://cbxyz.com/in/?tour=SHBY&campaign=HGMnE&track=embed&room=xpandorax_com"
+              className="absolute inset-0 w-full h-full rounded-lg"
+              style={{ border: 'none' }}
+              allowFullScreen
+              title="Live Cam"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
