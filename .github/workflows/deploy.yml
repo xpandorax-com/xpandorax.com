@@ -40,11 +40,10 @@ jobs:
           NODE_ENV: production
 
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy build/client --project-name=xpandorax --commit-dirty=true
+        run: npx wrangler pages deploy build/client --project-name=xpandorax
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        continue-on-error: false
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

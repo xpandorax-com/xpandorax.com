@@ -1,6 +1,6 @@
 import { createPagesFunctionHandler } from "@remix-run/cloudflare-pages";
 // @ts-expect-error - build/server is generated at build time
-import * as build from "../build/server";
+import * as build from "../build/server/index.js";
 
 interface PageContext {
   env: Record<string, unknown>;
