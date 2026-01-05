@@ -15,34 +15,42 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ context }: LoaderFunctionArgs) {
-  const env = context.cloudflare.env;
+  try {
+    const env = context.cloudflare.env;
 
-  // Create Sanity client
-  const sanity = createSanityClient(env);
+    // Create Sanity client
+    const sanity = createSanityClient(env);
 
-  // Fetch all categories from Sanity
-  const categoriesRaw = await sanity.fetch<SanityCategory[]>(
-    `*[_type == "category"] | order(sortOrder asc) {
-      _id,
-      name,
-      slug,
-      "thumbnail": thumbnail.asset->url,
-      "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true])
-    }`
-  );
+    // Fetch all categories from Sanity
+    const categoriesRaw = await sanity.fetch<SanityCategory[]>(
+      `*[_type == "category"] | order(sortOrder asc) {
+        _id,
+        name,
+        slug,
+        "thumbnail": thumbnail.asset->url,
+        "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true])
+      }`
+    );
 
-  const allCategories = categoriesRaw.map((c) => ({
-    _id: c._id,
-    id: c._id,
-    slug: getSlug(c.slug),
-    name: c.name,
-    thumbnail: c.thumbnail || null,
-    videoCount: c.videoCount || 0,
-  }));
+    const allCategories = categoriesRaw.map((c) => ({
+      _id: c._id,
+      id: c._id,
+      slug: getSlug(c.slug),
+      name: c.name,
+      thumbnail: c.thumbnail || null,
+      videoCount: c.videoCount || 0,
+    }));
 
-  return json({
-    categories: allCategories,
-  });
+    return json({
+      categories: allCategories,
+    });
+  } catch (error) {
+    console.error("Categories loader error:", error);
+    return json({
+      categories: [],
+      error: "Failed to load categories",
+    });
+  }
 }
 
 export default function CategoriesPage() {

@@ -133,7 +133,12 @@ export function getSecurityHeaders(): Record<string, string> {
   };
 }
 
-// Simple in-memory rate limiter (for Cloudflare Workers, consider using KV or Durable Objects for production)
+// Simple in-memory rate limiter
+// WARNING: This implementation won't work reliably in Cloudflare Workers serverless environment
+// because each worker instance has isolated memory. For production use, consider:
+// - Cloudflare KV for distributed rate limiting
+// - Cloudflare Durable Objects for more complex scenarios
+// - Cloudflare's built-in Rate Limiting rules
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 export function checkRateLimit(key: string): { allowed: boolean; retryAfter?: number } {

@@ -9,6 +9,15 @@ import { Badge } from "~/components/ui/badge";
 import { Search, Video, Users, Folder, X } from "lucide-react";
 import { createSanityClient, getSlug, type SanityVideo, type SanityActress, type SanityCategory } from "~/lib/sanity";
 
+// Sanitize search query to prevent GROQ injection
+function sanitizeSearchQuery(query: string): string {
+  // Remove special GROQ characters that could alter query logic
+  return query
+    .replace(/[\[\]{}()\|&!@#$%^*;:"'`\\<>]/g, '')
+    .trim()
+    .slice(0, 100); // Limit length to prevent abuse
+}
+
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const query = data?.query || "";
   return [
@@ -19,15 +28,18 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
-  const query = url.searchParams.get("q")?.trim() || "";
+  const rawQuery = url.searchParams.get("q")?.trim() || "";
   const type = url.searchParams.get("type") || "videos";
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
   const limit = 24;
   const offset = (page - 1) * limit;
 
+  // Sanitize search query to prevent GROQ injection
+  const query = sanitizeSearchQuery(rawQuery);
+
   if (!query) {
     return json({
-      query: "",
+      query: rawQuery, // Return original for display
       type,
       videos: [],
       actresses: [],
@@ -41,69 +53,77 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   }
 
   const sanity = createSanityClient(context.cloudflare.env);
+  const searchPattern = `${query}*`;
 
-  // Search videos
-  const [videoResults, totalVideos] = await Promise.all([
-    type === "videos"
-      ? sanity.fetch<SanityVideo[]>(
-          `*[_type == "video" && isPublished == true && (title match "${query}*" || description match "${query}*")] | order(publishedAt desc) [${offset}...${offset + limit}] {
-            _id,
-            title,
-            slug,
-            "thumbnail": thumbnail.asset->url,
-            "previewVideo": previewVideo.asset->url,
-            duration,
-            views,
-            isPremium
-          }`
-        )
-      : Promise.resolve([]),
-    type === "videos"
-      ? sanity.fetch<number>(
-          `count(*[_type == "video" && isPublished == true && (title match "${query}*" || description match "${query}*")])`
-        )
-      : Promise.resolve(0),
-  ]);
+  try {
+    // Search videos - using parameterized query to prevent injection
+    const [videoResults, totalVideos] = await Promise.all([
+      type === "videos"
+        ? sanity.fetch<SanityVideo[]>(
+            `*[_type == "video" && isPublished == true && (title match $searchPattern || description match $searchPattern)] | order(publishedAt desc) [$offset...$end] {
+              _id,
+              title,
+              slug,
+              "thumbnail": thumbnail.asset->url,
+              "previewVideo": previewVideo.asset->url,
+              duration,
+              views,
+              isPremium
+            }`,
+            { searchPattern, offset, end: offset + limit }
+          )
+        : Promise.resolve([]),
+      type === "videos"
+        ? sanity.fetch<number>(
+            `count(*[_type == "video" && isPublished == true && (title match $searchPattern || description match $searchPattern)])`,
+            { searchPattern }
+          )
+        : Promise.resolve(0),
+    ]);
 
-  // Search actresses/models
-  const [actressResults, totalActresses] = await Promise.all([
-    type === "actresses"
-      ? sanity.fetch<(SanityActress & { videoCount: number })[]>(
-          `*[_type == "actress" && (name match "${query}*" || bio match "${query}*")] | order(name asc) [${offset}...${offset + limit}] {
-            _id,
-            name,
-            slug,
-            "image": image.asset->url,
-            "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
-          }`
-        )
-      : Promise.resolve([]),
-    type === "actresses"
-      ? sanity.fetch<number>(
-          `count(*[_type == "actress" && (name match "${query}*" || bio match "${query}*")])`
-        )
-      : Promise.resolve(0),
-  ]);
+    // Search actresses/models - using parameterized query
+    const [actressResults, totalActresses] = await Promise.all([
+      type === "actresses"
+        ? sanity.fetch<(SanityActress & { videoCount: number })[]>(
+            `*[_type == "actress" && (name match $searchPattern || bio match $searchPattern)] | order(name asc) [$offset...$end] {
+              _id,
+              name,
+              slug,
+              "image": image.asset->url,
+              "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
+            }`,
+            { searchPattern, offset, end: offset + limit }
+          )
+        : Promise.resolve([]),
+      type === "actresses"
+        ? sanity.fetch<number>(
+            `count(*[_type == "actress" && (name match $searchPattern || bio match $searchPattern)])`,
+            { searchPattern }
+          )
+        : Promise.resolve(0),
+    ]);
 
-  // Search categories
-  const [categoryResults, totalCategories] = await Promise.all([
-    type === "categories"
-      ? sanity.fetch<(SanityCategory & { videoCount: number })[]>(
-          `*[_type == "category" && (name match "${query}*" || description match "${query}*")] | order(name asc) [${offset}...${offset + limit}] {
-            _id,
-            name,
-            slug,
-            "thumbnail": thumbnail.asset->url,
-            "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true])
-          }`
-        )
-      : Promise.resolve([]),
-    type === "categories"
-      ? sanity.fetch<number>(
-          `count(*[_type == "category" && (name match "${query}*" || description match "${query}*")])`
-        )
-      : Promise.resolve(0),
-  ]);
+    // Search categories - using parameterized query
+    const [categoryResults, totalCategories] = await Promise.all([
+      type === "categories"
+        ? sanity.fetch<(SanityCategory & { videoCount: number })[]>(
+            `*[_type == "category" && (name match $searchPattern || description match $searchPattern)] | order(name asc) [$offset...$end] {
+              _id,
+              name,
+              slug,
+              "thumbnail": thumbnail.asset->url,
+              "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true])
+            }`,
+            { searchPattern, offset, end: offset + limit }
+          )
+        : Promise.resolve([]),
+      type === "categories"
+        ? sanity.fetch<number>(
+            `count(*[_type == "category" && (name match $searchPattern || description match $searchPattern)])`,
+            { searchPattern }
+          )
+        : Promise.resolve(0),
+    ]);
 
   // Transform data
   const videos = videoResults.map((v) => ({
@@ -140,18 +160,35 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       ? totalActresses
       : totalCategories;
 
-  return json({
-    query,
-    type,
-    videos,
-    actresses,
-    categories,
-    totalVideos,
-    totalActresses,
-    totalCategories,
-    page,
-    totalPages: Math.ceil(currentTotal / limit),
-  });
+    return json({
+      query,
+      type,
+      videos,
+      actresses,
+      categories,
+      totalVideos,
+      totalActresses,
+      totalCategories,
+      page,
+      totalPages: Math.ceil(currentTotal / limit),
+    });
+  } catch (error) {
+    console.error("Search error:", error);
+    // Return empty results on error
+    return json({
+      query,
+      type,
+      videos: [],
+      actresses: [],
+      categories: [],
+      totalVideos: 0,
+      totalActresses: 0,
+      totalCategories: 0,
+      page,
+      totalPages: 0,
+      error: "Search failed. Please try again.",
+    });
+  }
 }
 
 export default function SearchPage() {

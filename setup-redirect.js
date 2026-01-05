@@ -1,6 +1,7 @@
 const token = 'VNR3Vo-Lx4xin1qWs5V5-yUBctO2YWFzTO98UwEz';
 const zoneId = '7a80fd2ecf89fe08f0dc6b9ddf1ce2cc';
-const pagesDomain = '2059bde5.xpandorax-com.pages.dev';
+// Pages domain reference (not used directly in redirect rules)
+// const pagesDomain = '2059bde5.xpandorax-com.pages.dev';
 
 const headers = {
   'Authorization': 'Bearer ' + token,

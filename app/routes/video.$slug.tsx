@@ -225,7 +225,8 @@ export default function VideoPage() {
   // Fetch initial interaction status
   useEffect(() => {
     statusFetcher.load(`/api/video-interaction?videoId=${video.id}`);
-  }, [video.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [video.id]); // statusFetcher is stable and doesn't need to be in deps
 
   // Update state when status is fetched
   useEffect(() => {

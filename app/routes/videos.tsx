@@ -23,7 +23,8 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const limit = 36;
   const offset = (page - 1) * limit;
 
-  const sanity = createSanityClient(context.cloudflare.env);
+  try {
+    const sanity = createSanityClient(context.cloudflare.env);
 
   let orderBy;
   switch (sort) {
@@ -110,6 +111,20 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     duration,
     category,
   });
+  } catch (error) {
+    console.error("Videos loader error:", error);
+    return json({
+      videos: [],
+      categories: [],
+      total: 0,
+      page: 1,
+      totalPages: 0,
+      sort: "newest",
+      duration: null,
+      category: null,
+      error: "Failed to load videos",
+    });
+  }
 }
 
 export default function VideosPage() {

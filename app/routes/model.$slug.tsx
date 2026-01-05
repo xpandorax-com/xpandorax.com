@@ -43,85 +43,94 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
   const limit = 24;
   const offset = (page - 1) * limit;
 
-  const sanity = createSanityClient(context.cloudflare.env);
+  try {
+    const sanity = createSanityClient(context.cloudflare.env);
 
-  // Fetch model with videos from Sanity
-  const actressRaw = await sanity.fetch<(SanityActress & { 
-    videos: SanityVideo[];
-    videoCount: number;
-    createdAt?: string;
-    gallery?: SanityGalleryImage[];
-  }) | null>(
-    `*[_type == "actress" && slug.current == $slug][0] {
-      _id,
-      name,
-      slug,
-      bio,
-      "image": image.asset->url,
-      "_createdAt": _createdAt,
-      "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true]),
-      "videos": *[_type == "video" && actress._ref == ^._id && isPublished == true] | order(publishedAt desc) [$offset...$end] {
+    // Fetch model with videos from Sanity
+    const actressRaw = await sanity.fetch<(SanityActress & { 
+      videos: SanityVideo[];
+      videoCount: number;
+      createdAt?: string;
+      gallery?: SanityGalleryImage[];
+    }) | null>(
+      `*[_type == "actress" && slug.current == $slug][0] {
         _id,
-        title,
+        name,
         slug,
-        "thumbnail": thumbnail.asset->url,
-        "previewVideo": previewVideo.asset->url,
-        duration,
-        views,
-        isPremium
-      },
-      "gallery": gallery[] {
-        _key,
-        "url": asset->url,
-        caption,
-        alt
-      }
-    }`,
-    { slug, offset, end: offset + limit }
-  );
+        bio,
+        "image": image.asset->url,
+        "_createdAt": _createdAt,
+        "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true]),
+        "videos": *[_type == "video" && actress._ref == ^._id && isPublished == true] | order(publishedAt desc) [$offset...$end] {
+          _id,
+          title,
+          slug,
+          "thumbnail": thumbnail.asset->url,
+          "previewVideo": previewVideo.asset->url,
+          duration,
+          views,
+          isPremium
+        },
+        "gallery": gallery[] {
+          _key,
+          "url": asset->url,
+          caption,
+          alt
+        }
+      }`,
+      { slug, offset, end: offset + limit }
+    );
 
-  if (!actressRaw) {
-    throw new Response("Not Found", { status: 404 });
+    if (!actressRaw) {
+      throw new Response("Not Found", { status: 404 });
+    }
+
+    const total = actressRaw.videoCount || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    // Transform data
+    const actress = {
+      id: actressRaw._id,
+      slug: getSlug(actressRaw.slug),
+      name: actressRaw.name,
+      bio: actressRaw.bio || null,
+      image: actressRaw.image || null,
+      createdAt: actressRaw.createdAt || null,
+    };
+
+    const actressVideos = (actressRaw.videos || []).map((v) => ({
+      id: v._id,
+      slug: getSlug(v.slug),
+      title: v.title,
+      thumbnail: v.thumbnail || null,
+      previewVideo: v.previewVideo || null,
+      duration: v.duration || null,
+      views: v.views || 0,
+      isPremium: v.isPremium || false,
+    }));
+
+    const gallery = (actressRaw.gallery || []).map((img) => ({
+      url: img.url || "",
+      caption: img.caption || undefined,
+      alt: img.alt || undefined,
+    })).filter(img => img.url);
+
+    return json({
+      actress,
+      videos: actressVideos,
+      gallery,
+      total,
+      page,
+      totalPages,
+    });
+  } catch (error) {
+    // Re-throw Response errors (404, etc.)
+    if (error instanceof Response) {
+      throw error;
+    }
+    console.error("Model loader error:", error);
+    throw new Response("Failed to load model data", { status: 500 });
   }
-
-  const total = actressRaw.videoCount || 0;
-  const totalPages = Math.ceil(total / limit);
-
-  // Transform data
-  const actress = {
-    id: actressRaw._id,
-    slug: getSlug(actressRaw.slug),
-    name: actressRaw.name,
-    bio: actressRaw.bio || null,
-    image: actressRaw.image || null,
-    createdAt: actressRaw.createdAt || null,
-  };
-
-  const actressVideos = (actressRaw.videos || []).map((v) => ({
-    id: v._id,
-    slug: getSlug(v.slug),
-    title: v.title,
-    thumbnail: v.thumbnail || null,
-    previewVideo: v.previewVideo || null,
-    duration: v.duration || null,
-    views: v.views || 0,
-    isPremium: v.isPremium || false,
-  }));
-
-  const gallery = (actressRaw.gallery || []).map((img) => ({
-    url: img.url || "",
-    caption: img.caption || undefined,
-    alt: img.alt || undefined,
-  })).filter(img => img.url);
-
-  return json({
-    actress,
-    videos: actressVideos,
-    gallery,
-    total,
-    page,
-    totalPages,
-  });
 }
 
 export default function ModelDetailPage() {
