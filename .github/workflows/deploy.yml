@@ -40,14 +40,10 @@ jobs:
           NODE_ENV: production
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: xpandorax-com
-          directory: build/client
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          wranglerVersion: "4"
+        run: npx wrangler pages deploy build/client --project-name=xpandorax-com
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
