@@ -28,63 +28,76 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const limit = 36;
   const offset = (page - 1) * limit;
 
-  const sanity = createSanityClient(context.cloudflare.env);
+  try {
+    const sanity = createSanityClient(context.cloudflare.env);
 
-  // Build order by based on sort
-  let orderBy;
-  switch (sort) {
-    case "name":
-      orderBy = "name asc";
-      break;
-    case "newest":
-      orderBy = "_createdAt desc";
-      break;
-    case "popular":
-    default:
-      orderBy = "videoCount desc";
-      break;
+    // Build order by based on sort
+    let orderBy;
+    switch (sort) {
+      case "name":
+        orderBy = "name asc";
+        break;
+      case "newest":
+        orderBy = "_createdAt desc";
+        break;
+      case "popular":
+      default:
+        orderBy = "videoCount desc";
+        break;
+    }
+
+    // Build search filter
+    const searchFilter = search
+      ? `&& (name match "*${search}*" || bio match "*${search}*")`
+      : "";
+
+    // Fetch models with pagination
+    const [actressesRaw, totalCount] = await Promise.all([
+      sanity.fetch<(SanityActress & { videoCount: number })[]>(
+        `*[_type == "actress" ${searchFilter}] {
+          _id,
+          name,
+          slug,
+          "image": image.asset->url,
+          "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
+        } | order(${orderBy}) [$offset...$end]`,
+        { offset, end: offset + limit }
+      ),
+      sanity.fetch<number>(
+        `count(*[_type == "actress" ${searchFilter}])`
+      ),
+    ]);
+
+    const actressList = actressesRaw.map((a) => ({
+      id: a._id,
+      slug: getSlug(a.slug),
+      name: a.name,
+      image: a.image || null,
+      videoCount: a.videoCount || 0,
+    }));
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return json({
+      actresses: actressList,
+      total: totalCount,
+      page,
+      totalPages,
+      sort,
+      search,
+    });
+  } catch (error) {
+    console.error("Models loader error:", error);
+    return json({
+      actresses: [],
+      total: 0,
+      page: 1,
+      totalPages: 0,
+      sort,
+      search,
+      error: "Failed to load models",
+    });
   }
-
-  // Build search filter
-  const searchFilter = search
-    ? `&& (name match "*${search}*" || bio match "*${search}*")`
-    : "";
-
-  // Fetch models with pagination
-  const [actressesRaw, totalCount] = await Promise.all([
-    sanity.fetch<(SanityActress & { videoCount: number })[]>(
-      `*[_type == "actress" ${searchFilter}] {
-        _id,
-        name,
-        slug,
-        "image": image.asset->url,
-        "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
-      } | order(${orderBy}) [$offset...$end]`,
-      { offset, end: offset + limit }
-    ),
-    sanity.fetch<number>(
-      `count(*[_type == "actress" ${searchFilter}])`
-    ),
-  ]);
-
-  const actressList = actressesRaw.map((a) => ({
-    id: a._id,
-    slug: getSlug(a.slug),
-    name: a.name,
-    image: a.image || null,
-    videoCount: a.videoCount || 0,
-  }));
-
-  const totalPages = Math.ceil(totalCount / limit);
-
-  return json({
-    actresses: actressList,
-    total: totalCount,
-    page,
-    totalPages,
-    sort,
-    search,
-  });
 }
 
 export default function ModelsPage() {

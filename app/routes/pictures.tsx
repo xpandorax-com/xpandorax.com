@@ -45,126 +45,137 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const limit = 48;
   const offset = (page - 1) * limit;
 
-  const sanity = createSanityClient(context.cloudflare.env);
+  try {
+    const sanity = createSanityClient(context.cloudflare.env);
 
-  // Fetch pictures from the dedicated Pictures schema
-  const [picturesFromSchema, modelsWithGalleries] = await Promise.all([
-    sanity.fetch<Array<{
-      _id: string;
-      title: string;
-      slug: { current: string } | string;
-      thumbnail?: string;
-      images?: Array<{
-        _key: string;
-        url?: string;
-        caption?: string;
-        alt?: string;
-      }>;
-      actress?: {
+    // Fetch pictures from the dedicated Pictures schema
+    const [picturesFromSchema, modelsWithGalleries] = await Promise.all([
+      sanity.fetch<Array<{
+        _id: string;
+        title: string;
+        slug: { current: string } | string;
+        thumbnail?: string;
+        images?: Array<{
+          _key: string;
+          url?: string;
+          caption?: string;
+          alt?: string;
+        }>;
+        actress?: {
+          _id: string;
+          name: string;
+          slug: { current: string } | string;
+          image?: string;
+        };
+      }>>(
+        `*[_type == "picture" && isPublished == true] | order(publishedAt desc) {
+          _id,
+          title,
+          slug,
+          "thumbnail": thumbnail.asset->url,
+          "images": images[] {
+            _key,
+            url,
+            caption,
+            alt
+          },
+          "actress": actress->{
+            _id,
+            name,
+            slug,
+            "image": image.asset->url
+          }
+        }`
+      ),
+      // Also fetch model gallery images as fallback
+      sanity.fetch<Array<{
         _id: string;
         name: string;
         slug: { current: string } | string;
         image?: string;
-      };
-    }>>(
-      `*[_type == "picture" && isPublished == true] | order(publishedAt desc) {
-        _id,
-        title,
-        slug,
-        "thumbnail": thumbnail.asset->url,
-        "images": images[] {
-          _key,
-          url,
-          caption,
-          alt
-        },
-        "actress": actress->{
+        gallery?: Array<{
+          _key: string;
+          url?: string;
+          caption?: string;
+          alt?: string;
+        }>;
+      }>>(
+        `*[_type == "actress" && defined(gallery) && count(gallery) > 0] {
           _id,
           name,
           slug,
-          "image": image.asset->url
-        }
-      }`
-    ),
-    // Also fetch model gallery images as fallback
-    sanity.fetch<Array<{
-      _id: string;
-      name: string;
-      slug: { current: string } | string;
-      image?: string;
-      gallery?: Array<{
-        _key: string;
-        url?: string;
-        caption?: string;
-        alt?: string;
-      }>;
-    }>>(
-      `*[_type == "actress" && defined(gallery) && count(gallery) > 0] {
-        _id,
-        name,
-        slug,
-        "image": image.asset->url,
-        "gallery": gallery[] {
-          _key,
-          "url": asset->url,
-          caption,
-          alt
-        }
-      }`
-    ),
-  ]);
+          "image": image.asset->url,
+          "gallery": gallery[] {
+            _key,
+            "url": asset->url,
+            caption,
+            alt
+          }
+        }`
+      ),
+    ]);
 
-  // Combine all images
-  const allImages: GalleryImageWithModel[] = [];
+    // Combine all images
+    const allImages: GalleryImageWithModel[] = [];
 
-  // Add pictures from Pictures schema first (each picture can have multiple images)
-  picturesFromSchema.forEach((pic) => {
-    if (pic.images && pic.images.length > 0) {
-      pic.images.forEach((img) => {
-        if (img.url) {
-          allImages.push({
-            url: img.url,
-            caption: img.caption || pic.title,
-            alt: img.alt || pic.title,
-            modelName: pic.actress?.name || "Unknown",
-            modelSlug: pic.actress ? getSlug(pic.actress.slug) : "",
-            modelImage: pic.actress?.image,
-            modelId: pic.actress?._id || pic._id,
-          });
-        }
-      });
-    }
-  });
+    // Add pictures from Pictures schema first (each picture can have multiple images)
+    picturesFromSchema.forEach((pic) => {
+      if (pic.images && pic.images.length > 0) {
+        pic.images.forEach((img) => {
+          if (img.url) {
+            allImages.push({
+              url: img.url,
+              caption: img.caption || pic.title,
+              alt: img.alt || pic.title,
+              modelName: pic.actress?.name || "Unknown",
+              modelSlug: pic.actress ? getSlug(pic.actress.slug) : "",
+              modelImage: pic.actress?.image,
+              modelId: pic.actress?._id || pic._id,
+            });
+          }
+        });
+      }
+    });
 
-  // Add model gallery images
-  modelsWithGalleries.forEach((model) => {
-    if (model.gallery) {
-      model.gallery.forEach((img) => {
-        if (img.url) {
-          allImages.push({
-            url: img.url,
-            caption: img.caption,
-            alt: img.alt,
-            modelName: model.name,
-            modelSlug: getSlug(model.slug),
-            modelImage: model.image,
-            modelId: model._id,
-          });
-        }
-      });
-    }
-  });
+    // Add model gallery images
+    modelsWithGalleries.forEach((model) => {
+      if (model.gallery) {
+        model.gallery.forEach((img) => {
+          if (img.url) {
+            allImages.push({
+              url: img.url,
+              caption: img.caption,
+              alt: img.alt,
+              modelName: model.name,
+              modelSlug: getSlug(model.slug),
+              modelImage: model.image,
+              modelId: model._id,
+            });
+          }
+        });
+      }
+    });
 
-  const total = allImages.length;
-  const totalPages = Math.ceil(total / limit);
-  const paginatedImages = allImages.slice(offset, offset + limit);
+    const total = allImages.length;
+    const totalPages = Math.ceil(total / limit);
+    const paginatedImages = allImages.slice(offset, offset + limit);
 
-  return json({
-    images: paginatedImages,
-    total,
-    page,
-    totalPages,
-  });
+    return json({
+      images: paginatedImages,
+      total,
+      page,
+      totalPages,
+    });
+  } catch (error) {
+    console.error("Pictures loader error:", error);
+    return json({
+      images: [],
+      total: 0,
+      page: 1,
+      totalPages: 0,
+      error: "Failed to load pictures",
+    });
+  }
 }
 
 export default function PicturesPage() {

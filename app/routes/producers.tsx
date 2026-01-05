@@ -37,72 +37,85 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const limit = 36;
   const offset = (page - 1) * limit;
 
-  const sanity = createSanityClient(context.cloudflare.env);
+  try {
+    const sanity = createSanityClient(context.cloudflare.env);
 
-  // Build order by based on sort
-  let orderBy;
-  switch (sort) {
-    case "name":
-      orderBy = "name asc";
-      break;
-    case "newest":
-      orderBy = "_createdAt desc";
-      break;
-    case "popular":
-    default:
-      orderBy = "videoCount desc";
-      break;
+    // Build order by based on sort
+    let orderBy;
+    switch (sort) {
+      case "name":
+        orderBy = "name asc";
+        break;
+      case "newest":
+        orderBy = "_createdAt desc";
+        break;
+      case "popular":
+      default:
+        orderBy = "videoCount desc";
+        break;
+    }
+
+    // Build search filter
+    const searchFilter = search
+      ? `&& (name match "*${search}*" || description match "*${search}*")`
+      : "";
+
+    // Fetch producers with pagination
+    const [producersRaw, totalCount] = await Promise.all([
+      sanity.fetch<Array<{
+        _id: string;
+        name: string;
+        slug: { current: string } | string;
+        logo?: string;
+        description?: string;
+        videoCount: number;
+      }>>(
+        `*[_type == "producer" ${searchFilter}] {
+          _id,
+          name,
+          slug,
+          "logo": logo.asset->url,
+          description,
+          "videoCount": count(*[_type == "video" && producer._ref == ^._id && isPublished == true])
+        } | order(${orderBy}) [$offset...$end]`,
+        { offset, end: offset + limit }
+      ),
+      sanity.fetch<number>(
+        `count(*[_type == "producer" ${searchFilter}])`
+      ),
+    ]);
+
+    const producersList: Producer[] = producersRaw.map((p) => ({
+      id: p._id,
+      slug: getSlug(p.slug),
+      name: p.name,
+      logo: p.logo || null,
+      description: p.description || null,
+      videoCount: p.videoCount || 0,
+    }));
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return json({
+      producers: producersList,
+      total: totalCount,
+      page,
+      totalPages,
+      sort,
+      search,
+    });
+  } catch (error) {
+    console.error("Producers loader error:", error);
+    return json({
+      producers: [],
+      total: 0,
+      page: 1,
+      totalPages: 0,
+      sort,
+      search,
+      error: "Failed to load producers",
+    });
   }
-
-  // Build search filter
-  const searchFilter = search
-    ? `&& (name match "*${search}*" || description match "*${search}*")`
-    : "";
-
-  // Fetch producers with pagination
-  const [producersRaw, totalCount] = await Promise.all([
-    sanity.fetch<Array<{
-      _id: string;
-      name: string;
-      slug: { current: string } | string;
-      logo?: string;
-      description?: string;
-      videoCount: number;
-    }>>(
-      `*[_type == "producer" ${searchFilter}] {
-        _id,
-        name,
-        slug,
-        "logo": logo.asset->url,
-        description,
-        "videoCount": count(*[_type == "video" && producer._ref == ^._id && isPublished == true])
-      } | order(${orderBy}) [$offset...$end]`,
-      { offset, end: offset + limit }
-    ),
-    sanity.fetch<number>(
-      `count(*[_type == "producer" ${searchFilter}])`
-    ),
-  ]);
-
-  const producersList: Producer[] = producersRaw.map((p) => ({
-    id: p._id,
-    slug: getSlug(p.slug),
-    name: p.name,
-    logo: p.logo || null,
-    description: p.description || null,
-    videoCount: p.videoCount || 0,
-  }));
-
-  const totalPages = Math.ceil(totalCount / limit);
-
-  return json({
-    producers: producersList,
-    total: totalCount,
-    page,
-    totalPages,
-    sort,
-    search,
-  });
 }
 
 export default function ProducersPage() {
