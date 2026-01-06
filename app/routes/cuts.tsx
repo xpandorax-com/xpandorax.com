@@ -7,7 +7,6 @@ import {
   Scissors, 
   Clock, 
   TrendingUp, 
-  Crown,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -25,7 +24,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
   const sort = url.searchParams.get("sort") || "latest";
-  const filter = url.searchParams.get("filter") || "all"; // all, free, premium
+  const filter = url.searchParams.get("filter") || "all";
   const limit = 24;
   const offset = (page - 1) * limit;
 
@@ -46,13 +45,8 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
         break;
     }
 
-    // Build filter condition
-    let filterCondition = "";
-    if (filter === "free") {
-      filterCondition = "&& (isPremium == false || !defined(isPremium))";
-    } else if (filter === "premium") {
-      filterCondition = "&& isPremium == true";
-    }
+    // No filter condition needed
+    const filterCondition = "";
 
     // Fetch cuts, count, and categories in parallel
     const [cutsRaw, totalCount, categoriesRaw] = await Promise.all([
@@ -65,7 +59,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
           videoUrl,
           duration,
           views,
-          isPremium,
           "actress": actress->{
             name
           }
@@ -88,7 +81,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       videoUrl: c.videoUrl,
       duration: c.duration || null,
       views: c.views || 0,
-      isPremium: c.isPremium || false,
       actress: c.actress ? { name: c.actress.name } : null,
     }));
 
@@ -145,8 +137,6 @@ export default function CutsPage() {
 
   const filterOptions = [
     { value: "all", label: "All", icon: null },
-    { value: "free", label: "Free", icon: null },
-    { value: "premium", label: "Premium", icon: Crown },
   ];
 
   const sortOptions = [

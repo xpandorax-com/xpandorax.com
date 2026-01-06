@@ -1,5 +1,5 @@
 import { Link } from "@remix-run/react";
-import { Play, Crown } from "lucide-react";
+import { Play } from "lucide-react";
 import { formatViews, cn } from "~/lib/utils";
 
 interface CutCardCut {
@@ -9,7 +9,6 @@ interface CutCardCut {
   thumbnail?: string | null;
   duration?: number | null;
   views?: number;
-  isPremium?: boolean;
   actress?: {
     name: string;
   } | null;
@@ -50,14 +49,6 @@ export function CutCard({ cut, className }: CutCardProps) {
             <Play className="h-6 w-6 text-black" fill="black" />
           </div>
         </div>
-
-        {/* Premium Badge */}
-        {cut.isPremium && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-1 text-[10px] font-bold text-white shadow-lg">
-            <Crown className="h-3 w-3" />
-            <span>Premium</span>
-          </div>
-        )}
 
         {/* Views badge */}
         {cut.views !== undefined && cut.views > 0 && (
@@ -115,13 +106,6 @@ export function CutCardCompact({ cut, className }: CutCardProps) {
           <Play className="h-4 w-4 text-black" fill="black" />
         </div>
       </div>
-
-      {/* Premium Badge */}
-      {cut.isPremium && (
-        <div className="absolute top-1.5 left-1.5 flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
-          <Crown className="h-2.5 w-2.5" />
-        </div>
-      )}
 
       {/* Bottom info */}
       <div className="absolute bottom-0 left-0 right-0 p-2">

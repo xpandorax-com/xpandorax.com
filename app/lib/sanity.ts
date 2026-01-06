@@ -223,7 +223,6 @@ export const CUTS_QUERY = `*[_type == "cut" && isPublished == true] | order(publ
   duration,
   views,
   likes,
-  isPremium,
   soundName,
   hashtags,
   publishedAt,
@@ -251,7 +250,6 @@ export const CUT_BY_SLUG_QUERY = `*[_type == "cut" && slug.current == $slug][0] 
   duration,
   views,
   likes,
-  isPremium,
   soundName,
   hashtags,
   publishedAt,
@@ -276,8 +274,7 @@ export const FEATURED_CUTS_QUERY = `*[_type == "cut" && isPublished == true && i
   "thumbnail": thumbnail.asset->url,
   videoUrl,
   duration,
-  views,
-  isPremium
+  views
 }`;
 
 export const POPULAR_CUTS_QUERY = `*[_type == "cut" && isPublished == true] | order(views desc)[0...12] {
@@ -287,8 +284,7 @@ export const POPULAR_CUTS_QUERY = `*[_type == "cut" && isPublished == true] | or
   "thumbnail": thumbnail.asset->url,
   videoUrl,
   duration,
-  views,
-  isPremium
+  views
 }`;
 
 // ==================== TYPE DEFINITIONS ====================
@@ -302,7 +298,6 @@ export interface SanityVideo {
   previewVideo?: string;
   duration?: number;
   views?: number;
-  isPremium?: boolean;
   abyssEmbed: string;
   mainServerUrl?: string;
   servers?: { name: string; url: string }[];
@@ -382,7 +377,6 @@ export interface SanityCut {
   duration?: number;
   views?: number;
   likes?: number;
-  isPremium?: boolean;
   soundName?: string;
   hashtags?: string[];
   publishedAt?: string;

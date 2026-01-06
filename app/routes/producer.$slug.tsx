@@ -66,8 +66,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
           "thumbnail": thumbnail.asset->url,
           "previewVideo": previewVideo.asset->url,
           duration,
-          views,
-          isPremium
+          views
         }
       }`,
       { slug, offset, end: offset + limit }
@@ -101,7 +100,6 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       previewVideo: v.previewVideo || null,
       duration: v.duration || null,
       views: v.views || 0,
-      isPremium: v.isPremium || false,
     }));
 
     return json({

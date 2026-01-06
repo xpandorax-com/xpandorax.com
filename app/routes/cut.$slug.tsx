@@ -44,7 +44,6 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
         duration,
         views,
         likes,
-        isPremium,
         soundName,
         hashtags,
         publishedAt,
@@ -80,7 +79,6 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
           duration,
           views,
           likes,
-          isPremium,
           soundName,
           hashtags,
           "actress": actress->{
@@ -103,7 +101,6 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
           duration,
           views,
           likes,
-          isPremium,
           soundName,
           hashtags,
           "actress": actress->{
@@ -129,7 +126,6 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
       duration: cutRaw.duration || null,
       views: cutRaw.views || 0,
       likes: cutRaw.likes || 0,
-      isPremium: cutRaw.isPremium || false,
       soundName: cutRaw.soundName || null,
       hashtags: cutRaw.hashtags || [],
       actress: cutRaw.actress ? {
@@ -152,7 +148,6 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
         duration: c.duration || null,
         views: c.views || 0,
         likes: c.likes || 0,
-        isPremium: c.isPremium || false,
         soundName: c.soundName || null,
         hashtags: c.hashtags || [],
         actress: c.actress ? {
@@ -173,7 +168,6 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
         duration: c.duration || null,
         views: c.views || 0,
         likes: c.likes || 0,
-        isPremium: c.isPremium || false,
         soundName: c.soundName || null,
         hashtags: c.hashtags || [],
         actress: c.actress ? {

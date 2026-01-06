@@ -39,7 +39,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       "previewVideo": previewVideo.asset->url,
       duration,
       views,
-      isPremium,
+
       "actress": actress->{
         name
       }
@@ -56,7 +56,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       "previewVideo": previewVideo.asset->url,
       duration,
       views,
-      isPremium,
       "actress": actress->{
         name
       }
@@ -111,7 +110,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     previewVideo: v.previewVideo || null,
     duration: v.duration || null,
     views: v.views || 0,
-    isPremium: v.isPremium || false,
     actress: v.actress ? { name: v.actress.name } : null,
   }));
 
@@ -123,7 +121,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     previewVideo: v.previewVideo || null,
     duration: v.duration || null,
     views: v.views || 0,
-    isPremium: v.isPremium || false,
     actress: v.actress ? { name: v.actress.name } : null,
   }));
 

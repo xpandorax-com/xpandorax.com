@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Shield, Users, Video, Crown, Globe, Heart } from "lucide-react";
+import { Shield, Users, Video, Globe, Heart } from "lucide-react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -33,7 +33,7 @@ export default function AboutPage() {
           About XpandoraX
         </h1>
         <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">
-          Your premier destination for premium video content. We&apos;re dedicated to providing 
+          Your premier destination for quality video content. We&apos;re dedicated to providing 
           a safe, enjoyable, and high-quality viewing experience.
         </p>
       </div>
@@ -99,17 +99,6 @@ export default function AboutPage() {
 
             <Card>
               <CardHeader>
-                <Crown className="h-8 w-8 text-primary mb-2" />
-                <CardTitle>Premium Experience</CardTitle>
-                <CardDescription>
-                  Upgrade to premium for an ad-free experience and access to exclusive 
-                  content.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
                 <Shield className="h-8 w-8 text-primary mb-2" />
                 <CardTitle>Safe & Secure</CardTitle>
                 <CardDescription>
@@ -156,12 +145,6 @@ export default function AboutPage() {
           <div className="flex justify-center gap-4">
             <Button asChild size="lg">
               <Link to="/register">Create Account</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link to="/premium">
-                <Crown className="mr-2 h-4 w-4" />
-                Go Premium
-              </Link>
             </Button>
           </div>
         </section>

@@ -223,13 +223,6 @@ export default function ContactPage() {
             </CardHeader>
             <CardContent className="space-y-3 px-4 sm:px-6">
               <a
-                href="/premium"
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary py-1 touch-manipulation"
-              >
-                <AlertCircle className="h-4 w-4" />
-                Premium Subscription Help
-              </a>
-              <a
                 href="/dmca"
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary py-1 touch-manipulation"
               >

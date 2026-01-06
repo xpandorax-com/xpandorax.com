@@ -68,8 +68,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
           "thumbnail": thumbnail.asset->url,
           "previewVideo": previewVideo.asset->url,
           duration,
-          views,
-          isPremium
+          views
         },
         "gallery": gallery[] {
           _key,
@@ -106,7 +105,6 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       previewVideo: v.previewVideo || null,
       duration: v.duration || null,
       views: v.views || 0,
-      isPremium: v.isPremium || false,
     }));
 
     const gallery = (actressRaw.gallery || []).map((img) => ({

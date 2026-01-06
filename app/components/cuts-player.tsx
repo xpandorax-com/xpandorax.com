@@ -30,7 +30,6 @@ export interface CutData {
   duration?: number | null;
   views?: number;
   likes?: number;
-  isPremium?: boolean;
   soundName?: string | null;
   hashtags?: string[];
   actress?: {

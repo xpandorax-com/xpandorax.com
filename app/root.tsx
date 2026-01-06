@@ -91,7 +91,7 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <WebsiteSchema name={appName} url={appUrl} description="Premium Video Directory Platform" />
+      <WebsiteSchema name={appName} url={appUrl} description="Video Directory Platform" />
       <OrganizationSchema name={appName} url={appUrl} />
       <Header user={headerUser} appName={appName} />
       <main className="flex-1">

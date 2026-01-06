@@ -17,7 +17,7 @@ export function Footer({ appName }: FooterProps) {
               {appName}
             </Link>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              Premium video content platform. All content is intended for adults
+              Video content platform. All content is intended for adults
               18 years of age or older.
             </p>
           </div>
