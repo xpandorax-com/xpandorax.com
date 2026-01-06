@@ -1,12 +1,40 @@
+# Cloudflare Pages configuration
 name = "xpandorax"
-pages_build_output_dir = "./build/client"
+pages_build_output_dir = "build/client"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
+# D1 Database binding
 [[d1_databases]]
 binding = "DB"
 database_name = "xpandorax-com"
 database_id = "1e1e0001-2d13-4c0e-b5c6-83f26ab8732e"
 
+[vars]
+APP_NAME = "XpandoraX"
+APP_URL = "https://xpandorax.com"
+B2_BUCKET_NAME = "xpandorax-com"
+B2_ENDPOINT = "s3.us-east-005.backblazeb2.com"
+B2_REGION = "us-east-005"
+CDN_URL = "https://cdn.xpandorax.com"
+SANITY_PROJECT_ID = "p9gceue4"
+SANITY_DATASET = "production"
+
 [env.production]
-vars = { APP_NAME = "XpandoraX", APP_URL = "https://xpandorax.com", B2_BUCKET_NAME = "xpandorax-com", B2_REGION = "us-east-005", B2_ENDPOINT = "s3.us-east-005.backblazeb2.com", CDN_URL = "https://cdn.xpandorax.com", SANITY_PROJECT_ID = "p9gceue4", SANITY_DATASET = "production" }
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "xpandorax-com"
+database_id = "1e1e0001-2d13-4c0e-b5c6-83f26ab8732e"
+
+[env.production.vars]
+APP_NAME = "XpandoraX"
+APP_URL = "https://xpandorax.com"
+B2_BUCKET_NAME = "xpandorax-com"
+B2_ENDPOINT = "s3.us-east-005.backblazeb2.com"
+B2_REGION = "us-east-005"
+CDN_URL = "https://cdn.xpandorax.com"
+SANITY_PROJECT_ID = "p9gceue4"
+SANITY_DATASET = "production"
