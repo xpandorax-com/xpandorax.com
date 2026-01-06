@@ -129,10 +129,11 @@ export default function LiveCam() {
                   <h3 className="font-semibold">Featured Live Stream</h3>
                 </div>
               </div>
-              <div className="relative w-full" style={{ paddingBottom: '62.12%' }}>
+              <div className="flex justify-center p-4">
                 <iframe
-                  src="https://chaturbate.com/in/?tour=SHBY&campaign=HGMnE&track=embed"
-                  className="absolute inset-0 w-full h-full"
+                  src="https://cbxyz.com/in/?tour=nvfS&campaign=HGMnE&track=embed"
+                  height="528"
+                  width="850"
                   style={{ border: 'none' }}
                   allowFullScreen
                   title="Live Cam Stream"
