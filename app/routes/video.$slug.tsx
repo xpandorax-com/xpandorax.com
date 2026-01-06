@@ -216,8 +216,18 @@ export default function VideoPage() {
   const currentUserId = rootData?.user?.id;
   const isPremium = rootData?.user?.isPremium || false;
 
-  // Track view when page loads
-  useViewTracker({ type: "video", id: video.id, enabled: true });
+  // State for views - moved before the hook so we can update it
+  const [views, setViews] = useState(video.views || 0);
+
+  // Track view when page loads and increment local count on success
+  useViewTracker({ 
+    type: "video", 
+    id: video.id, 
+    enabled: true,
+    onViewCounted: useCallback(() => {
+      setViews(prev => prev + 1);
+    }, [])
+  });
 
   // Fetcher for like/dislike interactions
   const interactionFetcher = useFetcher();
@@ -227,12 +237,11 @@ export default function VideoPage() {
   const [userInteraction, setUserInteraction] = useState<"like" | "dislike" | null>(null);
   const [likes, setLikes] = useState(0);
   const [dislikes, setDislikes] = useState(0);
-  const [views, setViews] = useState(video.views || 0);
 
-  // Update views when video changes
+  // Update views when video changes (e.g., navigating to another video)
   useEffect(() => {
     setViews(video.views || 0);
-  }, [video.views]);
+  }, [video.id, video.views]);
 
   // Fetch initial interaction status
   useEffect(() => {
