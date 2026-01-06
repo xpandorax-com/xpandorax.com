@@ -8,9 +8,6 @@ import {
   Menu,
   History,
   Bookmark,
-  Video,
-  ShoppingBag,
-  Scissors,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -44,11 +41,13 @@ export function Header({ user, appName }: HeaderProps) {
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/videos", label: "Videos" },
-    { href: "/cuts", label: "Cuts", icon: Scissors, gradient: true },
+    { href: "/cuts", label: "Cuts" },
     { href: "/pictures", label: "Pictures" },
     { href: "/categories", label: "Categories" },
     { href: "/models", label: "Models" },
     { href: "/producers", label: "Producers" },
+    { href: "https://www.lovense.com/r/h4tz6m", label: "Store", external: true },
+    { href: "/live-cam", label: "Live Cam" },
   ];
 
   return (
@@ -73,67 +72,41 @@ export function Header({ user, appName }: HeaderProps) {
             <nav className="flex flex-col p-4">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.href;
-                const ItemIcon = (item as any).icon;
-                const hasGradient = (item as any).gradient;
+                const isExternal = (item as any).external;
+                
+                if (isExternal) {
+                  return (
+                    <SheetClose asChild key={item.href}>
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target text-muted-foreground hover:bg-accent hover:text-foreground"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </a>
+                    </SheetClose>
+                  );
+                }
+                
                 return (
                   <SheetClose asChild key={item.href}>
                     <Link
                       to={item.href}
                       className={cn(
-                        "flex items-center gap-2 px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target",
+                        "flex items-center px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target",
                         isActive
                           ? "bg-primary/10 text-primary"
                           : "text-muted-foreground hover:bg-accent hover:text-foreground"
                       )}
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      {ItemIcon && <ItemIcon className="h-5 w-5 text-pink-500" />}
-                      {hasGradient ? (
-                        <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-semibold">
-                          {item.label}
-                        </span>
-                      ) : (
-                        item.label
-                      )}
+                      {item.label}
                     </Link>
                   </SheetClose>
                 );
               })}
-              
-              {/* Mobile Store Link */}
-              <SheetClose asChild>
-                <a
-                  href="https://www.lovense.com/r/h4tz6m"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target text-muted-foreground hover:bg-accent hover:text-foreground"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <ShoppingBag className="h-5 w-5 text-purple-500" />
-                  <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold">
-                    Store
-                  </span>
-                </a>
-              </SheetClose>
-
-              {/* Mobile Live Cam Link */}
-              <SheetClose asChild>
-                <Link
-                  to="/live-cam"
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target",
-                    location.pathname === "/live-cam"
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                  )}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Video className="h-5 w-5 text-red-500 animate-pulse" />
-                  <span className="bg-gradient-to-r from-pink-500 to-red-500 bg-clip-text text-transparent font-semibold">
-                    Live Cam
-                  </span>
-                </Link>
-              </SheetClose>
               
               {/* Mobile User Section */}
               <div className="mt-4 pt-4 border-t">
@@ -202,53 +175,35 @@ export function Header({ user, appName }: HeaderProps) {
         <nav className="hidden md:flex md:flex-1 md:items-center md:gap-4 lg:gap-6">
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
-            const ItemIcon = (item as any).icon;
-            const hasGradient = (item as any).gradient;
+            const isExternal = (item as any).external;
+            
+            if (isExternal) {
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground whitespace-nowrap"
+                >
+                  {item.label}
+                </a>
+              );
+            }
+            
             return (
               <Link
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary flex items-center gap-1",
+                  "text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                {ItemIcon && <ItemIcon className="h-4 w-4 text-pink-500" />}
-                {hasGradient ? (
-                  <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-semibold">
-                    {item.label}
-                  </span>
-                ) : (
-                  item.label
-                )}
+                {item.label}
               </Link>
             );
           })}
-          {/* Store Link - Desktop */}
-          <a
-            href="https://www.lovense.com/r/h4tz6m"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 text-muted-foreground"
-          >
-            <ShoppingBag className="h-4 w-4 text-purple-500" />
-            <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold">
-              Store
-            </span>
-          </a>
-          {/* Live Cam Link - Desktop */}
-          <Link
-            to="/live-cam"
-            className={cn(
-              "text-sm font-medium transition-colors hover:text-primary flex items-center gap-1",
-              location.pathname === "/live-cam" ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            <Video className="h-4 w-4 text-red-500 animate-pulse" />
-            <span className="bg-gradient-to-r from-pink-500 to-red-500 bg-clip-text text-transparent font-semibold">
-              Live Cam
-            </span>
-          </Link>
         </nav>
 
         {/* Right Side Actions */}
