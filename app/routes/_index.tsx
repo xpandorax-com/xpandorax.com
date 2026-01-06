@@ -36,126 +36,125 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
         title,
         slug,
         "thumbnail": thumbnail.asset->url,
-      "previewVideo": previewVideo.asset->url,
-      duration,
-      views,
+        "previewVideo": previewVideo.asset->url,
+        duration,
+        views,
+        "actress": actress->{
+          name
+        }
+      }`
+    );
 
-      "actress": actress->{
-        name
-      }
-    }`
-  );
+    // Fetch trending videos (most views) from Sanity
+    const trendingVideosRaw = await sanity.fetch<SanityVideo[]>(
+      `*[_type == "video" && isPublished == true] | order(views desc)[0...8] {
+        _id,
+        title,
+        slug,
+        "thumbnail": thumbnail.asset->url,
+        "previewVideo": previewVideo.asset->url,
+        duration,
+        views,
+        "actress": actress->{
+          name
+        }
+      }`
+    );
 
-  // Fetch trending videos (most views) from Sanity
-  const trendingVideosRaw = await sanity.fetch<SanityVideo[]>(
-    `*[_type == "video" && isPublished == true] | order(views desc)[0...8] {
-      _id,
-      title,
-      slug,
-      "thumbnail": thumbnail.asset->url,
-      "previewVideo": previewVideo.asset->url,
-      duration,
-      views,
-      "actress": actress->{
-        name
-      }
-    }`
-  );
+    // Fetch categories from Sanity
+    const categoriesRaw = await sanity.fetch<SanityCategory[]>(
+      `*[_type == "category"] | order(sortOrder asc)[0...12] {
+        _id,
+        name,
+        slug,
+        "thumbnail": thumbnail.asset->url,
+        "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true])
+      }`
+    );
 
-  // Fetch categories from Sanity
-  const categoriesRaw = await sanity.fetch<SanityCategory[]>(
-    `*[_type == "category"] | order(sortOrder asc)[0...12] {
-      _id,
-      name,
-      slug,
-      "thumbnail": thumbnail.asset->url,
-      "videoCount": count(*[_type == "video" && references(^._id) && isPublished == true])
-    }`
-  );
+    // Fetch popular models from Sanity
+    const modelsRaw = await sanity.fetch<(SanityActress & { videoCount: number })[]>(
+      `*[_type == "actress"] {
+        _id,
+        name,
+        slug,
+        "image": image.asset->url,
+        "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
+      } | order(videoCount desc)[0...12]`
+    );
 
-  // Fetch popular models from Sanity
-  const modelsRaw = await sanity.fetch<(SanityActress & { videoCount: number })[]>(
-    `*[_type == "actress"] {
-      _id,
-      name,
-      slug,
-      "image": image.asset->url,
-      "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
-    } | order(videoCount desc)[0...12]`
-  );
+    // Fetch popular producers from Sanity
+    const producersRaw = await sanity.fetch<Array<{
+      _id: string;
+      name: string;
+      slug: { current: string } | string;
+      logo?: string;
+      videoCount: number;
+    }>>(
+      `*[_type == "producer"] {
+        _id,
+        name,
+        slug,
+        "logo": logo.asset->url,
+        "videoCount": count(*[_type == "video" && producer._ref == ^._id && isPublished == true])
+      } | order(videoCount desc)[0...12]`
+    );
 
-  // Fetch popular producers from Sanity
-  const producersRaw = await sanity.fetch<Array<{
-    _id: string;
-    name: string;
-    slug: { current: string } | string;
-    logo?: string;
-    videoCount: number;
-  }>>(
-    `*[_type == "producer"] {
-      _id,
-      name,
-      slug,
-      "logo": logo.asset->url,
-      "videoCount": count(*[_type == "video" && producer._ref == ^._id && isPublished == true])
-    } | order(videoCount desc)[0...12]`
-  );
+    // Transform Sanity data to match component expectations
+    const latestVideos = latestVideosRaw.map((v) => ({
+      id: v._id,
+      slug: getSlug(v.slug),
+      title: v.title,
+      thumbnail: v.thumbnail || null,
+      previewVideo: v.previewVideo || null,
+      duration: v.duration || null,
+      views: v.views || 0,
+      actress: v.actress ? { name: v.actress.name } : null,
+    }));
 
-  // Transform Sanity data to match component expectations
-  const latestVideos = latestVideosRaw.map((v) => ({
-    id: v._id,
-    slug: getSlug(v.slug),
-    title: v.title,
-    thumbnail: v.thumbnail || null,
-    previewVideo: v.previewVideo || null,
-    duration: v.duration || null,
-    views: v.views || 0,
-    actress: v.actress ? { name: v.actress.name } : null,
-  }));
+    const trendingVideos = trendingVideosRaw.map((v) => ({
+      id: v._id,
+      slug: getSlug(v.slug),
+      title: v.title,
+      thumbnail: v.thumbnail || null,
+      previewVideo: v.previewVideo || null,
+      duration: v.duration || null,
+      views: v.views || 0,
+      actress: v.actress ? { name: v.actress.name } : null,
+    }));
 
-  const trendingVideos = trendingVideosRaw.map((v) => ({
-    id: v._id,
-    slug: getSlug(v.slug),
-    title: v.title,
-    thumbnail: v.thumbnail || null,
-    previewVideo: v.previewVideo || null,
-    duration: v.duration || null,
-    views: v.views || 0,
-    actress: v.actress ? { name: v.actress.name } : null,
-  }));
+    const allCategories = categoriesRaw.map((c) => ({
+      _id: c._id,
+      id: c._id,
+      slug: getSlug(c.slug),
+      name: c.name,
+      thumbnail: c.thumbnail || null,
+      videoCount: c.videoCount || 0,
+    }));
 
-  const allCategories = categoriesRaw.map((c) => ({
-    _id: c._id,
-    id: c._id,
-    slug: getSlug(c.slug),
-    name: c.name,
-    thumbnail: c.thumbnail || null,
-    videoCount: c.videoCount || 0,
-  }));
+    const models = modelsRaw.map((m) => ({
+      id: m._id,
+      slug: getSlug(m.slug),
+      name: m.name,
+      image: m.image || null,
+      videoCount: m.videoCount || 0,
+    }));
 
-  const models = modelsRaw.map((m) => ({
-    id: m._id,
-    slug: getSlug(m.slug),
-    name: m.name,
-    image: m.image || null,
-    videoCount: m.videoCount || 0,
-  }));
+    const producers = producersRaw.map((p) => ({
+      id: p._id,
+      slug: getSlug(p.slug),
+      name: p.name,
+      logo: p.logo || null,
+      videoCount: p.videoCount || 0,
+    }));
 
-  const producers = producersRaw.map((p) => ({
-    id: p._id,
-    slug: getSlug(p.slug),
-    name: p.name,
-    logo: p.logo || null,
-    videoCount: p.videoCount || 0,
-  }));
-
-  return json({
-    latestVideos,
-    trendingVideos,
-    categories: allCategories,
-    models,
-    producers,
-  });
+    return json({
+      latestVideos,
+      trendingVideos,
+      categories: allCategories,
+      models,
+      producers,
+    });
   } catch (error) {
     console.error("Index loader error:", error);
     // Return empty data instead of crashing

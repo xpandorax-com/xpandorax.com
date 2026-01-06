@@ -42,6 +42,14 @@ export default defineConfig({
                   .defaultOrdering([{ field: 'publishedAt', direction: 'desc' }])
               ),
             S.listItem()
+              .title('Cuts')
+              .icon(() => '✂️')
+              .child(
+                S.documentTypeList('cut')
+                  .title('Cuts')
+                  .defaultOrdering([{ field: 'publishedAt', direction: 'desc' }])
+              ),
+            S.listItem()
               .title('Pictures')
               .icon(() => '🖼️')
               .child(
@@ -83,6 +91,8 @@ export default defineConfig({
       switch (type) {
         case 'video':
           return `${PREVIEW_URL}/video/${slug}`;
+        case 'cut':
+          return `${PREVIEW_URL}/cuts/${slug}`;
         case 'picture':
           return `${PREVIEW_URL}/pictures/${slug}`;
         case 'actress':

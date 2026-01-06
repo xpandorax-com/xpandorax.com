@@ -37,6 +37,13 @@ export default defineType({
       },
     }),
     defineField({
+      name: 'abyssEmbed',
+      title: 'Primary Embed URL',
+      type: 'url',
+      description: 'Main video embed URL (e.g., https://short.icu/abc123)',
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: 'servers',
       title: 'Additional Servers',
       type: 'array',
