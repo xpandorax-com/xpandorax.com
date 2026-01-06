@@ -1,6 +1,7 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link, useSearchParams } from "@remix-run/react";
+import type { LucideIcon } from "lucide-react";
 import { CutCardCompact } from "~/components/cut-card";
 import { Button } from "~/components/ui/button";
 import { 
@@ -135,11 +136,11 @@ export default function CutsPage() {
     return `/cuts?${params.toString()}`;
   };
 
-  const filterOptions = [
+  const filterOptions: { value: string; label: string; icon: LucideIcon | null }[] = [
     { value: "all", label: "All", icon: null },
   ];
 
-  const sortOptions = [
+  const sortOptions: { value: string; label: string; icon: LucideIcon }[] = [
     { value: "latest", label: "Latest", icon: Clock },
     { value: "popular", label: "Popular", icon: TrendingUp },
     { value: "oldest", label: "Oldest", icon: Clock },

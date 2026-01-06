@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Mail, MessageSquare, Send, CheckCircle, AlertCircle, HelpCircle, Flag, Shield } from "lucide-react";
+import { Mail, MessageSquare, Send, CheckCircle, HelpCircle, Flag, Shield } from "lucide-react";
 
 export const meta: MetaFunction = () => {
   return [
