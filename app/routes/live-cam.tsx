@@ -1,5 +1,5 @@
 import type { MetaFunction } from "@remix-run/cloudflare";
-import { Video, ExternalLink, Users, Sparkles } from "lucide-react";
+import { Video, ExternalLink, Users, Sparkles, Shuffle, Globe } from "lucide-react";
 import { Button } from "~/components/ui/button";
 
 export const meta: MetaFunction = () => {
@@ -16,7 +16,29 @@ export const meta: MetaFunction = () => {
 };
 
 export default function LiveCam() {
-  const liveCamUrl = "https://cbxyz.com/in/?tour=nvfS&campaign=HGMnE&track=embed";
+  const liveCamUrl = "https://chaturbate.com/?join_overlay=1&campaign=HGMnE&tour=g4pe&track=default&disable_sound=0";
+
+  const categories = [
+    { title: "Female", color: "from-pink-500 to-rose-500", emoji: "👩", url: "https://chaturbate.com/in/?tour=EuIR&campaign=HGMnE&track=default" },
+    { title: "Male", color: "from-blue-500 to-cyan-500", emoji: "👨", url: "https://chaturbate.com/in/?tour=YKzf&campaign=HGMnE&track=default" },
+    { title: "Couples", color: "from-purple-500 to-pink-500", emoji: "💑", url: "https://chaturbate.com/in/?tour=DqyZ&campaign=HGMnE&track=default" },
+    { title: "Trans", color: "from-amber-500 to-orange-500", emoji: "🌈", url: "https://chaturbate.com/in/?tour=vj0T&campaign=HGMnE&track=default" },
+  ];
+
+  const randomRooms = [
+    { title: "Random Female", color: "from-pink-500 to-rose-500", emoji: "🎲", url: "https://chaturbate.com/in/?tour=41Ea&campaign=HGMnE&track=default" },
+    { title: "Random Male", color: "from-blue-500 to-cyan-500", emoji: "🎲", url: "https://chaturbate.com/in/?tour=9rL0&campaign=HGMnE&track=default" },
+    { title: "Random Couple", color: "from-purple-500 to-pink-500", emoji: "🎲", url: "https://chaturbate.com/in/?tour=goZq&campaign=HGMnE&track=default" },
+    { title: "Random Trans", color: "from-amber-500 to-orange-500", emoji: "🎲", url: "https://chaturbate.com/in/?tour=sxJR&campaign=HGMnE&track=default" },
+  ];
+
+  const regions = [
+    { title: "Asian Cams", color: "from-red-500 to-orange-500", emoji: "🌏", url: "https://chaturbate.com/in/?tour=AZcr&campaign=HGMnE&track=default" },
+    { title: "Euro Russian Cams", color: "from-blue-500 to-indigo-500", emoji: "🌍", url: "https://chaturbate.com/in/?tour=ERcr&campaign=HGMnE&track=default" },
+    { title: "North American Cams", color: "from-green-500 to-teal-500", emoji: "🌎", url: "https://chaturbate.com/in/?tour=NAcr&campaign=HGMnE&track=default" },
+    { title: "South American Cams", color: "from-yellow-500 to-orange-500", emoji: "🌎", url: "https://chaturbate.com/in/?tour=SAcr&campaign=HGMnE&track=default" },
+    { title: "Other Region Cams", color: "from-purple-500 to-violet-500", emoji: "🌐", url: "https://chaturbate.com/in/?tour=ORcr&campaign=HGMnE&track=default" },
+  ];
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col">
@@ -37,7 +59,8 @@ export default function LiveCam() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 container pb-8">
+      <div className="flex-1 container pb-8 space-y-8">
+        {/* Featured Section */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Featured Card */}
           <div className="md:col-span-2 lg:col-span-3 relative overflow-hidden rounded-xl bg-gradient-to-br from-pink-500/20 via-purple-500/20 to-red-500/20 border border-pink-500/30 p-6 sm:p-8">
@@ -108,7 +131,7 @@ export default function LiveCam() {
               </div>
               <div className="relative w-full" style={{ paddingBottom: '62.12%' }}>
                 <iframe
-                  src="https://cbxyz.com/in/?tour=nvfS&campaign=HGMnE&track=embed"
+                  src="https://chaturbate.com/in/?tour=SHBY&campaign=HGMnE&track=embed"
                   className="absolute inset-0 w-full h-full"
                   style={{ border: 'none' }}
                   allowFullScreen
@@ -118,32 +141,93 @@ export default function LiveCam() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Category Cards */}
-          {[
-            { title: "Female", color: "from-pink-500 to-rose-500", emoji: "👩" },
-            { title: "Male", color: "from-blue-500 to-cyan-500", emoji: "👨" },
-            { title: "Couples", color: "from-purple-500 to-pink-500", emoji: "💑" },
-            { title: "Trans", color: "from-amber-500 to-orange-500", emoji: "🌈" },
-          ].map((category) => (
-            <a
-              key={category.title}
-              href={liveCamUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative overflow-hidden rounded-xl bg-card border p-6 hover:border-pink-500/50 transition-all hover:shadow-lg hover:shadow-pink-500/10"
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
-              <div className="relative z-10 flex items-center justify-between">
-                <div>
-                  <span className="text-3xl mb-2 block">{category.emoji}</span>
-                  <h3 className="text-lg font-semibold">{category.title}</h3>
-                  <p className="text-sm text-muted-foreground">Live now</p>
+        {/* Categories Section */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="h-5 w-5 text-pink-500" />
+            <h2 className="text-xl font-bold">Browse by Category</h2>
+          </div>
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+            {categories.map((category) => (
+              <a
+                key={category.title}
+                href={category.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative overflow-hidden rounded-xl bg-card border p-6 hover:border-pink-500/50 transition-all hover:shadow-lg hover:shadow-pink-500/10"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                <div className="relative z-10 flex items-center justify-between">
+                  <div>
+                    <span className="text-3xl mb-2 block">{category.emoji}</span>
+                    <h3 className="text-lg font-semibold">{category.title}</h3>
+                    <p className="text-sm text-muted-foreground">Live now</p>
+                  </div>
+                  <ExternalLink className="h-5 w-5 text-muted-foreground group-hover:text-pink-500 transition-colors" />
                 </div>
-                <ExternalLink className="h-5 w-5 text-muted-foreground group-hover:text-pink-500 transition-colors" />
-              </div>
-            </a>
-          ))}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Random Rooms Section */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Shuffle className="h-5 w-5 text-purple-500" />
+            <h2 className="text-xl font-bold">Random Rooms</h2>
+          </div>
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+            {randomRooms.map((room) => (
+              <a
+                key={room.title}
+                href={room.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative overflow-hidden rounded-xl bg-card border p-6 hover:border-purple-500/50 transition-all hover:shadow-lg hover:shadow-purple-500/10"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${room.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                <div className="relative z-10 flex items-center justify-between">
+                  <div>
+                    <span className="text-3xl mb-2 block">{room.emoji}</span>
+                    <h3 className="text-lg font-semibold">{room.title}</h3>
+                    <p className="text-sm text-muted-foreground">Surprise me!</p>
+                  </div>
+                  <ExternalLink className="h-5 w-5 text-muted-foreground group-hover:text-purple-500 transition-colors" />
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Regions Section */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Globe className="h-5 w-5 text-green-500" />
+            <h2 className="text-xl font-bold">Browse by Region</h2>
+          </div>
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            {regions.map((region) => (
+              <a
+                key={region.title}
+                href={region.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative overflow-hidden rounded-xl bg-card border p-5 hover:border-green-500/50 transition-all hover:shadow-lg hover:shadow-green-500/10"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${region.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                <div className="relative z-10 flex items-center justify-between">
+                  <div>
+                    <span className="text-2xl mb-2 block">{region.emoji}</span>
+                    <h3 className="text-sm font-semibold">{region.title}</h3>
+                    <p className="text-xs text-muted-foreground">Live now</p>
+                  </div>
+                  <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-green-500 transition-colors" />
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </div>
