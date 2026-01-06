@@ -10,6 +10,10 @@ export const users = sqliteTable("users", {
   hashedPassword: text("hashed_password").notNull(),
   username: text("username").notNull().unique(),
   role: text("role", { enum: ["user", "admin"] }).notNull().default("user"),
+  isPremium: integer("is_premium", { mode: "boolean" }).notNull().default(false),
+  premiumExpiresAt: integer("premium_expires_at", { mode: "timestamp" }),
+  lemonSqueezyCustomerId: text("lemon_squeezy_customer_id"),
+  lemonSqueezySubscriptionId: text("lemon_squeezy_subscription_id"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   // Security & password reset fields

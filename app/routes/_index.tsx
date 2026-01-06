@@ -23,7 +23,7 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   try {
-    const { user } = await getSession(request, context);
+    await getSession(request, context);
     const env = context.cloudflare.env;
 
     // Create Sanity client
