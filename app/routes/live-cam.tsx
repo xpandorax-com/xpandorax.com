@@ -94,6 +94,31 @@ export default function LiveCam() {
             </div>
           </div>
 
+          {/* Embedded Live Cam Section */}
+          <div className="md:col-span-2 lg:col-span-3">
+            <div className="rounded-xl border bg-card overflow-hidden">
+              <div className="p-4 border-b bg-gradient-to-r from-pink-500/10 to-red-500/10">
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-25" />
+                    <div className="relative w-3 h-3 bg-red-500 rounded-full" />
+                  </div>
+                  <h3 className="font-semibold">Featured Live Stream</h3>
+                </div>
+              </div>
+              <div className="relative w-full" style={{ paddingBottom: '62.12%' }}>
+                <iframe
+                  src="https://cbxyz.com/in/?tour=nvfS&campaign=HGMnE&track=embed"
+                  className="absolute inset-0 w-full h-full"
+                  style={{ border: 'none' }}
+                  allowFullScreen
+                  title="Live Cam Stream"
+                  allow="autoplay; fullscreen"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Category Cards */}
           {[
             { title: "Female", color: "from-pink-500 to-rose-500", emoji: "👩" },
