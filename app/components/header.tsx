@@ -9,6 +9,7 @@ import {
   History,
   Bookmark,
   Video,
+  ShoppingBag,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -106,6 +107,22 @@ export function Header({ user, appName }: HeaderProps) {
                   </span>
                 </Link>
               </SheetClose>
+
+              {/* Mobile Store Link */}
+              <SheetClose asChild>
+                <a
+                  href="https://www.lovense.com/r/h4tz6m"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target text-muted-foreground hover:bg-accent hover:text-foreground"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <ShoppingBag className="h-5 w-5 text-purple-500" />
+                  <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold">
+                    Store
+                  </span>
+                </a>
+              </SheetClose>
               
               {/* Mobile User Section */}
               <div className="mt-4 pt-4 border-t">
@@ -200,6 +217,18 @@ export function Header({ user, appName }: HeaderProps) {
               Live Cam
             </span>
           </Link>
+          {/* Store Link - Desktop */}
+          <a
+            href="https://www.lovense.com/r/h4tz6m"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 text-muted-foreground"
+          >
+            <ShoppingBag className="h-4 w-4 text-purple-500" />
+            <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold">
+              Store
+            </span>
+          </a>
         </nav>
 
         {/* Right Side Actions */}
