@@ -57,7 +57,6 @@ export default function PrivacyPage() {
           <p className="text-muted-foreground mt-2">We use the information we collect to:</p>
           <ul className="list-disc list-inside text-muted-foreground mt-2 space-y-1">
             <li>Provide and maintain our Service</li>
-            <li>Process transactions and subscriptions</li>
             <li>Send administrative information</li>
             <li>Respond to inquiries and support requests</li>
             <li>Improve our website and services</li>
@@ -90,9 +89,8 @@ export default function PrivacyPage() {
             We may employ third-party companies and services to facilitate our Service:
           </p>
           <ul className="list-disc list-inside text-muted-foreground mt-2 space-y-1">
-            <li><strong>Payment Processing:</strong> Lemon Squeezy handles payment information</li>
             <li><strong>Video Hosting:</strong> Videos are hosted by third-party services</li>
-            <li><strong>Advertising:</strong> ExoClick and JuicyAds for non-premium users</li>
+            <li><strong>Advertising:</strong> ExoClick and JuicyAds for ad-supported content</li>
             <li><strong>Analytics:</strong> To monitor and analyze website usage</li>
           </ul>
           <p className="text-muted-foreground mt-2">

@@ -67,16 +67,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold">6. Premium Subscriptions</h2>
-          <p className="text-muted-foreground mt-2">
-            Premium subscriptions are billed on a recurring basis. You may cancel your subscription 
-            at any time through your account settings. Refunds are handled on a case-by-case basis 
-            in accordance with our refund policy.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold">7. Intellectual Property</h2>
+          <h2 className="text-xl font-semibold">6. Intellectual Property</h2>
           <p className="text-muted-foreground mt-2">
             The Service and its original content, features, and functionality are owned by 
             XpandoraX and are protected by international copyright, trademark, patent, trade 
@@ -85,7 +76,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold">8. Disclaimer of Warranties</h2>
+          <h2 className="text-xl font-semibold">7. Disclaimer of Warranties</h2>
           <p className="text-muted-foreground mt-2">
             The Service is provided &quot;as is&quot; and &quot;as available&quot; without warranties of any 
             kind, either express or implied. We do not warrant that the Service will be 
@@ -94,7 +85,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold">9. Limitation of Liability</h2>
+          <h2 className="text-xl font-semibold">8. Limitation of Liability</h2>
           <p className="text-muted-foreground mt-2">
             In no event shall XpandoraX be liable for any indirect, incidental, special, 
             consequential, or punitive damages resulting from your use of or inability to 
@@ -103,7 +94,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold">10. Changes to Terms</h2>
+          <h2 className="text-xl font-semibold">9. Changes to Terms</h2>
           <p className="text-muted-foreground mt-2">
             We reserve the right to modify or replace these terms at any time. We will provide 
             notice of any material changes by posting the new Terms on this page with an updated 
@@ -112,7 +103,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold">11. Contact</h2>
+          <h2 className="text-xl font-semibold">10. Contact</h2>
           <p className="text-muted-foreground mt-2">
             If you have any questions about these Terms, please contact us at{" "}
             <a href="mailto:legal@xpandorax.com" className="text-primary hover:underline">

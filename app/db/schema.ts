@@ -9,10 +9,6 @@ export const users = sqliteTable("users", {
   email: text("email").notNull().unique(),
   hashedPassword: text("hashed_password").notNull(),
   username: text("username").notNull().unique(),
-  isPremium: integer("is_premium", { mode: "boolean" }).notNull().default(false),
-  premiumExpiresAt: integer("premium_expires_at", { mode: "timestamp" }),
-  lemonSqueezyCustomerId: text("lemon_squeezy_customer_id"),
-  lemonSqueezySubscriptionId: text("lemon_squeezy_subscription_id"),
   role: text("role", { enum: ["user", "admin"] }).notNull().default("user"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
@@ -32,27 +28,6 @@ export const sessions = sqliteTable("sessions", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expiresAt: integer("expires_at").notNull(),
-});
-
-// ==================== SUBSCRIPTION TABLES ====================
-
-export const subscriptions = sqliteTable("subscriptions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  lemonSqueezySubscriptionId: text("lemon_squeezy_subscription_id").notNull().unique(),
-  lemonSqueezyOrderId: text("lemon_squeezy_order_id"),
-  lemonSqueezyProductId: text("lemon_squeezy_product_id"),
-  lemonSqueezyVariantId: text("lemon_squeezy_variant_id"),
-  status: text("status", { 
-    enum: ["active", "cancelled", "expired", "paused", "past_due", "unpaid", "on_trial"] 
-  }).notNull(),
-  currentPeriodStart: integer("current_period_start", { mode: "timestamp" }),
-  currentPeriodEnd: integer("current_period_end", { mode: "timestamp" }),
-  cancelledAt: integer("cancelled_at", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
 
 // ==================== USER INTERACTION TABLES ====================
@@ -125,7 +100,6 @@ export const bookmarks = sqliteTable("bookmarks", {
 
 export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
-  subscriptions: many(subscriptions),
   comments: many(comments),
   watchHistory: many(watchHistory),
   bookmarks: many(bookmarks),
@@ -134,13 +108,6 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, {
     fields: [sessions.userId],
-    references: [users.id],
-  }),
-}));
-
-export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
-  user: one(users, {
-    fields: [subscriptions.userId],
     references: [users.id],
   }),
 }));
@@ -180,8 +147,6 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
-export type Subscription = typeof subscriptions.$inferSelect;
-export type NewSubscription = typeof subscriptions.$inferInsert;
 export type VideoInteraction = typeof videoInteractions.$inferSelect;
 export type NewVideoInteraction = typeof videoInteractions.$inferInsert;
 export type Comment = typeof comments.$inferSelect;

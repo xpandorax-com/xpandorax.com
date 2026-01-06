@@ -15,7 +15,7 @@ const PREVIEW_URL = process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:5
  * Media Storage:
  * - Thumbnails: Sanity CDN (fast thumbnail delivery)
  * - Full Images: Backblaze B2 + Cloudflare CDN (xpandorax-com bucket)
- * - Videos: Backblaze B2 + Cloudflare CDN for premium subscribers
+ * - Videos: Third-party embed servers
  * 
  * CDN: https://cdn.xpandorax.com (Cloudflare proxied)
  * Upload Endpoint: ${UPLOAD_API_URL}

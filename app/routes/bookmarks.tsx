@@ -49,8 +49,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       "thumbnail": thumbnail.asset->url,
       "previewVideo": previewVideo.asset->url,
       duration,
-      views,
-      isPremium
+      views
     }`,
     { ids: videoIds }
   );

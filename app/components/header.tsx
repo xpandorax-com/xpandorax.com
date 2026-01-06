@@ -10,6 +10,7 @@ import {
   Bookmark,
   Video,
   ShoppingBag,
+  Scissors,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -43,6 +44,7 @@ export function Header({ user, appName }: HeaderProps) {
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/videos", label: "Videos" },
+    { href: "/cuts", label: "Cuts", icon: Scissors, gradient: true },
     { href: "/pictures", label: "Pictures" },
     { href: "/categories", label: "Categories" },
     { href: "/models", label: "Models" },
@@ -71,19 +73,28 @@ export function Header({ user, appName }: HeaderProps) {
             <nav className="flex flex-col p-4">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.href;
+                const ItemIcon = (item as any).icon;
+                const hasGradient = (item as any).gradient;
                 return (
                   <SheetClose asChild key={item.href}>
                     <Link
                       to={item.href}
                       className={cn(
-                        "flex items-center px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target",
+                        "flex items-center gap-2 px-3 py-3 rounded-lg text-base font-medium transition-colors touch-target",
                         isActive
                           ? "bg-primary/10 text-primary"
                           : "text-muted-foreground hover:bg-accent hover:text-foreground"
                       )}
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      {item.label}
+                      {ItemIcon && <ItemIcon className="h-5 w-5 text-pink-500" />}
+                      {hasGradient ? (
+                        <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-semibold">
+                          {item.label}
+                        </span>
+                      ) : (
+                        item.label
+                      )}
                     </Link>
                   </SheetClose>
                 );
@@ -191,16 +202,25 @@ export function Header({ user, appName }: HeaderProps) {
         <nav className="hidden md:flex md:flex-1 md:items-center md:gap-4 lg:gap-6">
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
+            const ItemIcon = (item as any).icon;
+            const hasGradient = (item as any).gradient;
             return (
               <Link
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
+                  "text-sm font-medium transition-colors hover:text-primary flex items-center gap-1",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                {item.label}
+                {ItemIcon && <ItemIcon className="h-4 w-4 text-pink-500" />}
+                {hasGradient ? (
+                  <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-semibold">
+                    {item.label}
+                  </span>
+                ) : (
+                  item.label
+                )}
               </Link>
             );
           })}

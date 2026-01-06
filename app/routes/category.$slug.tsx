@@ -71,8 +71,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
           slug,
           "thumbnail": thumbnail.asset->url,
           "previewVideo": previewVideo.asset->url,
-          duration,
-          isPremium
+          duration
         }
       }`,
       { slug, offset, end: offset + pageSize }
@@ -129,7 +128,6 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
       previewVideo: v.previewVideo || null,
       duration: v.duration || null,
       views: viewsMap[v._id] || 0,
-      isPremium: (v as { isPremium?: boolean }).isPremium || false,
     }));
 
     // Sort by views if popular sort is selected

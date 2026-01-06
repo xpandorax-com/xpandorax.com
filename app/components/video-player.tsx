@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Play, Loader2, Server, ExternalLink, AlertTriangle, Maximize2, Crown } from "lucide-react";
+import { Play, Loader2, Server, ExternalLink, AlertTriangle, Maximize2 } from "lucide-react";
 import { cn } from "~/lib/utils";
 
 export interface VideoServer {
@@ -233,15 +233,12 @@ export function VideoPlayer({
 /**
  * Server Selector Component - displays server options as buttons
  * Mobile-responsive with horizontal scroll
- * Includes premium "Main Server (No Ads)" option
  */
 interface ServerSelectorProps {
   servers: VideoServer[];
   activeIndex: number;
   onServerChange: (index: number) => void;
   className?: string;
-  isPremium?: boolean;
-  mainServerUrl?: string | null;
 }
 
 export function ServerSelector({
@@ -249,14 +246,7 @@ export function ServerSelector({
   activeIndex,
   onServerChange,
   className,
-  isPremium = false,
-  mainServerUrl,
 }: ServerSelectorProps) {
-  // Check if Main Server URL is available
-  const hasMainServerUrl = !!mainServerUrl;
-  // Determine if Main Server is usable (premium + has URL)
-  const canUseMainServer = isPremium && hasMainServerUrl;
-  
   return (
     <div className={cn("flex flex-col sm:flex-row sm:items-center gap-2", className)}>
       <span className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground shrink-0">
@@ -264,24 +254,6 @@ export function ServerSelector({
         Servers:
       </span>
       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide">
-        {/* Main Server (No Ads) - Always show, locked for non-premium */}
-        <button
-          onClick={() => canUseMainServer && onServerChange(-1)}
-          disabled={!canUseMainServer}
-          title={!isPremium ? "Premium subscription required for ad-free streaming" : !hasMainServerUrl ? "Ad-free video not available for this content" : "Ad-free streaming"}
-          className={cn(
-            "rounded-lg px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap touch-target min-h-[36px] sm:min-h-[auto] relative",
-            activeIndex === -1 && canUseMainServer
-              ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white"
-              : canUseMainServer
-              ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/50"
-              : "bg-muted/50 text-muted-foreground/50 cursor-not-allowed border border-dashed border-muted-foreground/30"
-          )}
-        >
-          Main Server (No Ads)
-        </button>
-        
-        {/* Regular servers */}
         {servers.map((server, index) => (
           <button
             key={index}
@@ -297,131 +269,6 @@ export function ServerSelector({
           </button>
         ))}
       </div>
-    </div>
-  );
-}
-
-/**
- * Plyr Video Player Component for direct video files (Premium Main Server)
- * Uses Plyr.io for a clean, ad-free video experience
- */
-interface PlyrVideoPlayerProps {
-  videoUrl: string;
-  thumbnailUrl?: string | null;
-  title: string;
-  className?: string;
-  onPlay?: () => void;
-}
-
-export function PlyrVideoPlayer({
-  videoUrl,
-  thumbnailUrl,
-  title: _title,
-  className,
-  onPlay,
-}: PlyrVideoPlayerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    // Dynamically load Plyr CSS
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdn.plyr.io/3.7.8/plyr.css';
-    document.head.appendChild(link);
-
-    // Dynamically load Plyr JS and initialize
-    const script = document.createElement('script');
-    script.src = 'https://cdn.plyr.io/3.7.8/plyr.polyfilled.js';
-    script.async = true;
-    script.onload = () => {
-      if (videoRef.current && (window as any).Plyr) {
-        const player = new (window as any).Plyr(videoRef.current, {
-          controls: [
-            'play-large',
-            'play',
-            'progress',
-            'current-time',
-            'duration',
-            'mute',
-            'volume',
-            'captions',
-            'settings',
-            'pip',
-            'airplay',
-            'fullscreen',
-          ],
-          settings: ['captions', 'quality', 'speed'],
-          speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
-          keyboard: { focused: true, global: false },
-          tooltips: { controls: true, seek: true },
-        });
-
-        player.on('play', () => {
-          onPlay?.();
-        });
-
-        player.on('ready', () => {
-          setIsLoading(false);
-        });
-
-        player.on('error', () => {
-          setHasError(true);
-          setIsLoading(false);
-        });
-      }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      // Cleanup
-      document.head.removeChild(link);
-      document.body.removeChild(script);
-    };
-  }, [videoUrl, onPlay]);
-
-  return (
-    <div className={cn("relative aspect-video w-full overflow-hidden rounded-lg bg-black", className)}>
-      {/* Premium badge */}
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-2 py-1 text-xs font-semibold text-white shadow-lg">
-        <Crown className="h-3.5 w-3.5" />
-        Ad-Free
-      </div>
-
-      {isLoading && (
-        <div className="absolute inset-0 z-5 flex items-center justify-center bg-black">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 animate-spin text-amber-500" />
-            <p className="text-xs sm:text-sm text-zinc-400">Loading premium video...</p>
-          </div>
-        </div>
-      )}
-
-      {hasError && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
-          <div className="flex flex-col items-center gap-3 text-center px-4">
-            <AlertTriangle className="h-10 w-10 text-yellow-500" />
-            <div>
-              <p className="text-lg font-medium text-white">Video unavailable</p>
-              <p className="text-sm text-zinc-400 mt-1">
-                There was an error loading the video. Please try another server.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <video
-        ref={videoRef}
-        className={cn("h-full w-full", (isLoading || hasError) && "invisible")}
-        poster={thumbnailUrl || undefined}
-        playsInline
-        crossOrigin="anonymous"
-      >
-        <source src={videoUrl} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
     </div>
   );
 }

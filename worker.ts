@@ -4,10 +4,6 @@ export interface Env {
   DB: D1Database;
   CACHE: KVNamespace;
   SESSION_SECRET: string;
-  LEMON_SQUEEZY_API_KEY: string;
-  LEMON_SQUEEZY_STORE_ID: string;
-  LEMON_SQUEEZY_VARIANT_ID: string;
-  LEMON_SQUEEZY_WEBHOOK_SECRET: string;
   EXOCLICK_ZONE_ID: string;
   JUICYADS_ZONE_ID: string;
   SITE_URL: string;

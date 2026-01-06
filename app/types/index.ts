@@ -10,7 +10,6 @@ export interface Video {
   duration: number;
   thumbnail: string;
   videoUrl: string;
-  isPremium: boolean;
   views: number;
   actress?: Actress | null;
   categories: Category[];
@@ -82,41 +81,4 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   errors?: Record<string, string[]>;
-}
-
-// Lemon Squeezy types
-export interface LemonSqueezyWebhookPayload {
-  meta: {
-    event_name: string;
-    custom_data?: {
-      user_id?: string;
-    };
-  };
-  data: {
-    id: string;
-    type: string;
-    attributes: {
-      user_email: string;
-      user_name: string;
-      status: string;
-      customer_id: number;
-      order_id: number;
-      product_id: number;
-      variant_id: number;
-      renews_at: string | null;
-      ends_at: string | null;
-      created_at: string;
-      updated_at: string;
-    };
-  };
-}
-
-export interface LemonSqueezyCheckoutResponse {
-  data: {
-    id: string;
-    type: string;
-    attributes: {
-      url: string;
-    };
-  };
 }

@@ -23,7 +23,7 @@ interface Env {
   APP_NAME?: string;
 
   // Backblaze B2 Storage (S3-compatible API)
-  // Used for both images and premium video hosting with Cloudflare CDN delivery
+  // Used for images and video hosting with Cloudflare CDN delivery
   B2_KEY_ID: string;
   B2_APPLICATION_KEY: string;
   B2_BUCKET_NAME: string;
@@ -48,10 +48,6 @@ interface Env {
 
   // Secrets
   SESSION_SECRET: string;
-  LEMON_SQUEEZY_API_KEY: string;
-  LEMON_SQUEEZY_WEBHOOK_SECRET: string;
-  LEMON_SQUEEZY_STORE_ID: string;
-  LEMON_SQUEEZY_VARIANT_ID: string;
   EXOCLICK_ZONE_ID: string;
   JUICYADS_ZONE_ID: string;
 }

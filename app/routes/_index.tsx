@@ -10,13 +10,13 @@ import { createSanityClient, getSlug, type SanityVideo, type SanityCategory, typ
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "XpandoraX - Premium Video Content" },
+    { title: "XpandoraX - Free Video Content" },
     {
       name: "description",
-      content: "Discover premium video content. Browse categories, actresses, and enjoy high-quality streaming.",
+      content: "Discover free video content. Browse categories, actresses, and enjoy high-quality streaming.",
     },
-    { property: "og:title", content: "XpandoraX - Premium Video Content" },
-    { property: "og:description", content: "Discover premium video content." },
+    { property: "og:title", content: "XpandoraX - Free Video Content" },
+    { property: "og:description", content: "Discover free video content." },
     { property: "og:type", content: "website" },
   ];
 };
@@ -25,9 +25,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   try {
     const { user } = await getSession(request, context);
     const env = context.cloudflare.env;
-
-    // Check premium status (available for future features - remove if not needed)
-    void (user?.isPremium && (user.premiumExpiresAt ? new Date(user.premiumExpiresAt) > new Date() : true));
 
     // Create Sanity client
     const sanity = createSanityClient(env);

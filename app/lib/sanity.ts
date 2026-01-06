@@ -207,7 +207,88 @@ export const STATS_QUERY = `{
   "totalCategories": count(*[_type == "category"]),
   "totalActresses": count(*[_type == "actress"]),
   "totalProducers": count(*[_type == "producer"]),
-  "totalPictures": count(*[_type == "picture" && isPublished == true])
+  "totalPictures": count(*[_type == "picture" && isPublished == true]),
+  "totalCuts": count(*[_type == "cut" && isPublished == true])
+}`;
+
+// Cuts (Short Videos)
+export const CUTS_QUERY = `*[_type == "cut" && isPublished == true] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  description,
+  "thumbnail": thumbnail.asset->url,
+  videoUrl,
+  embedUrl,
+  duration,
+  views,
+  likes,
+  isPremium,
+  soundName,
+  hashtags,
+  publishedAt,
+  "actress": actress->{
+    _id,
+    name,
+    slug,
+    "image": image.asset->url
+  },
+  "categories": categories[]->{
+    _id,
+    name,
+    slug
+  }
+}`;
+
+export const CUT_BY_SLUG_QUERY = `*[_type == "cut" && slug.current == $slug][0] {
+  _id,
+  title,
+  slug,
+  description,
+  "thumbnail": thumbnail.asset->url,
+  videoUrl,
+  embedUrl,
+  duration,
+  views,
+  likes,
+  isPremium,
+  soundName,
+  hashtags,
+  publishedAt,
+  "actress": actress->{
+    _id,
+    name,
+    slug,
+    "image": image.asset->url,
+    "cutCount": count(*[_type == "cut" && actress._ref == ^._id && isPublished == true])
+  },
+  "categories": categories[]->{
+    _id,
+    name,
+    slug
+  }
+}`;
+
+export const FEATURED_CUTS_QUERY = `*[_type == "cut" && isPublished == true && isFeatured == true] | order(publishedAt desc)[0...8] {
+  _id,
+  title,
+  slug,
+  "thumbnail": thumbnail.asset->url,
+  videoUrl,
+  duration,
+  views,
+  isPremium
+}`;
+
+export const POPULAR_CUTS_QUERY = `*[_type == "cut" && isPublished == true] | order(views desc)[0...12] {
+  _id,
+  title,
+  slug,
+  "thumbnail": thumbnail.asset->url,
+  videoUrl,
+  duration,
+  views,
+  isPremium
 }`;
 
 // ==================== TYPE DEFINITIONS ====================
@@ -288,6 +369,25 @@ export interface SanityPicture {
   categories?: SanityCategory[];
   isPublished: boolean;
   publishedAt?: string;
+}
+
+export interface SanityCut {
+  _id: string;
+  title: string;
+  slug: { current: string } | string;
+  description?: string;
+  thumbnail?: string;
+  videoUrl: string;
+  embedUrl?: string;
+  duration?: number;
+  views?: number;
+  likes?: number;
+  isPremium?: boolean;
+  soundName?: string;
+  hashtags?: string[];
+  publishedAt?: string;
+  actress?: SanityActress;
+  categories?: SanityCategory[];
 }
 
 // Helper to get slug string from Sanity slug object

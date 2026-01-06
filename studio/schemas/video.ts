@@ -37,12 +37,6 @@ export default defineType({
       },
     }),
     defineField({
-      name: 'mainServerUrl',
-      title: 'Main Server URL (Premium - B2 + CDN)',
-      type: 'url',
-      description: 'Premium ad-free video from Backblaze B2 + Cloudflare CDN. Format: https://cdn.xpandorax.com/videos/filename.mp4. Only available to premium subscribers. No ads, globally cached.',
-    }),
-    defineField({
       name: 'servers',
       title: 'Additional Servers',
       type: 'array',

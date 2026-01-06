@@ -67,8 +67,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
               "thumbnail": thumbnail.asset->url,
               "previewVideo": previewVideo.asset->url,
               duration,
-              views,
-              isPremium
+              views
             }`,
             { searchPattern, offset, end: offset + limit }
           )
@@ -134,7 +133,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     previewVideo: v.previewVideo || null,
     duration: v.duration || null,
     views: v.views || 0,
-    isPremium: v.isPremium || false,
   }));
 
   const actresses = actressResults.map((a) => ({
@@ -287,7 +285,6 @@ export default function SearchPage() {
                         thumbnail: video.thumbnail,
                         duration: video.duration,
                         views: video.views,
-                        isPremium: video.isPremium,
                       }}
                     />
                   ))}

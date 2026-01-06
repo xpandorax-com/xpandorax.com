@@ -2,7 +2,7 @@ import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, Link, useFetcher, useRouteLoaderData } from "@remix-run/react";
 import { useState, useEffect, useCallback } from "react";
-import { VideoPlayer, PlyrVideoPlayer, ServerSelector, type VideoServer, type DownloadLink } from "~/components/video-player";
+import { VideoPlayer, ServerSelector, type VideoServer, type DownloadLink } from "~/components/video-player";
 import { VideoCard } from "~/components/video-card";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -63,7 +63,6 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
         "thumbnail": thumbnail.asset->url,
         duration,
         abyssEmbed,
-        mainServerUrl,
         servers,
         downloadLinks,
         publishedAt,
@@ -155,7 +154,6 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
       duration: videoRaw.duration || null,
       views: viewCount,
       abyssEmbed: videoRaw.abyssEmbed || "",
-      mainServerUrl: videoRaw.mainServerUrl || null,
       servers: (videoRaw.servers || []).map((s: { name: string; url: string }) => ({
         name: s.name,
         url: s.url,
@@ -214,7 +212,6 @@ export default function VideoPage() {
     useLoaderData<typeof loader>();
   const rootData = useRouteLoaderData<RootLoaderData>("root");
   const currentUserId = rootData?.user?.id;
-  const isPremium = rootData?.user?.isPremium || false;
 
   // State for views - moved before the hook so we can update it
   const [views, setViews] = useState(video.views || 0);
@@ -297,21 +294,10 @@ export default function VideoPage() {
     ...video.servers,
   ];
   
-  // -1 means Main Server (No Ads), 0+ means regular servers
-  const [activeServerIndex, setActiveServerIndex] = useState(isPremium && video.mainServerUrl ? -1 : 0);
+  const [activeServerIndex, setActiveServerIndex] = useState(0);
   
   // Get the current embed URL based on selected server
-  const getCurrentEmbedUrl = () => {
-    if (activeServerIndex === -1 && video.mainServerUrl) {
-      return video.mainServerUrl;
-    }
-    return allServers[activeServerIndex]?.url || video.abyssEmbed;
-  };
-  
-  const currentEmbedUrl = getCurrentEmbedUrl();
-  
-  // Determine if we should use Plyr for Main Server (direct video) or iframe
-  const isDirectVideo = activeServerIndex === -1 && video.mainServerUrl;
+  const currentEmbedUrl = allServers[activeServerIndex]?.url || video.abyssEmbed;
 
   // Handle server error - auto switch to next server
   const handleServerError = useCallback((failedIndex: number) => {
@@ -326,47 +312,22 @@ export default function VideoPage() {
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-3 sm:space-y-4">
-          {/* Video Player - Use Plyr for Main Server (Premium), iframe for others */}
-          {isDirectVideo && video.mainServerUrl ? (
-            <PlyrVideoPlayer
-              videoUrl={video.mainServerUrl}
-              thumbnailUrl={video.thumbnail}
-              title={video.title}
-            />
-          ) : (
-            <VideoPlayer
-              embedUrl={currentEmbedUrl}
-              thumbnailUrl={video.thumbnail}
-              title={video.title}
-              servers={allServers}
-              currentServerIndex={activeServerIndex >= 0 ? activeServerIndex : 0}
-              onServerError={handleServerError}
-            />
-          )}
+          {/* Video Player */}
+          <VideoPlayer
+            embedUrl={currentEmbedUrl}
+            thumbnailUrl={video.thumbnail}
+            title={video.title}
+            servers={allServers}
+            currentServerIndex={activeServerIndex}
+            onServerError={handleServerError}
+          />
 
           {/* Server Selector - below video player, above title */}
           <ServerSelector
             servers={allServers}
             activeIndex={activeServerIndex}
             onServerChange={setActiveServerIndex}
-            isPremium={isPremium}
-            mainServerUrl={video.mainServerUrl}
           />
-          
-          {/* Premium Upsell for non-premium users */}
-          {!isPremium && video.mainServerUrl && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-amber-500">Upgrade to Premium</p>
-                <p className="text-xs text-muted-foreground">Get ad-free streaming on the Main Server</p>
-              </div>
-              <Link to="/premium">
-                <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">
-                  Upgrade
-                </Button>
-              </Link>
-            </div>
-          )}
 
           {/* Download Links */}
           {video.downloadLinks.length > 0 && (
