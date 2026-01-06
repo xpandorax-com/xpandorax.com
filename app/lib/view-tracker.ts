@@ -8,7 +8,7 @@ interface TrackViewResponse {
 }
 
 interface UseViewTrackerOptions {
-  type: "video" | "picture" | "actress";
+  type: "video" | "picture" | "actress" | "cut";
   id: string;
   enabled?: boolean;
   onViewCounted?: () => void;
@@ -74,7 +74,7 @@ export function useViewTracker({ type, id, enabled = true, onViewCounted }: UseV
 /**
  * Track a view imperatively (for use outside of React components or for manual tracking)
  */
-export async function trackView(type: "video" | "picture" | "actress", id: string): Promise<boolean> {
+export async function trackView(type: "video" | "picture" | "actress" | "cut", id: string): Promise<boolean> {
   try {
     const response = await fetch("/api/track-view", {
       method: "POST",

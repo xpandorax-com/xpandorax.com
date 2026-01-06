@@ -3,6 +3,7 @@ import { json } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import { CutsPlayer, type CutData } from "~/components/cuts-player";
 import { createSanityClient, getSlug, type SanityCut } from "~/lib/sanity";
+import { useViewTracker } from "~/lib/view-tracker";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data?.cut) {
@@ -196,6 +197,9 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
 
 export default function CutPage() {
   const { cut, allCuts, currentIndex } = useLoaderData<typeof loader>();
+
+  // Track view for this cut
+  useViewTracker({ type: "cut", id: cut.id });
 
   return (
     <div className="fixed inset-0 bg-black z-50">

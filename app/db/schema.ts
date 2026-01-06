@@ -60,12 +60,12 @@ export const comments = sqliteTable("comments", {
 });
 
 // ==================== CONTENT VIEWS TABLE ====================
-// Tracks view counts for videos, pictures, and actresses (content managed by Sanity)
+// Tracks view counts for videos, pictures, cuts, and actresses (content managed by Sanity)
 
 export const contentViews = sqliteTable("content_views", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   contentId: text("content_id").notNull(), // Sanity content _id
-  contentType: text("content_type", { enum: ["video", "picture", "actress"] }).notNull(),
+  contentType: text("content_type", { enum: ["video", "picture", "actress", "cut"] }).notNull(),
   views: integer("views").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),

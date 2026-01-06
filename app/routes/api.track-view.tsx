@@ -33,7 +33,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
       return json({ error: "Missing type or id" }, { status: 400 });
     }
 
-    if (!["video", "picture", "actress"].includes(type)) {
+    if (!["video", "picture", "actress", "cut"].includes(type)) {
       return json({ error: "Invalid type" }, { status: 400 });
     }
 
@@ -72,7 +72,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
         .where(
           and(
             eq(contentViews.contentId, id),
-            eq(contentViews.contentType, type as "video" | "picture" | "actress")
+            eq(contentViews.contentType, type as "video" | "picture" | "actress" | "cut")
           )
         )
         .limit(1);
@@ -88,7 +88,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
           .where(
             and(
               eq(contentViews.contentId, id),
-              eq(contentViews.contentType, type as "video" | "picture" | "actress")
+              eq(contentViews.contentType, type as "video" | "picture" | "actress" | "cut")
             )
           );
       } else {
@@ -96,7 +96,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
         await db.insert(contentViews).values({
           id: crypto.randomUUID(),
           contentId: id,
-          contentType: type as "video" | "picture" | "actress",
+          contentType: type as "video" | "picture" | "actress" | "cut",
           views: 1,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -125,7 +125,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     return json({ error: "Missing id or type parameter" }, { status: 400 });
   }
 
-  if (!["video", "picture", "actress"].includes(type)) {
+  if (!["video", "picture", "actress", "cut"].includes(type)) {
     return json({ error: "Invalid type" }, { status: 400 });
   }
 
@@ -139,7 +139,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       .where(
         and(
           eq(contentViews.contentId, id),
-          eq(contentViews.contentType, type as "video" | "picture" | "actress")
+          eq(contentViews.contentType, type as "video" | "picture" | "actress" | "cut")
         )
       )
       .limit(1);
