@@ -13,7 +13,7 @@ declare module "@remix-run/cloudflare" {
   }
 }
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
   plugins: [
     cloudflareDevProxyVitePlugin(),
     remix({
@@ -28,13 +28,17 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
-  ssr: {
-    resolve: {
-      conditions: ["workerd", "worker", "browser"],
-    },
-    target: "webworker",
-    noExternal: true,
-  },
+  ...(isSsrBuild
+    ? {
+        ssr: {
+          resolve: {
+            conditions: ["workerd", "worker", "browser"],
+          },
+          target: "webworker",
+          noExternal: true,
+        },
+      }
+    : {}),
   resolve: {
     mainFields: ["browser", "module", "main"],
     alias: {
@@ -50,4 +54,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));
