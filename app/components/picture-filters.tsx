@@ -13,19 +13,11 @@ import { X } from "lucide-react";
 interface PictureFiltersProps {
   models?: { id: string; name: string; slug: string }[];
   currentFilters: {
-    sort: string;
+    sort?: string;
     model?: string;
   };
   totalResults?: number;
 }
-
-const SORT_OPTIONS = [
-  { value: "newest", label: "Newest First" },
-  { value: "oldest", label: "Oldest First" },
-  { value: "popular", label: "Most Views" },
-  { value: "most-images", label: "Most Images" },
-  { value: "title", label: "Title (A-Z)" },
-];
 
 export function PictureFilters({ 
   models = [], 
@@ -46,11 +38,7 @@ export function PictureFilters({
   };
 
   const clearFilters = () => {
-    const params = new URLSearchParams();
-    if (currentFilters.sort !== "newest") {
-      params.set("sort", currentFilters.sort);
-    }
-    setSearchParams(params);
+    setSearchParams(new URLSearchParams());
   };
 
   const hasActiveFilters = currentFilters.model;
@@ -65,23 +53,6 @@ export function PictureFilters({
     <div className="space-y-4">
       {/* Filter Controls */}
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        {/* Sort */}
-        <Select 
-          value={currentFilters.sort} 
-          onValueChange={(v) => updateFilter("sort", v)}
-        >
-          <SelectTrigger className="w-[140px] sm:w-[160px] h-9">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
         {/* Model Filter */}
         {models.length > 0 && (
           <Select 

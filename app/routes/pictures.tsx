@@ -31,7 +31,6 @@ interface PictureGallery {
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
-  const sort = url.searchParams.get("sort") || "newest";
   const modelFilter = url.searchParams.get("model");
   const limit = 24;
   const offset = (page - 1) * limit;
@@ -39,35 +38,9 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   try {
     const sanity = createSanityClient(context.cloudflare.env);
 
-    // Determine sort order
-    let orderBy;
-    switch (sort) {
-      case "oldest":
-        orderBy = "publishedAt asc";
-        break;
-      case "popular":
-        orderBy = "views desc";
-        break;
-      case "most-images":
-        orderBy = "count(images) desc";
-        break;
-      case "title":
-        orderBy = "title asc";
-        break;
-      case "newest":
-      default:
-        orderBy = "publishedAt desc";
-        break;
-    }
-
-    // Build model filter condition
-    const modelCondition = modelFilter 
-      ? `&& actress->slug.current == "${modelFilter}"`
-      : "";
-
     // Fetch pictures from the Pictures schema, models for filter, and count
     const [picturesRaw, modelsWithPictures, totalCount] = await Promise.all([
-      // Main pictures query
+      // Main pictures query - use simple ordering to avoid GROQ issues
       sanity.fetch<Array<{
         _id: string;
         title: string;
@@ -82,21 +55,36 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
           slug: { current: string } | string;
         };
       }>>(
-        `*[_type == "picture" && isPublished == true ${modelCondition}] | order(${orderBy}) [$offset...$end] {
-          _id,
-          title,
-          slug,
-          "thumbnail": coalesce(thumbnail.asset->url, images[0].url),
-          images,
-          views,
-          publishedAt,
-          "actress": actress->{
-            _id,
-            name,
-            slug
-          }
-        }`,
-        { offset, end: offset + limit }
+        modelFilter
+          ? `*[_type == "picture" && isPublished == true && actress->slug.current == $modelFilter] | order(publishedAt desc) [$offset...$end] {
+              _id,
+              title,
+              slug,
+              "thumbnail": coalesce(thumbnail.asset->url, images[0].url),
+              images,
+              views,
+              publishedAt,
+              "actress": actress->{
+                _id,
+                name,
+                slug
+              }
+            }`
+          : `*[_type == "picture" && isPublished == true] | order(publishedAt desc) [$offset...$end] {
+              _id,
+              title,
+              slug,
+              "thumbnail": coalesce(thumbnail.asset->url, images[0].url),
+              images,
+              views,
+              publishedAt,
+              "actress": actress->{
+                _id,
+                name,
+                slug
+              }
+            }`,
+        { offset, end: offset + limit, modelFilter }
       ),
       // Get all models that have pictures (for filter dropdown)
       sanity.fetch<Array<{
@@ -112,7 +100,10 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       ),
       // Total count
       sanity.fetch<number>(
-        `count(*[_type == "picture" && isPublished == true ${modelCondition}])`
+        modelFilter
+          ? `count(*[_type == "picture" && isPublished == true && actress->slug.current == $modelFilter])`
+          : `count(*[_type == "picture" && isPublished == true])`,
+        { modelFilter }
       ),
     ]);
 
@@ -146,7 +137,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       total: totalCount,
       page,
       totalPages,
-      sort,
       model: modelFilter,
     });
   } catch (error) {
@@ -157,7 +147,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       total: 0,
       page: 1,
       totalPages: 0,
-      sort: "newest",
       model: null,
       error: "Failed to load pictures",
     });
@@ -170,7 +159,6 @@ export default function PicturesPage() {
   // Build pagination URL
   const buildPageUrl = (pageNum: number) => {
     const params = new URLSearchParams();
-    params.set("sort", data.sort);
     params.set("page", String(pageNum));
     if (data.model) params.set("model", data.model);
     return `/pictures?${params.toString()}`;
@@ -189,7 +177,6 @@ export default function PicturesPage() {
         <PictureFilters
           models={data.models}
           currentFilters={{
-            sort: data.sort,
             model: data.model || undefined,
           }}
           totalResults={data.total}
