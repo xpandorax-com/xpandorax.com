@@ -1,442 +1,283 @@
 import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { useLoaderData, Link, useSearchParams } from "@remix-run/react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useLoaderData, Link } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
-import { 
-  Image as ImageIcon, 
-  ChevronUp, 
-  Users, 
-  Settings2,
-  ArrowUp,
-  Loader2
-} from "lucide-react";
+import { Image as ImageIcon, Users } from "lucide-react";
 import { createSanityClient, getSlug } from "~/lib/sanity";
-import { trackView } from "~/lib/view-tracker";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
+import { PictureCard } from "~/components/picture-card";
+import { PictureFilters } from "~/components/picture-filters";
 
 export const meta: MetaFunction = () => {
   return [
     { title: "Pictures - XpandoraX" },
-    { name: "description", content: "Browse all model pictures in manga-style reader on XpandoraX." },
+    { name: "description", content: "Browse all model picture galleries on XpandoraX." },
   ];
 };
 
-interface GalleryImageWithModel {
-  url: string;
-  caption?: string;
-  alt?: string;
-  modelName: string;
-  modelSlug: string;
-  modelImage?: string;
-  modelId: string;
+interface PictureGallery {
+  id: string;
+  slug: string;
+  title: string;
+  thumbnail: string | null;
+  imageCount: number;
+  views: number;
+  model: {
+    name: string;
+    slug: string;
+  } | null;
+  publishedAt: string | null;
 }
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
-  const limit = 48;
+  const sort = url.searchParams.get("sort") || "newest";
+  const modelFilter = url.searchParams.get("model");
+  const limit = 24;
   const offset = (page - 1) * limit;
 
   try {
     const sanity = createSanityClient(context.cloudflare.env);
 
-    // Fetch pictures from the dedicated Pictures schema
-    const [picturesFromSchema, modelsWithGalleries] = await Promise.all([
+    // Determine sort order
+    let orderBy;
+    switch (sort) {
+      case "oldest":
+        orderBy = "publishedAt asc";
+        break;
+      case "popular":
+        orderBy = "views desc";
+        break;
+      case "most-images":
+        orderBy = "count(images) desc";
+        break;
+      case "title":
+        orderBy = "title asc";
+        break;
+      case "newest":
+      default:
+        orderBy = "publishedAt desc";
+        break;
+    }
+
+    // Build model filter condition
+    const modelCondition = modelFilter 
+      ? `&& actress->slug.current == "${modelFilter}"`
+      : "";
+
+    // Fetch pictures from the Pictures schema, models for filter, and count
+    const [picturesRaw, modelsWithPictures, totalCount] = await Promise.all([
+      // Main pictures query
       sanity.fetch<Array<{
         _id: string;
         title: string;
         slug: { current: string } | string;
         thumbnail?: string;
-        images?: Array<{
-          _key: string;
-          url?: string;
-          caption?: string;
-          alt?: string;
-        }>;
+        images?: Array<{ url?: string }>;
+        views?: number;
+        publishedAt?: string;
         actress?: {
           _id: string;
           name: string;
           slug: { current: string } | string;
-          image?: string;
         };
       }>>(
-        `*[_type == "picture" && isPublished == true] | order(publishedAt desc) {
+        `*[_type == "picture" && isPublished == true ${modelCondition}] | order(${orderBy}) [$offset...$end] {
           _id,
           title,
           slug,
-          "thumbnail": thumbnail.asset->url,
-          "images": images[] {
-            _key,
-            url,
-            caption,
-            alt
-          },
+          "thumbnail": coalesce(thumbnail.asset->url, images[0].url),
+          images,
+          views,
+          publishedAt,
           "actress": actress->{
             _id,
             name,
-            slug,
-            "image": image.asset->url
+            slug
           }
-        }`
+        }`,
+        { offset, end: offset + limit }
       ),
-      // Also fetch model gallery images as fallback
+      // Get all models that have pictures (for filter dropdown)
       sanity.fetch<Array<{
         _id: string;
         name: string;
         slug: { current: string } | string;
-        image?: string;
-        gallery?: Array<{
-          _key: string;
-          url?: string;
-          caption?: string;
-          alt?: string;
-        }>;
       }>>(
-        `*[_type == "actress" && defined(gallery) && count(gallery) > 0] {
+        `*[_type == "actress" && count(*[_type == "picture" && isPublished == true && references(^._id)]) > 0] | order(name asc) {
           _id,
           name,
-          slug,
-          "image": image.asset->url,
-          "gallery": gallery[] {
-            _key,
-            "url": asset->url,
-            caption,
-            alt
-          }
+          slug
         }`
+      ),
+      // Total count
+      sanity.fetch<number>(
+        `count(*[_type == "picture" && isPublished == true ${modelCondition}])`
       ),
     ]);
 
-    // Combine all images
-    const allImages: GalleryImageWithModel[] = [];
+    // Transform pictures data
+    const pictures: PictureGallery[] = picturesRaw.map((pic) => ({
+      id: pic._id,
+      slug: getSlug(pic.slug),
+      title: pic.title,
+      thumbnail: pic.thumbnail || null,
+      imageCount: pic.images?.filter(img => img.url)?.length || 0,
+      views: pic.views || 0,
+      model: pic.actress ? {
+        name: pic.actress.name,
+        slug: getSlug(pic.actress.slug),
+      } : null,
+      publishedAt: pic.publishedAt || null,
+    }));
 
-    // Add pictures from Pictures schema first (each picture can have multiple images)
-    picturesFromSchema.forEach((pic) => {
-      if (pic.images && pic.images.length > 0) {
-        pic.images.forEach((img) => {
-          if (img.url) {
-            allImages.push({
-              url: img.url,
-              caption: img.caption || pic.title,
-              alt: img.alt || pic.title,
-              modelName: pic.actress?.name || "Unknown",
-              modelSlug: pic.actress ? getSlug(pic.actress.slug) : "",
-              modelImage: pic.actress?.image,
-              modelId: pic.actress?._id || pic._id,
-            });
-          }
-        });
-      }
-    });
+    // Transform models for filter dropdown
+    const models = modelsWithPictures.map((m) => ({
+      id: m._id,
+      name: m.name,
+      slug: getSlug(m.slug),
+    }));
 
-    // Add model gallery images
-    modelsWithGalleries.forEach((model) => {
-      if (model.gallery) {
-        model.gallery.forEach((img) => {
-          if (img.url) {
-            allImages.push({
-              url: img.url,
-              caption: img.caption,
-              alt: img.alt,
-              modelName: model.name,
-              modelSlug: getSlug(model.slug),
-              modelImage: model.image,
-              modelId: model._id,
-            });
-          }
-        });
-      }
-    });
-
-    const total = allImages.length;
-    const totalPages = Math.ceil(total / limit);
-    const paginatedImages = allImages.slice(offset, offset + limit);
+    const totalPages = Math.ceil(totalCount / limit);
 
     return json({
-      images: paginatedImages,
-      total,
+      pictures,
+      models,
+      total: totalCount,
       page,
       totalPages,
+      sort,
+      model: modelFilter,
     });
   } catch (error) {
     console.error("Pictures loader error:", error);
     return json({
-      images: [],
+      pictures: [],
+      models: [],
       total: 0,
       page: 1,
       totalPages: 0,
+      sort: "newest",
+      model: null,
       error: "Failed to load pictures",
     });
   }
 }
 
 export default function PicturesPage() {
-  const { images, total, page, totalPages } = useLoaderData<typeof loader>();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [imageWidth, setImageWidth] = useState<"full" | "large" | "medium">("large");
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0, 1, 2, 3, 4]));
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const trackedViews = useRef<Set<string>>(new Set());
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const data = useLoaderData<typeof loader>();
 
-  // Track views for visible images
-  const trackImageView = useCallback((image: GalleryImageWithModel) => {
-    const viewKey = `${image.modelId}-${image.url}`;
-    if (!trackedViews.current.has(viewKey)) {
-      trackedViews.current.add(viewKey);
-      trackView("picture", image.modelId);
-    }
-  }, []);
-
-  // Lazy load images as user scrolls
-  useEffect(() => {
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = Number(entry.target.getAttribute("data-index"));
-            if (!isNaN(index)) {
-              setLoadedImages((prev) => {
-                const newSet = new Set(prev);
-                // Load this image and next few
-                for (let i = index; i < Math.min(index + 5, images.length); i++) {
-                  newSet.add(i);
-                }
-                return newSet;
-              });
-              // Track view when image becomes visible
-              if (images[index]) {
-                trackImageView(images[index]);
-              }
-            }
-          }
-        });
-      },
-      { rootMargin: "200px", threshold: 0.1 }
-    );
-
-    return () => observerRef.current?.disconnect();
-  }, [images, trackImageView]);
-
-  // Scroll position for back-to-top button
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Handle infinite scroll for loading more pages
-  useEffect(() => {
-    if (!loadMoreRef.current || page >= totalPages) return;
-
-    const loadMoreObserver = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isLoadingMore) {
-          setIsLoadingMore(true);
-          // Navigate to next page
-          const newParams = new URLSearchParams(searchParams);
-          newParams.set("page", String(page + 1));
-          setSearchParams(newParams, { preventScrollReset: true });
-        }
-      },
-      { rootMargin: "400px", threshold: 0 }
-    );
-
-    loadMoreObserver.observe(loadMoreRef.current);
-    return () => loadMoreObserver.disconnect();
-  }, [page, totalPages, isLoadingMore, searchParams, setSearchParams]);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const getImageContainerClass = () => {
-    switch (imageWidth) {
-      case "full":
-        return "max-w-full";
-      case "large":
-        return "max-w-3xl";
-      case "medium":
-        return "max-w-xl";
-      default:
-        return "max-w-3xl";
-    }
+  // Build pagination URL
+  const buildPageUrl = (pageNum: number) => {
+    const params = new URLSearchParams();
+    params.set("sort", data.sort);
+    params.set("page", String(pageNum));
+    if (data.model) params.set("model", data.model);
+    return `/pictures?${params.toString()}`;
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-black">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gray-800">
-        <div className="container-responsive py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ImageIcon className="h-5 w-5 text-pink-500" />
-            <div>
-              <h1 className="text-lg font-bold text-white">Pictures</h1>
-              <p className="text-xs text-gray-400">{total} images</p>
-            </div>
-          </div>
-          
-          {/* Settings Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Settings2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Settings</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Image Width</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => setImageWidth("full")}
-                className={imageWidth === "full" ? "bg-pink-500/20" : ""}
-              >
-                Full Width
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setImageWidth("large")}
-                className={imageWidth === "large" ? "bg-pink-500/20" : ""}
-              >
-                Large (Recommended)
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setImageWidth("medium")}
-                className={imageWidth === "medium" ? "bg-pink-500/20" : ""}
-              >
-                Medium
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+    <div className="container py-4 sm:py-8">
+      {/* Header */}
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2 mb-4">
+          <ImageIcon className="h-5 w-5 sm:h-6 sm:w-6 text-pink-500" />
+          Pictures
+        </h1>
+        
+        {/* Filters */}
+        <PictureFilters
+          models={data.models}
+          currentFilters={{
+            sort: data.sort,
+            model: data.model || undefined,
+          }}
+          totalResults={data.total}
+        />
       </div>
 
-      {/* Manga-style Vertical Reader */}
-      {images.length > 0 ? (
-        <div className="flex flex-col items-center py-4 gap-1">
-          {images.map((image, index) => (
-            <div
-              key={`${image.modelId}-${index}`}
-              data-index={index}
-              ref={(el) => {
-                if (el && observerRef.current) {
-                  observerRef.current.observe(el);
-                }
-              }}
-              className={`w-full ${getImageContainerClass()} mx-auto px-2 sm:px-4`}
-            >
-              {loadedImages.has(index) ? (
-                <div className="relative group">
-                  {/* Image */}
-                  <img
-                    src={image.url}
-                    alt={image.alt || `${image.modelName} photo ${index + 1}`}
-                    className="w-full h-auto object-contain"
-                    loading="lazy"
-                  />
-                  
-                  {/* Model info overlay - shows on hover/tap */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 sm:p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Link
-                      to={`/model/${image.modelSlug}`}
-                      className="flex items-center gap-2 text-white hover:text-pink-400 transition-colors"
-                    >
-                      {image.modelImage ? (
-                        <img
-                          src={image.modelImage}
-                          alt={image.modelName}
-                          className="h-8 w-8 rounded-full object-cover border border-white/30"
-                        />
-                      ) : (
-                        <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center">
-                          <Users className="h-4 w-4 text-gray-400" />
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-medium text-sm">{image.modelName}</p>
-                        {image.caption && (
-                          <p className="text-xs text-gray-300">{image.caption}</p>
-                        )}
-                      </div>
-                    </Link>
-                  </div>
+      {/* Pictures Grid */}
+      {data.pictures.length > 0 ? (
+        <>
+          <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {data.pictures.map((picture) => (
+              <PictureCard
+                key={picture.id}
+                picture={{
+                  id: picture.id,
+                  slug: picture.slug,
+                  title: picture.title,
+                  thumbnail: picture.thumbnail,
+                  imageCount: picture.imageCount,
+                  views: picture.views,
+                  model: picture.model,
+                }}
+              />
+            ))}
+          </div>
 
-                  {/* Image counter badge */}
-                  <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full opacity-60">
-                    {index + 1} / {images.length}
-                  </div>
-                </div>
-              ) : (
-                // Placeholder while loading
-                <div className="w-full aspect-[3/4] bg-gray-900 animate-pulse flex items-center justify-center">
-                  <Loader2 className="h-8 w-8 text-gray-600 animate-spin" />
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Load More Trigger */}
-          {page < totalPages && (
-            <div ref={loadMoreRef} className="w-full py-8 flex items-center justify-center">
-              <div className="flex items-center gap-2 text-gray-400">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Loading more...</span>
+          {/* Pagination */}
+          {data.totalPages > 1 && (
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2">
+              <div className="flex gap-2 w-full sm:w-auto">
+                {data.page > 1 && (
+                  <Button variant="outline" asChild className="flex-1 sm:flex-none touch-target">
+                    <a href={buildPageUrl(data.page - 1)}>
+                      Previous
+                    </a>
+                  </Button>
+                )}
+                {data.page < data.totalPages && (
+                  <Button variant="outline" asChild className="flex-1 sm:flex-none touch-target">
+                    <a href={buildPageUrl(data.page + 1)}>
+                      Next
+                    </a>
+                  </Button>
+                )}
               </div>
+              <span className="text-xs sm:text-sm text-muted-foreground order-first sm:order-none">
+                Page {data.page} of {data.totalPages}
+              </span>
             </div>
           )}
-
-          {/* End of content */}
-          {page >= totalPages && images.length > 0 && (
-            <div className="w-full py-8 text-center text-gray-500">
-              <p>You&apos;ve reached the end</p>
-              <Button
-                variant="ghost"
-                onClick={scrollToTop}
-                className="mt-2 text-pink-500 hover:text-pink-400"
-              >
-                <ChevronUp className="h-4 w-4 mr-1" />
-                Back to top
-              </Button>
-            </div>
-          )}
-        </div>
+        </>
       ) : (
-        <div className="text-center py-16">
-          <ImageIcon className="mx-auto h-16 w-16 text-gray-700" />
-          <p className="mt-4 text-gray-500 text-lg">No pictures available yet.</p>
+        /* Empty State */
+        <div className="flex flex-col items-center justify-center py-16 sm:py-24">
+          <div className="rounded-full bg-muted p-6 mb-6">
+            <ImageIcon className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
+          </div>
+          <h2 className="text-lg sm:text-xl font-semibold text-center mb-2">
+            No pictures available yet
+          </h2>
+          <p className="text-muted-foreground text-center max-w-md mb-6">
+            {data.model 
+              ? "No pictures found for this model. Try clearing the filter to see all pictures."
+              : "Picture galleries will appear here once they are uploaded."
+            }
+          </p>
+          {data.model && (
+            <Button variant="outline" asChild>
+              <Link to="/pictures">
+                Clear Filters
+              </Link>
+            </Button>
+          )}
+          <div className="mt-8 flex flex-wrap gap-3 justify-center">
+            <Button variant="secondary" asChild>
+              <Link to="/videos" className="flex items-center gap-2">
+                Browse Videos
+              </Link>
+            </Button>
+            <Button variant="secondary" asChild>
+              <Link to="/models" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Browse Models
+              </Link>
+            </Button>
+          </div>
         </div>
       )}
-
-      {/* Floating scroll controls */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-40">
-        {showScrollTop && (
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={scrollToTop}
-            className="h-12 w-12 rounded-full bg-pink-600 hover:bg-pink-700 text-white shadow-lg"
-          >
-            <ArrowUp className="h-6 w-6" />
-          </Button>
-        )}
-      </div>
-
-      {/* Keyboard navigation hint - shows briefly */}
-      <div className="fixed bottom-6 left-6 hidden sm:block text-xs text-gray-600 bg-black/60 px-3 py-2 rounded-lg opacity-50">
-        Scroll to read • Hover for model info
-      </div>
     </div>
   );
 }
