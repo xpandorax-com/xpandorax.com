@@ -105,34 +105,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     } | order(videoCount desc)[0...12]`
   );
 
-  // Fetch popular models (by video count)
-  const modelsRaw = await sanity.fetch<(SanityActress & { videoCount: number })[]>(
-    `*[_type == "actress"] {
-      _id,
-      name,
-      slug,
-      "image": image.asset->url,
-      "videoCount": count(*[_type == "video" && actress._ref == ^._id && isPublished == true])
-    } | order(videoCount desc)[0...12]`
-  );
-
-  // Fetch popular producers (by video count)
-  const producersRaw = await sanity.fetch<Array<{
-    _id: string;
-    name: string;
-    slug: { current: string } | string;
-    logo?: string;
-    videoCount: number;
-  }>>(
-    `*[_type == "producer"] {
-      _id,
-      name,
-      slug,
-      "logo": logo.asset->url,
-      "videoCount": count(*[_type == "video" && producer._ref == ^._id && isPublished == true])
-    } | order(videoCount desc)[0...12]`
-  );
-
   // Transform Sanity data to match component expectations
   const latestVideos = latestVideosRaw.map((v) => ({
     id: v._id,
