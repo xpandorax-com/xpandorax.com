@@ -5,7 +5,7 @@ import { getSession } from "~/lib/auth";
 import { VideoCard } from "~/components/video-card";
 import { CategoryCard } from "~/components/category-card";
 import { Button } from "~/components/ui/button";
-import { ChevronRight, TrendingUp, Sparkles, Grid3X3, Users, Building2, Video } from "lucide-react";
+import { ChevronRight, TrendingUp, Sparkles, Grid3X3, Users, Building2 } from "lucide-react";
 import { createSanityClient, getSlug, type SanityVideo, type SanityCategory, type SanityActress } from "~/lib/sanity";
 
 export const meta: MetaFunction = () => {
