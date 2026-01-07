@@ -65,17 +65,6 @@ export function VideoPlayer({
     setIsLoading(false);
   };
 
-  const handleError = () => {
-    setIsLoading(false);
-    setHasError(true);
-    
-    // Auto-switch to next server if available
-    if (!autoSwitchAttempted && servers.length > 0 && currentServerIndex < servers.length - 1) {
-      setAutoSwitchAttempted(true);
-      onServerError?.(currentServerIndex);
-    }
-  };
-
   const openInNewTab = () => {
     // Try to extract URL from embed code for opening in new tab
     const urlMatch = embedCode.match(/src=["']([^"']+)["']/);
