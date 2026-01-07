@@ -203,6 +203,9 @@ wrangler pages secret list
 
 # Verify B2 credentials are set
 wrangler pages secret put B2_KEY_ID
+# Preferred name:
+wrangler pages secret put B2_APPLICATION_KEY
+# Legacy/alternate name (accepted by the code for backwards compatibility):
 wrangler pages secret put B2_APP_KEY
 ```
 

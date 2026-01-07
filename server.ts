@@ -18,11 +18,14 @@ export interface Env {
   SITE_URL: string;
   B2_KEY_ID: string;
   B2_APPLICATION_KEY: string;
+  B2_APP_KEY: string; // Legacy name for B2_APPLICATION_KEY
   B2_BUCKET_NAME: string;
   B2_BUCKET_ID: string;
   B2_REGION: string;
   B2_ENDPOINT: string;
   CDN_URL: string;
+  // Pixeldrain for video uploads
+  PIXELDRAIN_API_KEY: string;
 }
 
 export default {

@@ -48,7 +48,8 @@ export const B2_CDN_URL = "https://cdn.xpandorax.com";
 export function getB2Config(env: Record<string, string | undefined>): B2Config {
   const config: B2Config = {
     keyId: env.B2_KEY_ID || '',
-    applicationKey: env.B2_APPLICATION_KEY || '',
+    // Accept either B2_APPLICATION_KEY (preferred) or legacy B2_APP_KEY
+    applicationKey: env.B2_APPLICATION_KEY || env.B2_APP_KEY || '',
     bucketName: env.B2_BUCKET_NAME || 'xpandorax-media',
     bucketId: env.B2_BUCKET_ID || '',
     region: env.B2_REGION || 'us-west-004',
@@ -57,7 +58,7 @@ export function getB2Config(env: Record<string, string | undefined>): B2Config {
   };
 
   if (!config.keyId || !config.applicationKey) {
-    throw new Error('B2 credentials not configured. Set B2_KEY_ID and B2_APPLICATION_KEY environment variables.');
+    throw new Error('B2 credentials not configured. Set B2_KEY_ID and either B2_APPLICATION_KEY or B2_APP_KEY environment variables.');
   }
 
   return config;

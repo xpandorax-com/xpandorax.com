@@ -132,12 +132,13 @@ export async function action({ request, context }: ActionFunctionArgs) {
     // Get B2 configuration from environment
     const env = (context as any).cloudflare?.env || (context as any).env || context;
     
-    // Check for required B2 credentials
-    if (!env.B2_KEY_ID || !env.B2_APPLICATION_KEY) {
+    // Check for required B2 credentials (allow either B2_APPLICATION_KEY or legacy B2_APP_KEY)
+    const b2AppKey = env.B2_APPLICATION_KEY || env.B2_APP_KEY;
+    if (!env.B2_KEY_ID || !b2AppKey) {
       console.error("B2 credentials not found. Available keys:", Object.keys(env || {}));
       return jsonWithCors({ 
         error: "Storage not configured",
-        debug: { availableKeys: Object.keys(env || {}) }
+        debug: { availableKeys: Object.keys(env || {}), hint: "Set B2_KEY_ID and B2_APPLICATION_KEY (or B2_APP_KEY) as Cloudflare Pages secrets" }
       }, { status: 500 });
     }
 
