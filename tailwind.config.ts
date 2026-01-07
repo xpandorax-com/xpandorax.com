@@ -39,12 +39,45 @@ export default {
       minHeight: {
         "touch": "44px",
         "screen-safe": "calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))",
+        "screen-dvh": "100dvh", // Dynamic viewport height
+        "screen-svh": "100svh", // Small viewport height
+        "screen-lvh": "100lvh", // Large viewport height
       },
       minWidth: {
         "touch": "44px",
       },
+      height: {
+        "screen-dvh": "100dvh", // Dynamic viewport height (accounts for mobile browser UI)
+        "screen-svh": "100svh", // Small viewport height (address bar visible)
+        "screen-lvh": "100lvh", // Large viewport height (address bar hidden)
+        "screen-safe": "calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))",
+      },
+      maxHeight: {
+        "screen-dvh": "100dvh",
+        "screen-svh": "100svh",
+        "screen-lvh": "100lvh",
+        "screen-safe": "calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))",
+      },
+      width: {
+        "screen-dvw": "100dvw", // Dynamic viewport width
+      },
+      maxWidth: {
+        "screen-dvw": "100dvw",
+        "cuts-video": "500px", // Max width for vertical video on desktop
+      },
       fontSize: {
         "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
+        // Auto-scaling font sizes using clamp
+        "auto-xs": ["clamp(0.625rem, 1.5vw, 0.75rem)", { lineHeight: "1.4" }],
+        "auto-sm": ["clamp(0.75rem, 2vw, 0.875rem)", { lineHeight: "1.4" }],
+        "auto-base": ["clamp(0.875rem, 2.5vw, 1rem)", { lineHeight: "1.5" }],
+        "auto-lg": ["clamp(1rem, 3vw, 1.25rem)", { lineHeight: "1.5" }],
+        "auto-xl": ["clamp(1.125rem, 3.5vw, 1.5rem)", { lineHeight: "1.4" }],
+      },
+      aspectRatio: {
+        "vertical": "9 / 16", // TikTok/Reels style
+        "cinema": "21 / 9", // Cinematic widescreen
+        "portrait": "3 / 4", // Portrait photos
       },
       colors: {
         border: "hsl(var(--border))",

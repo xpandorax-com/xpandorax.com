@@ -204,9 +204,9 @@ export default function CutsPage() {
         {data.total} {data.total === 1 ? "cut" : "cuts"} found
       </div>
 
-      {/* Cuts Grid */}
+      {/* Cuts Grid - Responsive for all device sizes */}
       {data.cuts.length > 0 ? (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1.5 xs:gap-2 sm:gap-3">
           {data.cuts.map((cut) => (
             <CutCardCompact key={cut.id} cut={cut} />
           ))}

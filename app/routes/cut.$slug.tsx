@@ -202,13 +202,16 @@ export default function CutPage() {
   useViewTracker({ type: "cut", id: cut.id });
 
   return (
-    <div className="fixed inset-0 bg-black z-50">
-      <CutsPlayer
-        cut={cut}
-        allCuts={allCuts}
-        currentIndex={currentIndex}
-        className="w-full h-full"
-      />
+    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+      {/* Full viewport container with dynamic sizing */}
+      <div className="relative w-full h-full max-h-[100dvh] flex items-center justify-center">
+        <CutsPlayer
+          cut={cut}
+          allCuts={allCuts}
+          currentIndex={currentIndex}
+          className="w-full h-full max-w-screen max-h-[100dvh]"
+        />
+      </div>
     </div>
   );
 }

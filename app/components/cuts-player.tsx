@@ -264,14 +264,15 @@ export function CutsPlayer({
       ref={containerRef}
       className={cn(
         "relative w-full h-full bg-black flex items-center justify-center overflow-hidden",
+        "safe-area-y", // Account for notched devices
         className
       )}
     >
-      {/* Video or Embed */}
+      {/* Video or Embed - Mobile optimized with dynamic viewport sizing */}
       {cut.embedUrl ? (
         <iframe
           src={cut.embedUrl}
-          className="w-full h-full max-w-[500px] mx-auto"
+          className="w-full h-full max-w-[100vw] sm:max-w-[500px] md:max-w-[450px] lg:max-w-[400px] mx-auto aspect-[9/16]"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           style={{ border: 0 }}
@@ -281,7 +282,7 @@ export function CutsPlayer({
           ref={videoRef}
           src={cut.videoUrl}
           poster={cut.thumbnail || undefined}
-          className="w-full h-full object-contain max-w-[500px] mx-auto"
+          className="w-full h-full object-contain max-w-[100vw] sm:max-w-[500px] md:max-w-[450px] lg:max-w-[400px] mx-auto"
           playsInline
           muted={isMuted}
           loop
@@ -318,21 +319,23 @@ export function CutsPlayer({
         </div>
       )}
 
-      {/* Close button */}
+      {/* Close button - Mobile optimized */}
       <Link
         to="/cuts"
         className={cn(
-          "absolute top-4 left-4 z-10 rounded-full bg-black/50 p-2 text-white transition-opacity hover:bg-black/70",
+          "absolute top-3 xs:top-4 left-3 xs:left-4 z-10 rounded-full bg-black/50 p-1.5 xs:p-2 text-white transition-opacity hover:bg-black/70 touch-target",
+          "safe-area-top safe-area-left", // Account for notched devices
           showControls ? "opacity-100" : "opacity-0"
         )}
       >
-        <X className="h-6 w-6" />
+        <X className="h-5 w-5 xs:h-6 xs:w-6" />
       </Link>
 
-      {/* Right side actions */}
+      {/* Right side actions - Mobile optimized positioning */}
       <div
         className={cn(
-          "absolute right-3 sm:right-4 bottom-24 sm:bottom-32 flex flex-col items-center gap-5 z-10 transition-opacity",
+          "absolute right-2 xs:right-3 sm:right-4 bottom-20 xs:bottom-24 sm:bottom-32 flex flex-col items-center gap-3 xs:gap-4 sm:gap-5 z-10 transition-opacity",
+          "safe-area-right", // Account for notched devices
           showControls ? "opacity-100" : "opacity-0 sm:opacity-100"
         )}
       >
@@ -340,9 +343,9 @@ export function CutsPlayer({
         {cut.actress && (
           <Link
             to={`/model/${cut.actress.slug}`}
-            className="relative"
+            className="relative touch-target"
           >
-            <div className="h-12 w-12 rounded-full border-2 border-white overflow-hidden bg-zinc-800">
+            <div className="h-10 w-10 xs:h-11 xs:w-11 sm:h-12 sm:w-12 rounded-full border-2 border-white overflow-hidden bg-zinc-800">
               {cut.actress.image ? (
                 <img
                   src={cut.actress.image}
@@ -351,12 +354,12 @@ export function CutsPlayer({
                 />
               ) : (
                 <div className="h-full w-full flex items-center justify-center">
-                  <User className="h-6 w-6 text-white" />
+                  <User className="h-5 w-5 xs:h-6 xs:w-6 text-white" />
                 </div>
               )}
             </div>
-            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full bg-pink-500 flex items-center justify-center">
-              <span className="text-white text-xs font-bold">+</span>
+            <div className="absolute -bottom-1 xs:-bottom-1.5 left-1/2 -translate-x-1/2 h-4 w-4 xs:h-5 xs:w-5 rounded-full bg-pink-500 flex items-center justify-center">
+              <span className="text-white text-[10px] xs:text-xs font-bold">+</span>
             </div>
           </Link>
         )}
@@ -364,18 +367,18 @@ export function CutsPlayer({
         {/* Like */}
         <button
           onClick={handleLike}
-          className="flex flex-col items-center gap-1"
+          className="flex flex-col items-center gap-0.5 xs:gap-1 touch-target"
         >
           <div className={cn(
-            "rounded-full bg-black/30 p-3 transition-colors",
+            "rounded-full bg-black/30 p-2 xs:p-2.5 sm:p-3 transition-colors",
             isLiked ? "text-red-500" : "text-white hover:bg-black/50"
           )}>
             <Heart
-              className="h-7 w-7"
+              className="h-5 w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7"
               fill={isLiked ? "currentColor" : "none"}
             />
           </div>
-          <span className="text-white text-xs font-semibold drop-shadow-lg">
+          <span className="text-white text-[10px] xs:text-xs font-semibold drop-shadow-lg">
             {formatViews((cut.likes || 0) + (isLiked ? 1 : 0))}
           </span>
         </button>
@@ -383,12 +386,12 @@ export function CutsPlayer({
         {/* Comments */}
         <button
           onClick={onComment}
-          className="flex flex-col items-center gap-1"
+          className="flex flex-col items-center gap-0.5 xs:gap-1 touch-target"
         >
-          <div className="rounded-full bg-black/30 p-3 text-white hover:bg-black/50 transition-colors">
-            <MessageCircle className="h-7 w-7" />
+          <div className="rounded-full bg-black/30 p-2 xs:p-2.5 sm:p-3 text-white hover:bg-black/50 transition-colors">
+            <MessageCircle className="h-5 w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7" />
           </div>
-          <span className="text-white text-xs font-semibold drop-shadow-lg">
+          <span className="text-white text-[10px] xs:text-xs font-semibold drop-shadow-lg">
             0
           </span>
         </button>
@@ -396,12 +399,12 @@ export function CutsPlayer({
         {/* Share */}
         <button
           onClick={handleShare}
-          className="flex flex-col items-center gap-1"
+          className="flex flex-col items-center gap-0.5 xs:gap-1 touch-target"
         >
-          <div className="rounded-full bg-black/30 p-3 text-white hover:bg-black/50 transition-colors">
-            <Share2 className="h-7 w-7" />
+          <div className="rounded-full bg-black/30 p-2 xs:p-2.5 sm:p-3 text-white hover:bg-black/50 transition-colors">
+            <Share2 className="h-5 w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7" />
           </div>
-          <span className="text-white text-xs font-semibold drop-shadow-lg">
+          <span className="text-white text-[10px] xs:text-xs font-semibold drop-shadow-lg">
             Share
           </span>
         </button>
@@ -410,21 +413,22 @@ export function CutsPlayer({
         {!cut.embedUrl && (
           <button
             onClick={toggleMute}
-            className="rounded-full bg-black/30 p-3 text-white hover:bg-black/50 transition-colors"
+            className="rounded-full bg-black/30 p-2 xs:p-2.5 sm:p-3 text-white hover:bg-black/50 transition-colors touch-target"
           >
             {isMuted ? (
-              <VolumeX className="h-6 w-6" />
+              <VolumeX className="h-5 w-5 xs:h-6 xs:w-6" />
             ) : (
-              <Volume2 className="h-6 w-6" />
+              <Volume2 className="h-5 w-5 xs:h-6 xs:w-6" />
             )}
           </button>
         )}
       </div>
 
-      {/* Bottom info */}
+      {/* Bottom info - Mobile optimized with safe area */}
       <div
         className={cn(
-          "absolute bottom-4 left-3 right-20 sm:right-24 z-10 transition-opacity",
+          "absolute bottom-3 xs:bottom-4 left-2 xs:left-3 right-16 xs:right-20 sm:right-24 z-10 transition-opacity",
+          "safe-area-bottom safe-area-left", // Account for notched devices
           showControls ? "opacity-100" : "opacity-0 sm:opacity-100"
         )}
       >
@@ -432,29 +436,29 @@ export function CutsPlayer({
         {cut.actress && (
           <Link
             to={`/model/${cut.actress.slug}`}
-            className="flex items-center gap-2 mb-2"
+            className="flex items-center gap-1.5 xs:gap-2 mb-1.5 xs:mb-2 touch-target"
           >
-            <span className="text-white font-bold text-base drop-shadow-lg hover:underline">
+            <span className="text-white font-bold text-sm xs:text-base drop-shadow-lg hover:underline">
               @{cut.actress.name.toLowerCase().replace(/\s+/g, '')}
             </span>
-            <span className="px-1.5 py-0.5 bg-pink-500 text-white text-[10px] font-bold rounded">
+            <span className="px-1 xs:px-1.5 py-0.5 bg-pink-500 text-white text-[9px] xs:text-[10px] font-bold rounded">
               Follow
             </span>
           </Link>
         )}
 
         {/* Description */}
-        <p className="text-white text-sm line-clamp-2 drop-shadow-lg mb-2">
+        <p className="text-white text-xs xs:text-sm line-clamp-2 drop-shadow-lg mb-1.5 xs:mb-2">
           {cut.description || cut.title}
         </p>
 
         {/* Hashtags */}
         {cut.hashtags && cut.hashtags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
+          <div className="flex flex-wrap gap-1 mb-1.5 xs:mb-2">
             {cut.hashtags.slice(0, 5).map((tag) => (
               <span
                 key={tag}
-                className="text-white text-xs font-medium drop-shadow-lg"
+                className="text-white text-[10px] xs:text-xs font-medium drop-shadow-lg"
               >
                 #{tag}
               </span>
@@ -464,9 +468,9 @@ export function CutsPlayer({
 
         {/* Sound/Music */}
         {cut.soundName && (
-          <div className="flex items-center gap-2 text-white text-xs">
-            <Music2 className="h-3.5 w-3.5 animate-spin" style={{ animationDuration: "3s" }} />
-            <span className="truncate max-w-[200px] drop-shadow-lg">
+          <div className="flex items-center gap-1.5 xs:gap-2 text-white text-[10px] xs:text-xs">
+            <Music2 className="h-3 w-3 xs:h-3.5 xs:w-3.5 animate-spin" style={{ animationDuration: "3s" }} />
+            <span className="truncate max-w-[150px] xs:max-w-[200px] drop-shadow-lg">
               {cut.soundName}
             </span>
           </div>
@@ -500,14 +504,15 @@ export function CutsPlayer({
         </Button>
       </div>
 
-      {/* Views count */}
+      {/* Views count - Mobile optimized */}
       <div
         className={cn(
-          "absolute top-4 right-4 flex items-center gap-1 text-white text-sm bg-black/30 px-2 py-1 rounded-full z-10 transition-opacity",
+          "absolute top-3 xs:top-4 right-3 xs:right-4 flex items-center gap-1 text-white text-xs xs:text-sm bg-black/30 px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-full z-10 transition-opacity",
+          "safe-area-top safe-area-right", // Account for notched devices
           showControls ? "opacity-100" : "opacity-0"
         )}
       >
-        <Play className="h-3.5 w-3.5" fill="white" />
+        <Play className="h-3 w-3 xs:h-3.5 xs:w-3.5" fill="white" />
         <span>{formatViews(cut.views || 0)}</span>
       </div>
     </div>
