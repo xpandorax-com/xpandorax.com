@@ -40,11 +40,7 @@ export const videoSchema = z.object({
   description: z.string().optional(),
   abyssEmbed: z
     .string()
-    .url("Must be a valid URL")
-    .refine(
-      (url) => url.includes("abyss.to/embed/"),
-      "Must be an Abyss.to embed URL"
-    ),
+    .min(1, "Embed code is required"),
   thumbnailUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   duration: z.number().int().positive().optional(),
   premiumOnly: z.boolean().default(false),

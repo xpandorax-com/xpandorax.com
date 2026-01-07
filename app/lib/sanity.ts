@@ -219,7 +219,7 @@ export const CUTS_QUERY = `*[_type == "cut" && isPublished == true] | order(publ
   description,
   "thumbnail": thumbnail.asset->url,
   videoUrl,
-  embedUrl,
+  embedCode,
   duration,
   views,
   likes,
@@ -246,7 +246,7 @@ export const CUT_BY_SLUG_QUERY = `*[_type == "cut" && slug.current == $slug][0] 
   description,
   "thumbnail": thumbnail.asset->url,
   videoUrl,
-  embedUrl,
+  embedCode,
   duration,
   views,
   likes,
@@ -300,7 +300,7 @@ export interface SanityVideo {
   views?: number;
   abyssEmbed: string;
   mainServerUrl?: string;
-  servers?: { name: string; url: string }[];
+  servers?: { name: string; embedCode: string }[];
   downloadLinks?: { name: string; url: string }[];
   publishedAt?: string;
   actress?: SanityActress;
@@ -373,7 +373,7 @@ export interface SanityCut {
   description?: string;
   thumbnail?: string;
   videoUrl: string;
-  embedUrl?: string;
+  embedCode?: string;
   duration?: number;
   views?: number;
   likes?: number;

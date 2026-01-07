@@ -6,7 +6,7 @@ import { cn } from "~/lib/utils";
 
 export interface VideoServer {
   name: string;
-  url: string;
+  embedCode: string;
 }
 
 export interface DownloadLink {
@@ -15,7 +15,7 @@ export interface DownloadLink {
 }
 
 interface VideoPlayerProps {
-  embedUrl: string;
+  embedCode: string;
   thumbnailUrl?: string | null;
   title: string;
   className?: string;
@@ -26,11 +26,11 @@ interface VideoPlayerProps {
 }
 
 /**
- * Simple Video Player Component using iframe embeds
+ * Simple Video Player Component using embed codes
  * Mobile-optimized with fullscreen support and auto server switching
  */
 export function VideoPlayer({
-  embedUrl,
+  embedCode,
   thumbnailUrl,
   title,
   className,
@@ -45,7 +45,6 @@ export function VideoPlayer({
   const [isMobile, setIsMobile] = useState(false);
   const [autoSwitchAttempted, setAutoSwitchAttempted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Detect mobile device
   useEffect(() => {
@@ -78,7 +77,12 @@ export function VideoPlayer({
   };
 
   const openInNewTab = () => {
-    window.open(embedUrl, '_blank', 'noopener,noreferrer');
+    // Try to extract URL from embed code for opening in new tab
+    const urlMatch = embedCode.match(/src=["']([^"']+)["']/);
+    const url = urlMatch ? urlMatch[1] : '';
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   // Request fullscreen on mobile
@@ -93,13 +97,13 @@ export function VideoPlayer({
   };
 
   useEffect(() => {
-    // Reset state when embed URL changes
+    // Reset state when embed code changes
     setIsLoading(true);
     setHasStarted(false);
     setHasError(false);
     setAutoSwitchAttempted(false);
     return undefined;
-  }, [embedUrl]);
+  }, [embedCode]);
 
   // Set a timeout to detect if iframe fails to load (X-Frame-Options block)
   useEffect(() => {
@@ -210,19 +214,14 @@ export function VideoPlayer({
             </button>
           )}
           
-          <iframe
-            ref={iframeRef}
-            src={embedUrl}
-            title={title}
+          {/* Embed code container */}
+          <div
             className={cn(
-              "h-full w-full border-0",
+              "h-full w-full [&>iframe]:h-full [&>iframe]:w-full [&>iframe]:border-0",
               (isLoading || hasError) && "invisible"
             )}
-            allowFullScreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-            onLoad={handleLoad}
-            onError={handleError}
-            referrerPolicy="no-referrer-when-downgrade"
+            dangerouslySetInnerHTML={{ __html: embedCode }}
+            onLoad={() => handleLoad()}
           />
         </div>
       )}

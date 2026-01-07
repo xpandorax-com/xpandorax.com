@@ -45,10 +45,11 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'embedUrl',
-      title: 'Embed URL',
-      type: 'url',
-      description: 'Embed URL for iframe playback (optional, falls back to videoUrl)',
+      name: 'embedCode',
+      title: 'Embed Code',
+      type: 'text',
+      rows: 4,
+      description: 'Paste the full embed code (iframe) for playback (optional, falls back to videoUrl)',
     }),
     defineField({
       name: 'duration',

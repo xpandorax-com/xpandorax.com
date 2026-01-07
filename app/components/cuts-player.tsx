@@ -26,7 +26,7 @@ export interface CutData {
   description?: string;
   thumbnail?: string | null;
   videoUrl: string;
-  embedUrl?: string | null;
+  embedCode?: string | null;
   duration?: number | null;
   views?: number;
   likes?: number;
@@ -269,13 +269,10 @@ export function CutsPlayer({
       )}
     >
       {/* Video or Embed - Mobile optimized with dynamic viewport sizing */}
-      {cut.embedUrl ? (
-        <iframe
-          src={cut.embedUrl}
-          className="w-full h-full max-w-[100vw] sm:max-w-[500px] md:max-w-[450px] lg:max-w-[400px] mx-auto aspect-[9/16]"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{ border: 0 }}
+      {cut.embedCode ? (
+        <div
+          className="w-full h-full max-w-[100vw] sm:max-w-[500px] md:max-w-[450px] lg:max-w-[400px] mx-auto aspect-[9/16] [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
+          dangerouslySetInnerHTML={{ __html: cut.embedCode }}
         />
       ) : (
         <video
@@ -294,14 +291,14 @@ export function CutsPlayer({
       )}
 
       {/* Loading spinner */}
-      {isLoading && !cut.embedUrl && (
+      {isLoading && !cut.embedCode && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
           <Loader2 className="h-12 w-12 text-white animate-spin" />
         </div>
       )}
 
       {/* Play/Pause indicator (on tap) */}
-      {!isPlaying && !cut.embedUrl && (
+      {!isPlaying && !cut.embedCode && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="rounded-full bg-black/50 p-6">
             <Play className="h-16 w-16 text-white" fill="white" />
@@ -310,7 +307,7 @@ export function CutsPlayer({
       )}
 
       {/* Progress bar */}
-      {!cut.embedUrl && (
+      {!cut.embedCode && (
         <div className="absolute top-0 left-0 right-0 h-1 bg-white/20">
           <div
             className="h-full bg-white transition-all duration-100"
@@ -410,7 +407,7 @@ export function CutsPlayer({
         </button>
 
         {/* Sound toggle */}
-        {!cut.embedUrl && (
+        {!cut.embedCode && (
           <button
             onClick={toggleMute}
             className="rounded-full bg-black/30 p-2 xs:p-2.5 sm:p-3 text-white hover:bg-black/50 transition-colors touch-target"

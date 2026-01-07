@@ -38,9 +38,10 @@ export default defineType({
     }),
     defineField({
       name: 'abyssEmbed',
-      title: 'Primary Embed URL',
-      type: 'url',
-      description: 'Main video embed URL (e.g., https://short.icu/abc123)',
+      title: 'Primary Embed Code',
+      type: 'text',
+      rows: 4,
+      description: 'Paste the full embed code (iframe) for the main video player',
     }),
     defineField({
       name: 'servers',
@@ -59,16 +60,18 @@ export default defineType({
               validation: (Rule) => Rule.required(),
             },
             {
-              name: 'url',
-              title: 'Embed URL',
-              type: 'url',
+              name: 'embedCode',
+              title: 'Embed Code',
+              type: 'text',
+              rows: 4,
+              description: 'Paste the full embed code (iframe) for this server',
               validation: (Rule) => Rule.required(),
             },
           ],
           preview: {
             select: {
               title: 'name',
-              subtitle: 'url',
+              subtitle: 'embedCode',
             },
           },
         },

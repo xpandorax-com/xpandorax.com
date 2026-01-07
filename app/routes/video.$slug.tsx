@@ -154,9 +154,9 @@ export async function loader({ params, context }: LoaderFunctionArgs) {
       duration: videoRaw.duration || null,
       views: viewCount,
       abyssEmbed: videoRaw.abyssEmbed || "",
-      servers: (videoRaw.servers || []).map((s: { name: string; url: string }) => ({
+      servers: (videoRaw.servers || []).map((s: { name: string; embedCode: string }) => ({
         name: s.name,
-        url: s.url,
+        embedCode: s.embedCode,
       })) as VideoServer[],
       downloadLinks: (videoRaw.downloadLinks || []).map((d: { name: string; url: string }) => ({
         name: d.name,
@@ -290,14 +290,14 @@ export default function VideoPage() {
 
   // Build all available servers (primary + additional)
   const allServers: VideoServer[] = [
-    { name: "Server 1", url: video.abyssEmbed },
+    { name: "Server 1", embedCode: video.abyssEmbed },
     ...video.servers,
   ];
   
   const [activeServerIndex, setActiveServerIndex] = useState(0);
   
-  // Get the current embed URL based on selected server
-  const currentEmbedUrl = allServers[activeServerIndex]?.url || video.abyssEmbed;
+  // Get the current embed code based on selected server
+  const currentEmbedCode = allServers[activeServerIndex]?.embedCode || video.abyssEmbed;
 
   // Handle server error - auto switch to next server
   const handleServerError = useCallback((failedIndex: number) => {
@@ -314,7 +314,7 @@ export default function VideoPage() {
         <div className="lg:col-span-2 space-y-3 sm:space-y-4">
           {/* Video Player */}
           <VideoPlayer
-            embedUrl={currentEmbedUrl}
+            embedCode={currentEmbedCode}
             thumbnailUrl={video.thumbnail}
             title={video.title}
             servers={allServers}
